@@ -27,6 +27,16 @@ Material(key=1, name='shoe')
 >>> scneario_1.get_bin(2)
 Bin(key=2, name='drawer_2', material_key=3)
 
+>>> from pycommons.io.temp import temp_dir
+>>> with temp_dir() as td:
+...     scneario_1.to_directory(td)
+...     scenario_1b = Scenario.from_directory(td)
+
+>>> scneario_1.bins == scenario_1b.bins
+True
+>>> scneario_1.materials == scenario_1b.materials
+True
+
 >>> scneario_2 = Scenario((mat_2, mat_3),
 ...                       (bin_1, bin_4))
 >>> scneario_2.get_material(2)
@@ -41,8 +51,15 @@ Bin(key=4, name='shed', material_key=None)
 1
 >>> scneario_2.bin_max_key
 4
-"""
+>>> with temp_dir() as td:
+...     scneario_2.to_directory(td)
+...     scenario_2b = Scenario.from_directory(td)
 
+>>> scneario_2.bins == scenario_2b.bins
+True
+>>> scneario_2.materials == scenario_2b.materials
+True
+"""
 
 from dataclasses import dataclass
 from typing import Callable, Final, Iterable
