@@ -1,0 +1,11 @@
+#
+# Dependencies Required to Use `warehouse`
+
+# the common tools package
+pycommons == 0.8.103
+
+# `numpy` is needed for its efficient data structures.
+numpy == 2.4.6
+
+# numba provides JIT compilers useful making vector/numpy operations efficient
+numba == 0.66.0
