@@ -11,14 +11,16 @@ The different events that may occur during a simulation.
 ...     b3 = Bin(None, "wardrobe", 3)
 ...     b4 = Bin(None, "drawer", "Skirt")
 ...     b5 = Bin(4, "shed", None)
+...     ev0 = StartEvent(1789361500000)
 ...     ev1 = WarehouseIn(1789361600000, "Hat", 12)
 ...     ev2 = WarehouseOut(1889361600000, "Hat", 8)
 ...     ev3 = OverstockIn(1899361600000, "Skirt", 4)
 ...     ev4 = OverstockOut(1999361600000, "Skirt", 3)
 ...     ev5 = BinIn(2099361600000, "Hat", "cupboard")
 ...     ev6 = BinOut(2109361600000, "Hat", "cupboard")
+...     ev7 = EndEvent(2110000000000)
 ...
-...     text = list(Event.to_csv((ev1, ev2, ev3, ev4, ev5, ev6)))
+...     text = list(Event.to_csv((ev0, ev1, ev2, ev3, ev4, ev5, ev6, ev7)))
 ...     for srow in text:
 ...         if not str.startswith(srow, '#'):
 ...             print(srow)
@@ -36,13 +38,16 @@ The different events that may occur during a simulation.
 ...         if not str.startswith(srow, '#'):
 ...             print(srow)
 time;type;material;amount;bin
+2026-09-14T12:51:40+08:00;start
 2026-09-14T12:53:20+08:00;warehouse_in;Hat;12
 2029-11-14T22:40:00+08:00;warehouse_out;Hat;8
 2030-03-10T16:26:40+08:00;overstock_in;Skirt;4
 2033-05-11T02:13:20+08:00;overstock_out;Skirt;3
 2036-07-11T12:00:00+08:00;bin_in;Hat;;cupboard
 2036-11-04T05:46:40+08:00;bin_out;Hat;;cupboard
+2036-11-11T15:06:40+08:00;end
 ------
+StartEvent(time=1789361500000)
 WarehouseIn(time=1789361600000, material=Material(key=1, name='Hat'), \
 amount=12)
 WarehouseOut(time=1889361600000, material=Material(key=1, name='Hat'), \
@@ -55,14 +60,17 @@ BinIn(time=2099361600000, material=Material(key=1, name='Hat'), where=Bin(\
 key=1, name='cupboard', material=None))
 BinOut(time=2109361600000, material=Material(key=1, name='Hat'), where=Bin(\
 key=1, name='cupboard', material=None))
+EndEvent(time=2110000000000)
 ------
 time;type;material;amount;bin
+2026-09-14T12:51:40+08:00;start
 2026-09-14T12:53:20+08:00;warehouse_in;Hat;12
 2029-11-14T22:40:00+08:00;warehouse_out;Hat;8
 2030-03-10T16:26:40+08:00;overstock_in;Skirt;4
 2033-05-11T02:13:20+08:00;overstock_out;Skirt;3
 2036-07-11T12:00:00+08:00;bin_in;Hat;;cupboard
 2036-11-04T05:46:40+08:00;bin_out;Hat;;cupboard
+2036-11-11T15:06:40+08:00;end
 """
 
 from dataclasses import dataclass, field
@@ -204,7 +212,7 @@ class Event:
         :param data: the data
         :return: the event
         """
-        return Event(time)
+        return cls(time)
 
     def __init__(self, time: int) -> None:
         """
@@ -471,6 +479,50 @@ class CsvWriter(CsvWriterBase[Event]):
             desc = cls._get_event_desc()
             if desc:
                 yield f"  - {name}: {desc}"
+
+
+class StartEvent(Event):
+    """The simulation begins."""
+
+    @classmethod
+    def _get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "start"
+
+    @classmethod
+    def _get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "the time when the simulation begins"
+
+
+class EndEvent(Event):
+    """The simulation ends."""
+
+    @classmethod
+    def _get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "end"
+
+    @classmethod
+    def _get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "the time when the simulation ends"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
