@@ -74,7 +74,7 @@ FILE_MATERIALS: Final[str] = "materials.txt"
 FILE_BINS: Final[str] = "bins.txt"
 
 #: the type variable for data to be written to CSV or to be read from CSV
-T = TypeVar("T", bound="Element")
+T = TypeVar("T", bound=Element)
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
