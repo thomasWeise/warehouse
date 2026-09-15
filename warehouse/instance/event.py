@@ -104,6 +104,12 @@ COLUMN_AMOUNT: Final[str] = "amount"
 TIME_ZONE: Final[ZoneInfo] = ZoneInfo("Asia/Shanghai")
 
 
+#: the earliest start time for an event
+EARLIEST_START: Final[int] = 1000000000000
+#: the latest end time for an event
+LATEST_END: Final[int] = 3500000000000
+
+
 def time_to_str(time: int) -> str:
     """
     Convert an event time to a string.
@@ -117,6 +123,10 @@ def time_to_str(time: int) -> str:
     '2026-09-14T12:54:55.616+08:00'
     >>> time_to_str(1789361695614)
     '2026-09-14T12:54:55.614+08:00'
+    >>> time_to_str(EARLIEST_START)
+    '2001-09-09T09:46:40+08:00'
+    >>> time_to_str(LATEST_END)
+    '2080-11-28T14:13:20+08:00'
     """
     return str.replace(datetime.fromtimestamp(
         time / 1000, tz=TIME_ZONE).isoformat(), "000+", "+")
@@ -135,6 +145,10 @@ def str_to_time(string: str) -> int:
     1789361695614
     >>> str_to_time('2026-09-14t12:54:55.616+00:00')
     1789390495616
+    >>> str_to_time(time_to_str(EARLIEST_START)) == EARLIEST_START
+    True
+    >>> str_to_time(time_to_str(LATEST_END)) == LATEST_END
+    True
     """
     return round(
         1000 * datetime.fromisoformat(str.strip(string)).timestamp())
@@ -157,7 +171,7 @@ class Event:
         :param kwargs: some arguments
         """
         super().__init_subclass__(**kwargs)
-        if cls.__name__ in ("BinEvent", "StorageEvent"):
+        if cls.__name__ in {"BinEvent", "StorageEvent"}:
             return
         Event._subclasses[str.lower(cls._get_csv_type())] = cls
 
@@ -221,7 +235,7 @@ class Event:
         :param time: the event time
         """
         object.__setattr__(self, "time", check_int_range(
-            time, "time", 1000000000000, 3500000000000))
+            time, "time", EARLIEST_START, LATEST_END))
 
     def __hash__(self) -> int:
         """

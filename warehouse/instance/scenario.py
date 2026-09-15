@@ -1,6 +1,8 @@
 """
 A warehouse setup.
 
+>>> from warehouse.instance.event import WarehouseIn
+
 >>> with context():
 ...     m1 = Material(None, "Shoe")
 ...     m2 = Material(1, "Hat")
@@ -11,21 +13,31 @@ A warehouse setup.
 ...     b3 = Bin(None, "wardrobe", 3)
 ...     b4 = Bin(None, "drawer", "Skirt")
 ...     b5 = Bin(4, "shed", None)
-...     scenario = Scenario((m1, m2, m3, m4), (b1, b2, b3, b4, b5))
+...     ev0 = StartEvent(10 ** 12 + 1)
+...     ev1 = WarehouseIn(10 ** 12 + 2, m3, 12)
+...     scenario = Scenario((m1, m2, m3, m4), (b1, b2, b3, b4, b5),
+...                         (ev0, ev1))
 
 >>> scenario.n_materials
 4
+
 >>> scenario.materials
 (Material(key=0, name='Shoe'), Material(key=1, name='Hat'), \
 Material(key=2, name='Skirt'), Material(key=3, name='T-Shirt'))
+
 >>> scenario.n_bins
 5
+
 >>> scenario.bins
 (Bin(key=0, name='shelf', material=Material(key=0, name='Shoe')), \
 Bin(key=1, name='cupboard', material=None), \
 Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt')), \
 Bin(key=3, name='drawer', material=Material(key=2, name='Skirt')), \
 Bin(key=4, name='shed', material=None))
+
+>>> scenario.events
+(StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \
+material=Material(key=2, name='Skirt'), amount=12))
 
 >>> from pycommons.io.temp import temp_dir
 >>> with temp_dir() as td:
@@ -56,6 +68,10 @@ Material(key=0, name='Shoe')
 
 >>> scenario_2.resolve(Material, 2)
 Material(key=2, name='Skirt')
+
+>>> scenario_2.events
+(StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \
+material=Material(key=2, name='Skirt'), amount=12))
 """
 
 from dataclasses import dataclass
@@ -66,12 +82,21 @@ from pycommons.types import type_error
 
 from warehouse.instance.bin import Bin
 from warehouse.instance.element import Element, ElementResolver, context
+from warehouse.instance.event import (
+    EARLIEST_START,
+    LATEST_END,
+    EndEvent,
+    Event,
+    StartEvent,
+)
 from warehouse.instance.material import Material
 
 #: the materials file
-FILE_MATERIALS: Final[str] = "materials.txt"
+FILE_MATERIALS: Final[str] = "materials.csv"
 #: the bins file
-FILE_BINS: Final[str] = "bins.txt"
+FILE_BINS: Final[str] = "bins.csv"
+#: the events file
+FILE_EVENTS: Final[str] = "events.csv"
 
 #: the type variable for data to be written to CSV or to be read from CSV
 T = TypeVar("T", bound=Element)
@@ -89,14 +114,18 @@ class Scenario(ElementResolver):
     materials: tuple[Material, ...]
     #: the bin configuration of the warehouse
     bins: tuple[Bin, ...]
+    #: the pre-defined events for the scenario
+    events: tuple[Event, ...]
 
     def __init__(self, materials: Iterable[Material],
-                 bins: Iterable[Bin]) -> None:
+                 bins: Iterable[Bin],
+                 events: Iterable[Event] | None = None) -> None:
         """
         Create an instance of the warehousing scenario.
 
         :param materials: the materials
         :param bins: the bins
+        :param events: the events
         """
         if not isinstance(materials, Iterable):
             raise type_error(materials, "materials", Iterable)
@@ -142,10 +171,38 @@ class Scenario(ElementResolver):
             if i != xbin.key:
                 raise ValueError(f"Inconsistent key for {xbin!r}.")
 
+        if events is None:
+            events = ()
+        else:
+            events = sorted(events)
+            last_time = EARLIEST_START
+            i = -1
+            for i, event in enumerate(events):
+                if not isinstance(event, Event):
+                    raise type_error(event, f"event[{i}]", Event)
+                time = event.time
+                if not (EARLIEST_START <= last_time <= time <= LATEST_END):
+                    raise ValueError(f"Inconsistent time for {event!r}.")
+                last_time = time
+                if isinstance(event, StartEvent):
+                    if i > 0:
+                        raise ValueError(
+                            f"{event!r} not permitted at index {i}.")
+                elif isinstance(event, EndEvent) and (
+                        i < (list.__len__(events) - 1)):
+                    raise ValueError(f"{event!r} not permitted at index {i}.")
+            if i <= 0:
+                events = ()
+            else:
+                if not isinstance(events[0], StartEvent):
+                    events.insert(0, StartEvent(events[0].time))
+                events = tuple(events)
+
         object.__setattr__(self, "n_materials", n_materials)
         object.__setattr__(self, "n_bins", n_bins)
         object.__setattr__(self, "materials", tuple(material_lst))
         object.__setattr__(self, "bins", tuple(bin_lst))
+        object.__setattr__(self, "events", events)
         object.__setattr__(self, "_names", names)
 
     def resolve(self, cls: type[T], name_or_key: str | int) -> T:
@@ -191,7 +248,14 @@ class Scenario(ElementResolver):
                     FILE_BINS).open_for_read() as stream:
                 bins.extend(Bin.from_csv(stream))  # type: ignore
 
-            return Scenario(materials=materials, bins=bins)
+            events_file = source.resolve_inside(FILE_EVENTS)
+            events: list[Event] | None = None
+            if events_file.is_file():
+                events = []
+                with events_file.open_for_read() as stream:
+                    events.extend(Event.from_csv(stream))
+
+            return Scenario(materials=materials, bins=bins, events=events)
 
     def to_directory(self, directory: str) -> None:
         """
@@ -213,3 +277,10 @@ class Scenario(ElementResolver):
             for row in Bin.to_csv(self.bins):
                 w(row)
                 w("\n")
+
+        if tuple.__len__(self.events) > 0:
+            with dest.resolve_inside(FILE_EVENTS).open_for_write() as stream:
+                w = stream.write
+                for row in Event.to_csv(self.events):
+                    w(row)
+                    w("\n")
