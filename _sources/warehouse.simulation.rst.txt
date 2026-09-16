@@ -1,0 +1,18 @@
+warehouse.simulation package
+============================
+
+.. automodule:: warehouse.simulation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+warehouse.simulation.simulation module
+--------------------------------------
+
+.. automodule:: warehouse.simulation.simulation
+   :members:
+   :show-inheritance:
+   :undoc-members:

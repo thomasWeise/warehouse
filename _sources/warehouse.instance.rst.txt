@@ -1,0 +1,50 @@
+warehouse.instance package
+==========================
+
+.. automodule:: warehouse.instance
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+warehouse.instance.bin module
+-----------------------------
+
+.. automodule:: warehouse.instance.bin
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.instance.element module
+---------------------------------
+
+.. automodule:: warehouse.instance.element
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.instance.event module
+-------------------------------
+
+.. automodule:: warehouse.instance.event
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.instance.material module
+----------------------------------
+
+.. automodule:: warehouse.instance.material
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.instance.scenario module
+----------------------------------
+
+.. automodule:: warehouse.instance.scenario
+   :members:
+   :show-inheritance:
+   :undoc-members:

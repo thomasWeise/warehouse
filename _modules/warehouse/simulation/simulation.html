@@ -1,0 +1,277 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.simulation.simulation — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/simulation/simulation.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.simulation</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.simulation.simulation</h1><div class=highlight><pre>
+<span></span><span class=sd>"""The warehouse simulation."""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>heapq</span><span class=w> </span><span class=kn>import</span> <span class=n>heapify</span><span class=p>,</span> <span class=n>heappop</span><span class=p>,</span> <span class=n>heappush</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Callable</span><span class=p>,</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Generator</span><span class=p>,</span> <span class=n>Iterable</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>type_error</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin</span><span class=w> </span><span class=kn>import</span> <span class=n>Bin</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>EARLIEST_START</span><span class=p>,</span>
+    <span class=n>BinIn</span><span class=p>,</span>
+    <span class=n>BinOut</span><span class=p>,</span>
+    <span class=n>EndEvent</span><span class=p>,</span>
+    <span class=n>Event</span><span class=p>,</span>
+    <span class=n>OverstockIn</span><span class=p>,</span>
+    <span class=n>OverstockOut</span><span class=p>,</span>
+    <span class=n>StartEvent</span><span class=p>,</span>
+    <span class=n>WarehouseIn</span><span class=p>,</span>
+    <span class=n>WarehouseOut</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.scenario</span><span class=w> </span><span class=kn>import</span> <span class=n>Scenario</span>
+
+
+<div class=viewcode-block id=Simulation>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.simulation.Simulation>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>Simulation</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""A warehouse simulation."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>scenario</span><span class=p>:</span> <span class=n>Scenario</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the simulation.</span>
+
+<span class=sd>        :param scenario: the scenario to simulate</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>scenario</span><span class=p>,</span> <span class=n>Scenario</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>scenario</span><span class=p>,</span> <span class=s2>"scenarion"</span><span class=p>,</span> <span class=n>Scenario</span><span class=p>)</span>
+
+        <span class=c1>#: the scenario we are simulating</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>scenario</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Scenario</span><span class=p>]</span> <span class=o>=</span> <span class=n>scenario</span>
+        <span class=c1>#: the time index</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>EARLIEST_START</span>
+
+        <span class=c1>#: the internal queue</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__queue</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Event</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=c1>#: the amount of over</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__overstock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>scenario</span><span class=o>.</span><span class=n>n_materials</span>
+
+        <span class=c1>#: the eligible bins for a given material</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__empty_material_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=p>[]</span> <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>scenario</span><span class=o>.</span><span class=n>n_materials</span><span class=p>))</span>
+        <span class=c1>#: the empty random bins</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__empty_random_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=c1>#: the used bins for a given material</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__used_material_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=p>[]</span> <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>scenario</span><span class=o>.</span><span class=n>n_materials</span><span class=p>))</span>
+
+        <span class=n>use_material</span> <span class=o>=</span> <span class=n>scenario</span><span class=o>.</span><span class=n>materials</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+        <span class=n>use_bin</span> <span class=o>=</span> <span class=n>scenario</span><span class=o>.</span><span class=n>bins</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+        <span class=c1>#: the shared BinIn event</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__bin_in</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinIn</span><span class=p>]</span> <span class=o>=</span> <span class=n>BinIn</span><span class=p>(</span>
+            <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>use_material</span><span class=p>,</span> <span class=n>use_bin</span><span class=p>)</span>
+        <span class=c1>#: the shared BinOut event</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__bin_out</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinOut</span><span class=p>]</span> <span class=o>=</span> <span class=n>BinOut</span><span class=p>(</span>
+            <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>use_material</span><span class=p>,</span> <span class=n>use_bin</span><span class=p>)</span>
+        <span class=c1>#: the shared overstock in event</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_in</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>OverstockIn</span><span class=p>]</span> <span class=o>=</span> <span class=n>OverstockIn</span><span class=p>(</span>
+            <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>use_material</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span>
+        <span class=c1>#: the shared overstock out event</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_out</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>OverstockOut</span><span class=p>]</span> <span class=o>=</span> <span class=n>OverstockOut</span><span class=p>(</span>
+            <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>use_material</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span>
+        <span class=c1>#: the bins</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>Bin</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=n>scenario</span><span class=o>.</span><span class=n>bins</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>__start</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""Begin the simulation."""</span>
+        <span class=n>os</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__overstock</span>
+        <span class=n>emb</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_material_bins</span>
+        <span class=n>erb</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_random_bins</span>
+        <span class=n>umb</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__used_material_bins</span>
+
+        <span class=n>erb</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>eb</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>emb</span><span class=p>):</span>
+            <span class=n>os</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span>
+            <span class=n>eb</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+            <span class=n>umb</span><span class=p>[</span><span class=n>i</span><span class=p>]</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+
+        <span class=k>for</span> <span class=n>xbin</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>scenario</span><span class=o>.</span><span class=n>bins</span><span class=p>:</span>
+            <span class=n>mat</span> <span class=o>=</span> <span class=n>xbin</span><span class=o>.</span><span class=n>material</span>
+            <span class=k>if</span> <span class=n>mat</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=n>erb</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=o>.</span><span class=n>key</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>emb</span><span class=p>[</span><span class=n>mat</span><span class=o>.</span><span class=n>key</span><span class=p>]</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=o>.</span><span class=n>key</span><span class=p>)</span>
+
+        <span class=n>queue</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Event</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__queue</span>
+        <span class=n>queue</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+        <span class=n>queue</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>scenario</span><span class=o>.</span><span class=n>events</span><span class=p>)</span>
+        <span class=n>heapify</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>=</span> <span class=n>EARLIEST_START</span>
+
+<div class=viewcode-block id=Simulation.simulate>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.simulation.Simulation.simulate>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>simulate</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Generator</span><span class=p>[</span><span class=n>Event</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Run the simulation.</span>
+
+<span class=sd>        :return: the sequence of events.</span>
+<span class=sd>        """</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__start</span><span class=p>()</span>
+
+        <span class=n>queue</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Event</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__queue</span>
+        <span class=k>if</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>yield</span> <span class=n>StartEvent</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+        <span class=k>elif</span> <span class=n>queue</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>StartEvent</span><span class=p>:</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>=</span> <span class=n>queue</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>time</span>
+            <span class=k>yield</span> <span class=n>StartEvent</span><span class=p>(</span><span class=n>queue</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+
+        <span class=n>router</span><span class=p>:</span> <span class=n>Final</span> <span class=o>=</span> <span class=n>_EVENT_ROUTER</span>
+        <span class=n>quitter</span> <span class=o>=</span> <span class=n>_QUIT</span>
+        <span class=n>eid</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span>
+        <span class=k>while</span> <span class=n>queue</span><span class=p>:</span>
+            <span class=n>event</span><span class=p>:</span> <span class=n>Event</span> <span class=o>=</span> <span class=n>heappop</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+            <span class=k>yield</span> <span class=n>event</span>
+
+            <span class=n>eid</span> <span class=o>=</span> <span class=nb>id</span><span class=p>(</span><span class=n>event</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>eid</span> <span class=o>==</span> <span class=n>quitter</span><span class=p>:</span>
+                <span class=k>break</span>
+            <span class=n>nested</span> <span class=o>=</span> <span class=n>router</span><span class=p>(</span><span class=n>eid</span><span class=p>)(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>nested</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=k>yield from</span> <span class=n>nested</span>
+
+        <span class=n>queue</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=n>eid</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span><span class=n>eid</span> <span class=o>!=</span> <span class=n>quit</span><span class=p>):</span>
+            <span class=k>yield</span> <span class=n>EndEvent</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=Simulation.enqueue>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.simulation.Simulation.enqueue>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>enqueue</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>Event</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Add an event to the simulation's event queue.</span>
+
+<span class=sd>        :param event: the event to add</span>
+<span class=sd>        """</span>
+        <span class=n>heappush</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__queue</span><span class=p>,</span> <span class=n>event</span><span class=p>)</span></div>
+
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_ignore</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>_</span><span class=p>:</span> <span class=n>Event</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Ignore this kind of event.</span>
+
+<span class=sd>        :param _: the event</span>
+<span class=sd>        """</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_error</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>Event</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Handle an event that is not permitted.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+            <span class=sa>f</span><span class=s2>"An event has occurred in the input event stream of a simulation"</span>
+            <span class=sa>f</span><span class=s2>" at time </span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=si>}</span><span class=s2> that is not permitted: </span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2>. Such "</span>
+            <span class=sa>f</span><span class=s2>"events can only be generated by the simulation (as output) but "</span>
+            <span class=sa>f</span><span class=s2>"you cannot trigger them by yourself as input to the "</span>
+            <span class=sa>f</span><span class=s2>"simulation."</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_warehouse_in</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseIn</span><span class=p>)</span> <span class=o>-></span> <span class=n>Generator</span><span class=p>[</span>
+            <span class=n>Event</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Store material into the warehouse.</span>
+
+<span class=sd>        :param event: the event with the information about the material</span>
+<span class=sd>            to be stored</span>
+<span class=sd>        :return: the event stream</span>
+<span class=sd>        """</span>
+        <span class=n>bin_in</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinIn</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__bin_in</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_in</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_in</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=p>)</span>
+
+        <span class=n>material</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>used_mat_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__used_material_bins</span><span class=p>[</span><span class=n>material</span><span class=p>]</span>
+        <span class=n>empty_mat_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_material_bins</span><span class=p>[</span><span class=n>material</span><span class=p>]</span>
+        <span class=n>empty_random_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_random_bins</span>
+        <span class=n>bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>Bin</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__bins</span>
+        <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>amount</span>
+
+        <span class=n>source</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>empty_mat_bins</span>
+        <span class=k>while</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=n>source</span><span class=p>:</span>
+                <span class=k>if</span> <span class=n>source</span> <span class=ow>is</span> <span class=n>empty_random_bins</span><span class=p>:</span>
+                    <span class=k>break</span>
+                <span class=n>source</span> <span class=o>=</span> <span class=n>empty_random_bins</span>
+                <span class=k>continue</span>
+            <span class=n>xbin</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>pop</span><span class=p>()</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_in</span><span class=p>,</span> <span class=s2>"where"</span><span class=p>,</span> <span class=n>bins</span><span class=p>[</span><span class=n>xbin</span><span class=p>])</span>
+            <span class=k>yield</span> <span class=n>bin_in</span>
+            <span class=n>used_mat_bins</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=p>)</span>
+            <span class=n>amount</span> <span class=o>-=</span> <span class=mi>1</span>
+
+        <span class=k>if</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>overstock_in</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>OverstockIn</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_in</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_in</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_in</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=p>)</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_in</span><span class=p>,</span> <span class=s2>"amount"</span><span class=p>,</span> <span class=n>amount</span><span class=p>)</span>
+            <span class=k>yield</span> <span class=n>overstock_in</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__overstock</span><span class=p>[</span><span class=n>material</span><span class=p>]</span> <span class=o>+=</span> <span class=n>amount</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_warehouse_out</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseOut</span><span class=p>)</span> <span class=o>-></span> <span class=n>Generator</span><span class=p>[</span>
+            <span class=n>Event</span><span class=p>,</span> <span class=kc>None</span><span class=p>,</span> <span class=kc>None</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Remove material from the warehouse.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=n>material</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>amount</span>
+        <span class=n>overstock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__overstock</span>
+
+        <span class=n>overstocked</span> <span class=o>=</span> <span class=n>overstock</span><span class=p>[</span><span class=n>material</span><span class=p>]</span>
+        <span class=k>if</span> <span class=n>overstocked</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>reduction</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>overstocked</span><span class=p>,</span> <span class=n>amount</span><span class=p>)</span>
+            <span class=n>amount</span> <span class=o>-=</span> <span class=n>reduction</span>
+            <span class=n>overstock</span><span class=p>[</span><span class=n>material</span><span class=p>]</span> <span class=o>=</span> <span class=n>overstocked</span> <span class=o>-</span> <span class=n>reduction</span>
+            <span class=n>overstock_out</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>OverstockOut</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_out</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_out</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_out</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=p>)</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>overstock_out</span><span class=p>,</span> <span class=s2>"amount"</span><span class=p>,</span> <span class=n>reduction</span><span class=p>)</span>
+            <span class=k>yield</span> <span class=n>overstock_out</span>
+
+        <span class=k>if</span> <span class=n>amount</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>return</span>
+
+        <span class=n>bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>Bin</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__bins</span>
+        <span class=n>used_mat_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__used_material_bins</span><span class=p>[</span><span class=n>material</span><span class=p>]</span>
+        <span class=n>empty_mat_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> \
+            <span class=bp>self</span><span class=o>.</span><span class=n>__empty_material_bins</span><span class=p>[</span><span class=n>material</span><span class=p>]</span>
+        <span class=n>empty_random_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_random_bins</span>
+        <span class=n>bin_out</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinOut</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__bin_out</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_out</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_out</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>event</span><span class=o>.</span><span class=n>material</span><span class=p>)</span>
+
+        <span class=c1># We will get an IndexError if you try to take out more material than</span>
+        <span class=c1># what is currently stored in the warehouse</span>
+        <span class=k>while</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>xbin</span> <span class=o>=</span> <span class=n>used_mat_bins</span><span class=o>.</span><span class=n>pop</span><span class=p>()</span>
+            <span class=n>vbin</span> <span class=o>=</span> <span class=n>bins</span><span class=p>[</span><span class=n>xbin</span><span class=p>]</span>
+            <span class=k>if</span> <span class=n>vbin</span><span class=o>.</span><span class=n>material</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=n>empty_random_bins</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>empty_mat_bins</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=p>)</span>
+            <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>bin_out</span><span class=p>,</span> <span class=s2>"where"</span><span class=p>,</span> <span class=n>vbin</span><span class=p>)</span>
+            <span class=k>yield</span> <span class=n>bin_out</span>
+            <span class=n>amount</span> <span class=o>-=</span> <span class=mi>1</span></div>
+
+
+
+<span class=c1>#: the end event</span>
+<span class=n>_QUIT</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>id</span><span class=p>(</span><span class=n>EndEvent</span><span class=p>)</span>
+
+<span class=c1>#: the event router</span>
+<span class=n>_EVENT_ROUTER</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Callable</span><span class=p>[[</span><span class=nb>int</span><span class=p>],</span> <span class=n>Callable</span><span class=p>[[</span>
+    <span class=n>Simulation</span><span class=p>,</span> <span class=n>Event</span><span class=p>],</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Event</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]]]</span> <span class=o>=</span> <span class=p>{</span>
+    <span class=n>_QUIT</span><span class=p>:</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_ignore</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>StartEvent</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_ignore</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_error</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>BinIn</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_error</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>BinOut</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_error</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>OverstockIn</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_error</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>OverstockOut</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_error</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>WarehouseIn</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_warehouse_in</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+    <span class=nb>id</span><span class=p>(</span><span class=n>WarehouseOut</span><span class=p>):</span> <span class=n>Simulation</span><span class=o>.</span><span class=n>_warehouse_out</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+<span class=p>}</span><span class=o>.</span><span class=fm>__getitem__</span>
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.simulation</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

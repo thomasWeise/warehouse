@@ -1,0 +1,56 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.material — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/material.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.material</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.material</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A class for identifying a material.</span>
+
+<span class=sd>This class here is just a subclass of</span>
+<span class=sd>:class:`~warehouse.instance.element.Element`</span>
+<span class=sd>that does not add any new attributes or functionality.</span>
+<span class=sd>If we extend this later, we may need to import the `dataclass` decorator.</span>
+
+<span class=sd>>>> from warehouse.instance.element import context</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     m1 = Material(None, "Shoe")</span>
+<span class=sd>...     m2 = Material(1, "Hat")</span>
+<span class=sd>...     m3 = Material(2, "Skirt")</span>
+
+<span class=sd>>>> str(m1)</span>
+<span class=sd>'M0'</span>
+<span class=sd>>>> str(m2)</span>
+<span class=sd>'M1'</span>
+<span class=sd>>>> str(m3)</span>
+<span class=sd>'M2'</span>
+
+<span class=sd>>>> repr(m1)</span>
+<span class=sd>"Material(key=0, name='Shoe')"</span>
+<span class=sd>>>> repr(m2)</span>
+<span class=sd>"Material(key=1, name='Hat')"</span>
+<span class=sd>>>> repr(m3)</span>
+<span class=sd>"Material(key=2, name='Skirt')"</span>
+
+<span class=sd>>>> csv1 = list(Material.to_csv((m1, m2, m3)))</span>
+<span class=sd>>>> for txt in csv1[:-3]:</span>
+<span class=sd>...     print(txt)</span>
+<span class=sd>key;name</span>
+<span class=sd>0;Shoe</span>
+<span class=sd>1;Hat</span>
+<span class=sd>2;Skirt</span>
+<span class=sd># key: the unique key of the element within its type</span>
+<span class=sd># name: the unique name of the element (unique over all elements of all types)</span>
+
+<span class=sd>>>> for mat in Material.from_csv(["name", "hello", "world", "material"]):</span>
+<span class=sd>...     print(repr(mat))</span>
+<span class=sd>Material(key=0, name='hello')</span>
+<span class=sd>Material(key=1, name='world')</span>
+<span class=sd>Material(key=2, name='material')</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>Element</span>
+
+
+<div class=viewcode-block id=Material>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.material.Material>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>Material</span><span class=p>(</span><span class=n>Element</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A class for identifying a material."""</span></div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.material</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

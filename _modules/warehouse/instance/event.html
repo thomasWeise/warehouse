@@ -1,0 +1,952 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.event — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/event.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.event</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.event</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>The different events that may occur during a simulation.</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     m1 = Material(None, "Shoe")</span>
+<span class=sd>...     m2 = Material(1, "Hat")</span>
+<span class=sd>...     m3 = Material(2, "Skirt")</span>
+<span class=sd>...     m4 = Material(None, "T-Shirt")</span>
+<span class=sd>...     b1 = Bin(None, "shelf", m1)</span>
+<span class=sd>...     b2 = Bin(1, "cupboard")</span>
+<span class=sd>...     b3 = Bin(None, "wardrobe", 3)</span>
+<span class=sd>...     b4 = Bin(None, "drawer", "Skirt")</span>
+<span class=sd>...     b5 = Bin(4, "shed", None)</span>
+<span class=sd>...     ev0 = StartEvent(1789361500000)</span>
+<span class=sd>...     ev1 = WarehouseIn(1789361600000, "Hat", 12)</span>
+<span class=sd>...     ev2 = WarehouseOut(1889361600000, "Hat", 8)</span>
+<span class=sd>...     ev3 = OverstockIn(1899361600000, "Skirt", 4)</span>
+<span class=sd>...     ev4 = OverstockOut(1999361600000, "Skirt", 3)</span>
+<span class=sd>...     ev5 = BinIn(2099361600000, "Hat", "cupboard")</span>
+<span class=sd>...     ev6 = BinOut(2109361600000, "Hat", "cupboard")</span>
+<span class=sd>...     ev7 = EndEvent(2110000000000)</span>
+<span class=sd>...</span>
+<span class=sd>...     text = list(Event.to_csv((ev0, ev1, ev2, ev3, ev4, ev5, ev6, ev7)))</span>
+<span class=sd>...     for srow in text:</span>
+<span class=sd>...         if not str.startswith(srow, '#'):</span>
+<span class=sd>...             print(srow)</span>
+<span class=sd>...</span>
+<span class=sd>...     print("------")</span>
+<span class=sd>...</span>
+<span class=sd>...     events = list(Event.from_csv(text))</span>
+<span class=sd>...     for event in events:</span>
+<span class=sd>...         print(repr(event))</span>
+<span class=sd>...</span>
+<span class=sd>...     print("------")</span>
+<span class=sd>...</span>
+<span class=sd>...     text = list(Event.to_csv(events))</span>
+<span class=sd>...     for srow in text:</span>
+<span class=sd>...         if not str.startswith(srow, '#'):</span>
+<span class=sd>...             print(srow)</span>
+<span class=sd>time;type;material;amount;bin</span>
+<span class=sd>2026-09-14T12:51:40+08:00;start</span>
+<span class=sd>2026-09-14T12:53:20+08:00;warehouse_in;Hat;12</span>
+<span class=sd>2029-11-14T22:40:00+08:00;warehouse_out;Hat;8</span>
+<span class=sd>2030-03-10T16:26:40+08:00;overstock_in;Skirt;4</span>
+<span class=sd>2033-05-11T02:13:20+08:00;overstock_out;Skirt;3</span>
+<span class=sd>2036-07-11T12:00:00+08:00;bin_in;Hat;1;cupboard</span>
+<span class=sd>2036-11-04T05:46:40+08:00;bin_out;Hat;1;cupboard</span>
+<span class=sd>2036-11-11T15:06:40+08:00;end</span>
+<span class=sd>------</span>
+<span class=sd>StartEvent(time=1789361500000)</span>
+<span class=sd>WarehouseIn(time=1789361600000, material=Material(key=1, name='Hat'), \</span>
+<span class=sd>amount=12)</span>
+<span class=sd>WarehouseOut(time=1889361600000, material=Material(key=1, name='Hat'), \</span>
+<span class=sd>amount=8)</span>
+<span class=sd>OverstockIn(time=1899361600000, material=Material(key=2, name='Skirt'), \</span>
+<span class=sd>amount=4)</span>
+<span class=sd>OverstockOut(time=1999361600000, material=Material(key=2, name='Skirt'), \</span>
+<span class=sd>amount=3)</span>
+<span class=sd>BinIn(time=2099361600000, material=Material(key=1, name='Hat'), where=Bin(\</span>
+<span class=sd>key=1, name='cupboard', material=None))</span>
+<span class=sd>BinOut(time=2109361600000, material=Material(key=1, name='Hat'), where=Bin(\</span>
+<span class=sd>key=1, name='cupboard', material=None))</span>
+<span class=sd>EndEvent(time=2110000000000)</span>
+<span class=sd>------</span>
+<span class=sd>time;type;material;amount;bin</span>
+<span class=sd>2026-09-14T12:51:40+08:00;start</span>
+<span class=sd>2026-09-14T12:53:20+08:00;warehouse_in;Hat;12</span>
+<span class=sd>2029-11-14T22:40:00+08:00;warehouse_out;Hat;8</span>
+<span class=sd>2030-03-10T16:26:40+08:00;overstock_in;Skirt;4</span>
+<span class=sd>2033-05-11T02:13:20+08:00;overstock_out;Skirt;3</span>
+<span class=sd>2036-07-11T12:00:00+08:00;bin_in;Hat;1;cupboard</span>
+<span class=sd>2036-11-04T05:46:40+08:00;bin_out;Hat;1;cupboard</span>
+<span class=sd>2036-11-11T15:06:40+08:00;end</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span><span class=p>,</span> <span class=n>field</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>datetime</span><span class=w> </span><span class=kn>import</span> <span class=n>datetime</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>ClassVar</span><span class=p>,</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>Self</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>zoneinfo</span><span class=w> </span><span class=kn>import</span> <span class=n>ZoneInfo</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvReader</span> <span class=k>as</span> <span class=n>CsvReaderBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvWriter</span> <span class=k>as</span> <span class=n>CsvWriterBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>csv_column</span><span class=p>,</span>
+    <span class=n>csv_column_or_none</span><span class=p>,</span>
+    <span class=n>csv_scope</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>check_int_range</span><span class=p>,</span> <span class=n>type_error</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_MATERIAL</span><span class=p>,</span> <span class=n>Bin</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>context</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.material</span><span class=w> </span><span class=kn>import</span> <span class=n>Material</span>
+
+<span class=c1>#: the event time column</span>
+<span class=n>COLUMN_TIME</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"time"</span>
+<span class=c1>#: the event type column</span>
+<span class=n>COLUMN_TYPE</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"type"</span>
+<span class=c1>#: the bin column</span>
+<span class=n>COLUMN_BIN</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"bin"</span>
+<span class=c1>#: the amount column</span>
+<span class=n>COLUMN_AMOUNT</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"amount"</span>
+
+<span class=c1>#: the standard time zone to use to write dates and times</span>
+<span class=n>TIME_ZONE</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>ZoneInfo</span><span class=p>]</span> <span class=o>=</span> <span class=n>ZoneInfo</span><span class=p>(</span><span class=s2>"Asia/Shanghai"</span><span class=p>)</span>
+
+
+<span class=c1>#: the earliest start time for an event</span>
+<span class=n>EARLIEST_START</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1000000000000</span>
+<span class=c1>#: the latest end time for an event</span>
+<span class=n>LATEST_END</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=mi>3500000000000</span>
+
+
+<div class=viewcode-block id=time_to_str>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.time_to_str>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>time_to_str</span><span class=p>(</span><span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert an event time to a string.</span>
+
+<span class=sd>    :param time: the event time</span>
+<span class=sd>    :return: the string</span>
+
+<span class=sd>    >>> time_to_str(1789361695615)</span>
+<span class=sd>    '2026-09-14T12:54:55.615+08:00'</span>
+<span class=sd>    >>> time_to_str(1789361695616)</span>
+<span class=sd>    '2026-09-14T12:54:55.616+08:00'</span>
+<span class=sd>    >>> time_to_str(1789361695614)</span>
+<span class=sd>    '2026-09-14T12:54:55.614+08:00'</span>
+<span class=sd>    >>> time_to_str(EARLIEST_START)</span>
+<span class=sd>    '2001-09-09T09:46:40+08:00'</span>
+<span class=sd>    >>> time_to_str(LATEST_END)</span>
+<span class=sd>    '2080-11-28T14:13:20+08:00'</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>str</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>fromtimestamp</span><span class=p>(</span>
+        <span class=n>time</span> <span class=o>/</span> <span class=mi>1000</span><span class=p>,</span> <span class=n>tz</span><span class=o>=</span><span class=n>TIME_ZONE</span><span class=p>)</span><span class=o>.</span><span class=n>isoformat</span><span class=p>(),</span> <span class=s2>"000+"</span><span class=p>,</span> <span class=s2>"+"</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=str_to_time>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.str_to_time>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>str_to_time</span><span class=p>(</span><span class=n>string</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert a time string to an event time value.</span>
+
+<span class=sd>    :param string: the time string</span>
+<span class=sd>    :return: the event time value.</span>
+
+<span class=sd>    >>> str_to_time('2026-09-14T12:54:55.615+08:00')</span>
+<span class=sd>    1789361695615</span>
+<span class=sd>    >>> str_to_time('2026-09-14T12:54:55.614+08:00')</span>
+<span class=sd>    1789361695614</span>
+<span class=sd>    >>> str_to_time('2026-09-14t12:54:55.616+00:00')</span>
+<span class=sd>    1789390495616</span>
+<span class=sd>    >>> str_to_time(time_to_str(EARLIEST_START)) == EARLIEST_START</span>
+<span class=sd>    True</span>
+<span class=sd>    >>> str_to_time(time_to_str(LATEST_END)) == LATEST_END</span>
+<span class=sd>    True</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>round</span><span class=p>(</span>
+        <span class=mi>1000</span> <span class=o>*</span> <span class=n>datetime</span><span class=o>.</span><span class=n>fromisoformat</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>string</span><span class=p>))</span><span class=o>.</span><span class=n>timestamp</span><span class=p>())</span></div>
+
+
+
+<div class=viewcode-block id=Event>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.Event>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>Event</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""The base class for events."""</span>
+
+    <span class=c1>#: all subclasses</span>
+    <span class=n>_subclasses</span><span class=p>:</span> <span class=n>ClassVar</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>type</span><span class=p>[</span><span class=s2>"Event"</span><span class=p>]]]</span> <span class=o>=</span> <span class=p>{}</span>
+
+    <span class=c1>#: the time associated with the event</span>
+    <span class=n>time</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>__init_subclass__</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=o>**</span><span class=n>kwargs</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize a new subclass of :class:`Event`.</span>
+
+<span class=sd>        :param kwargs: some arguments</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>__init_subclass__</span><span class=p>(</span><span class=o>**</span><span class=n>kwargs</span><span class=p>)</span>
+        <span class=k>if</span> <span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span> <span class=ow>in</span> <span class=p>{</span><span class=s2>"BinEvent"</span><span class=p>,</span> <span class=s2>"StorageEvent"</span><span class=p>}:</span>
+            <span class=k>return</span>
+        <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=p>[</span><span class=nb>str</span><span class=o>.</span><span class=n>lower</span><span class=p>(</span><span class=bp>cls</span><span class=o>.</span><span class=n>_get_csv_type</span><span class=p>())]</span> <span class=o>=</span> <span class=bp>cls</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns used by this event class.</span>
+
+<span class=sd>        :return: the CSV columns used by this event class</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>()</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV type of this class.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=nb>str</span><span class=o>.</span><span class=n>lower</span><span class=p>(</span><span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span><span class=p>)</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=kc>None</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_col_desc</span><span class=p>(</span>
+            <span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>  <span class=c1># noqa  # pylint: disable=W0613</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=kc>None</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_create</span><span class=p>(</span>
+            <span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>cols</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span>  <span class=c1># noqa  # pylint: disable=W0613</span>
+                <span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>],</span>
+            <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=s2>"Event"</span><span class=p>:</span>  <span class=c1># noqa  # pylint: disable=W0613</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the event from the columns.</span>
+
+<span class=sd>        :param time: the event time</span>
+<span class=sd>        :param cols: the columns</span>
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :return: the event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create an event object.</span>
+
+<span class=sd>        :param time: the event time</span>
+<span class=sd>        """</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=n>check_int_range</span><span class=p>(</span>
+            <span class=n>time</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>LATEST_END</span><span class=p>))</span>
+
+<div class=viewcode-block id=Event.copy>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.Event.copy>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>copy</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Self</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a copy of this event.</span>
+
+<span class=sd>        :return: an independent copy of this event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>)</span></div>
+
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__hash__</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the hash code of this event.</span>
+
+<span class=sd>        :return: the hash code.</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=nb>hash</span><span class=p>((</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=p>))</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_value</span><span class=p>(</span>
+            <span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>  <span class=c1># noqa  # pylint: disable=W0613</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__lt__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "less".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is less than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) < Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) < Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) < Event(10 ** 12)</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o><</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__le__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "less or equal".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is less or equal than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) <= Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) <= Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) <= Event(10 ** 12)</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o><=</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__eq__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "equality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is equal to the other event,</span>
+<span class=sd>            `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) == Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) == Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) == Event(10 ** 12)</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ge__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "greater or equal".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is greater or equal than the other</span>
+<span class=sd>            event, `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) >= Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) >= Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) >= Event(10 ** 12)</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>>=</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__gt__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "greater".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is greater than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) > Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) > Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) > Event(10 ** 12)</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>></span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ne__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "inequality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is not equal than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+
+<span class=sd>        >>> Event(10 ** 12) != Event(2 * (10 ** 12))</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) != Event(2 * (10 ** 12))</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> Event(2 * (10 ** 12)) != Event(10 ** 12)</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span>
+
+<div class=viewcode-block id=Event.to_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.Event.to_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Event"</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Convert an iterable of the object to a CSV stream.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :return: the stream</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>CsvWriter</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>data</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=Event.from_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.Event.from_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>rows</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Event"</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the data from CSV.</span>
+
+<span class=sd>        :param rows: the rows</span>
+<span class=sd>        :return: the sequence of objects</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=k>yield from</span> <span class=n>CsvReader</span><span class=o>.</span><span class=n>read</span><span class=p>(</span><span class=n>rows</span><span class=o>=</span><span class=n>rows</span><span class=p>)</span>   <span class=c1># type: ignore</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=CsvReader>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvReader>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvReader</span><span class=p>(</span><span class=n>CsvReaderBase</span><span class=p>[</span><span class=n>Event</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""A CsvReader that reads named objects from a CSV file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>columns</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span><span class=p>]):</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize.</span>
+
+<span class=sd>        :param columns: the named object columns</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>columns</span><span class=p>)</span>
+
+        <span class=n>cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_TIME</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_TIME</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+        <span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_TYPE</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_TYPE</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+        <span class=k>for</span> <span class=bp>cls</span> <span class=ow>in</span> <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=o>.</span><span class=n>values</span><span class=p>():</span>
+            <span class=n>cls_cols</span> <span class=o>=</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_get_csv_columns</span><span class=p>()</span>
+            <span class=k>for</span> <span class=n>col</span> <span class=ow>in</span> <span class=n>cls_cols</span><span class=p>:</span>
+                <span class=k>if</span> <span class=n>col</span> <span class=ow>in</span> <span class=n>cols</span><span class=p>:</span>
+                    <span class=k>continue</span>
+                <span class=n>cols</span><span class=p>[</span><span class=n>col</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column_or_none</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>col</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+
+        <span class=c1>#: the internal column list</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]]</span> <span class=o>=</span> <span class=n>cols</span>
+
+<div class=viewcode-block id=CsvReader.parse_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvReader.parse_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>parse_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Event</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Parse a data row.</span>
+
+<span class=sd>        :param data: the data row</span>
+<span class=sd>        :return: the instance</span>
+<span class=sd>        """</span>
+        <span class=n>cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__cols</span>
+        <span class=bp>cls</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>type</span><span class=p>[</span><span class=n>Event</span><span class=p>]]</span> <span class=o>=</span> <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=p>[</span>
+            <span class=nb>str</span><span class=o>.</span><span class=n>lower</span><span class=p>(</span><span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_TYPE</span><span class=p>]])]</span>
+        <span class=n>ret</span> <span class=o>=</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_create</span><span class=p>(</span><span class=n>str_to_time</span><span class=p>(</span><span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span>
+            <span class=n>COLUMN_TIME</span><span class=p>]]),</span> <span class=n>cols</span><span class=p>,</span> <span class=n>data</span><span class=p>)</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>ret</span><span class=p>,</span> <span class=n>Event</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>ret</span><span class=p>,</span> <span class=s2>"parse_row result"</span><span class=p>,</span> <span class=n>Event</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>ret</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=CsvWriter>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvWriter>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvWriter</span><span class=p>(</span><span class=n>CsvWriterBase</span><span class=p>[</span><span class=n>Event</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""Write the event data to a csv file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Event</span><span class=p>],</span>
+                 <span class=n>scope</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize the CSV writer.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :param scope: the scope</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=n>scope</span><span class=p>)</span>
+
+        <span class=c1>#: the time column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__col_time</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_TIME</span><span class=p>)</span>
+        <span class=c1>#: the type column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__col_type</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_TYPE</span><span class=p>)</span>
+
+        <span class=n>cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>str</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=k>for</span> <span class=bp>cls</span> <span class=ow>in</span> <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=o>.</span><span class=n>values</span><span class=p>():</span>
+            <span class=k>for</span> <span class=n>col</span> <span class=ow>in</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_get_csv_columns</span><span class=p>():</span>
+                <span class=k>if</span> <span class=n>col</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>cols</span><span class=p>:</span>
+                    <span class=n>cols</span><span class=p>[</span><span class=n>col</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>col</span><span class=p>)</span>
+        <span class=c1>#: the columns</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>str</span><span class=p>]]</span> <span class=o>=</span> <span class=n>cols</span>
+
+<div class=viewcode-block id=CsvWriter.get_column_titles>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvWriter.get_column_titles>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_column_titles</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column titles.</span>
+
+<span class=sd>        :returns: the column titles</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>__col_time</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>__col_type</span>
+        <span class=k>yield from</span> <span class=bp>self</span><span class=o>.</span><span class=n>__cols</span><span class=o>.</span><span class=n>values</span><span class=p>()</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvWriter.get_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Event</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Render a single element  CSV row.</span>
+
+<span class=sd>        :param data: the element</span>
+<span class=sd>        :returns: the row iterator</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=n>time_to_str</span><span class=p>(</span><span class=n>data</span><span class=o>.</span><span class=n>time</span><span class=p>)</span>
+        <span class=k>yield</span> <span class=n>data</span><span class=o>.</span><span class=vm>__class__</span><span class=o>.</span><span class=n>_get_csv_type</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>col</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__cols</span><span class=p>:</span>
+            <span class=k>yield</span> <span class=n>data</span><span class=o>.</span><span class=n>_get_csv_value</span><span class=p>(</span><span class=n>col</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_footer_comments>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.CsvWriter.get_footer_comments>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_footer_comments</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the footer comments.</span>
+
+<span class=sd>        :return: the footer comments</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=s2>"The following columns exist in this file:"</span>
+        <span class=k>yield</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>__col_time</span><span class=si>}</span><span class=s2>: The time at which the event takes place, "</span>
+               <span class=s2>"as an ISO timestamp with millisecond precision"</span><span class=p>)</span>
+        <span class=k>yield</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>__col_type</span><span class=si>}</span><span class=s2>: The type of the event. Each event type "</span>
+               <span class=s2>"has a specific meaning. See below for a list of event types."</span><span class=p>)</span>
+        <span class=n>cols</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>str</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>dict</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__cols</span><span class=p>)</span>
+        <span class=k>for</span> <span class=bp>cls</span> <span class=ow>in</span> <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=o>.</span><span class=n>values</span><span class=p>():</span>
+            <span class=k>for</span> <span class=n>col</span> <span class=ow>in</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_get_csv_columns</span><span class=p>():</span>
+                <span class=k>if</span> <span class=n>col</span> <span class=ow>in</span> <span class=n>cols</span><span class=p>:</span>
+                    <span class=n>desc</span> <span class=o>=</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_get_col_desc</span><span class=p>(</span><span class=n>col</span><span class=p>)</span>
+                    <span class=k>if</span> <span class=n>desc</span><span class=p>:</span>
+                        <span class=k>yield</span> <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>cols</span><span class=p>[</span><span class=n>col</span><span class=p>]</span><span class=si>}</span><span class=s2>: </span><span class=si>{</span><span class=n>desc</span><span class=si>}</span><span class=s2>"</span>
+                        <span class=k>del</span> <span class=n>cols</span><span class=p>[</span><span class=n>col</span><span class=p>]</span>
+        <span class=k>yield</span> <span class=s2>""</span>
+        <span class=k>yield</span> <span class=sa>f</span><span class=s2>"Event types (column </span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>__col_type</span><span class=si>}</span><span class=s2>):"</span>
+        <span class=k>for</span> <span class=n>name</span><span class=p>,</span> <span class=bp>cls</span> <span class=ow>in</span> <span class=n>Event</span><span class=o>.</span><span class=n>_subclasses</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+            <span class=n>desc</span> <span class=o>=</span> <span class=bp>cls</span><span class=o>.</span><span class=n>_get_event_desc</span><span class=p>()</span>
+            <span class=k>if</span> <span class=n>desc</span><span class=p>:</span>
+                <span class=k>yield</span> <span class=sa>f</span><span class=s2>"  - </span><span class=si>{</span><span class=n>name</span><span class=si>}</span><span class=s2>: </span><span class=si>{</span><span class=n>desc</span><span class=si>}</span><span class=s2>"</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=StartEvent>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.StartEvent>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>StartEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The simulation begins."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"start"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"the time when the simulation begins"</span></div>
+
+
+
+<div class=viewcode-block id=EndEvent>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.EndEvent>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>EndEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The simulation ends."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"end"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"the time when the simulation ends"</span></div>
+
+
+
+<div class=viewcode-block id=StorageEvent>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.StorageEvent>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>StorageEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store or retrieve an amount of a given material in the warehouse."""</span>
+
+    <span class=c1>#: the material to be stored in or retrieved from the warehouse</span>
+    <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+                               <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=c1>#: the amount of the material to be stored in or retrieved from the</span>
+    <span class=c1>#: warehouse</span>
+    <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>|</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>,</span>
+                 <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time when we want to store material in the warehouse</span>
+<span class=sd>        :param material: the material that we want to store/retrieve</span>
+<span class=sd>        :param amount: the amount of material to store/retrieve</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>time</span><span class=p>)</span>
+        <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>):</span>
+            <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+                <span class=n>material</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Material</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=n>Material</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=p>(</span><span class=n>Material</span><span class=p>,</span> <span class=nb>int</span><span class=p>,</span> <span class=nb>str</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"amount"</span><span class=p>,</span> <span class=n>check_int_range</span><span class=p>(</span>
+            <span class=n>amount</span><span class=p>,</span> <span class=s2>"amount"</span><span class=p>,</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>1_000_000</span><span class=p>))</span>
+
+<div class=viewcode-block id=StorageEvent.copy>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.StorageEvent.copy>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>copy</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Self</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a copy of this event.</span>
+
+<span class=sd>        :return: an independent copy of this event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>material</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span></div>
+
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_col_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_MATERIAL</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the type of material associated with the event"</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the amount of material stored or retrieved"</span>
+        <span class=k>return</span> <span class=kc>None</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_value</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_MATERIAL</span><span class=p>:</span>
+            <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>material</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=nb>str</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span>
+        <span class=k>return</span> <span class=s2>""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns of the event.</span>
+
+<span class=sd>        :return: the csv columns</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>COLUMN_MATERIAL</span><span class=p>,</span> <span class=n>COLUMN_AMOUNT</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_create</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>cols</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span>
+            <span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>],</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Event</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time</span>
+<span class=sd>        :param cols: the csv columns</span>
+<span class=sd>        :param data: the csv data</span>
+<span class=sd>        :return: the event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_MATERIAL</span><span class=p>]],</span> <span class=nb>int</span><span class=p>(</span>
+            <span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_AMOUNT</span><span class=p>]]))</span></div>
+
+
+
+<div class=viewcode-block id=WarehouseIn>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.WarehouseIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>WarehouseIn</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store material in the warehouse."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"warehouse_in"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a material has arrived at the warehouse "</span>
+                <span class=s2>"and needs to be stored; it then needs to be decided where to"</span>
+                <span class=s2>" put it."</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=WarehouseOut>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.WarehouseOut>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>WarehouseOut</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Retrieve material from the warehouse."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"warehouse_out"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a material is requested from the "</span>
+                <span class=s2>"warehouse and needs to be taken out of the stored amount of "</span>
+                <span class=s2>"this material; it then needs to be decided from which bin to"</span>
+                <span class=s2>" take it or, if there is overstock, maybe it can be taken "</span>
+                <span class=s2>"from there."</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=OverstockIn>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.OverstockIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>OverstockIn</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store material in the overstock."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"overstock_in"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a material has arrived in the warehouse,"</span>
+                <span class=s2>" but it could not be put into any bin, because all bins are "</span>
+                <span class=s2>"full; the material was placed into the 'overstock', meaning "</span>
+                <span class=s2>"that it is just laying around somewhere."</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=OverstockOut>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.OverstockOut>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>OverstockOut</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Retrieve material from the overstock."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"overstock_out"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a material was taken from the overstock:"</span>
+                <span class=s2>" this material was not in any bin, because all bins were "</span>
+                <span class=s2>"occupied; so it was just laying around."</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=BinEvent>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.BinEvent>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>BinEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store or retrieve material in/from a bin."""</span>
+
+    <span class=c1>#: the material to be stored in or retrieved from the bin</span>
+    <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+                               <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=c1>#: the bin</span>
+    <span class=n>where</span><span class=p>:</span> <span class=n>Bin</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>|</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>,</span>
+                 <span class=n>where</span><span class=p>:</span> <span class=n>Bin</span> <span class=o>|</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time when we want to store material in the warehouse</span>
+<span class=sd>        :param material: the material that we want to store/retrieve</span>
+<span class=sd>        :param where: the bin to use</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>time</span><span class=p>)</span>
+        <span class=n>needs_mat</span> <span class=o>=</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>)</span>
+        <span class=n>needs_bin</span> <span class=o>=</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>where</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>needs_mat</span> <span class=o>|</span> <span class=n>needs_bin</span><span class=p>:</span>
+            <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+                <span class=k>if</span> <span class=n>needs_mat</span><span class=p>:</span>
+                    <span class=n>material</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Material</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+                <span class=k>if</span> <span class=n>needs_bin</span><span class=p>:</span>
+                    <span class=n>where</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Bin</span><span class=p>,</span> <span class=n>where</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=n>Material</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=p>(</span><span class=n>Material</span><span class=p>,</span> <span class=nb>int</span><span class=p>,</span> <span class=nb>str</span><span class=p>))</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>where</span><span class=p>,</span> <span class=n>Bin</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>where</span><span class=p>,</span> <span class=s2>"where"</span><span class=p>,</span> <span class=p>(</span><span class=n>Bin</span><span class=p>,</span> <span class=nb>int</span><span class=p>,</span> <span class=nb>str</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"where"</span><span class=p>,</span> <span class=n>where</span><span class=p>)</span>
+
+<div class=viewcode-block id=BinEvent.copy>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.BinEvent.copy>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>copy</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Self</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a copy of this event.</span>
+
+<span class=sd>        :return: an independent copy of this event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>time</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>material</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>where</span><span class=p>)</span></div>
+
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_value</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_MATERIAL</span><span class=p>:</span>
+            <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>material</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_BIN</span><span class=p>:</span>
+            <span class=k>return</span> <span class=nb>str</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>where</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"1"</span>
+        <span class=k>return</span> <span class=s2>""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns of the event.</span>
+
+<span class=sd>        :return: the csv columns</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>COLUMN_MATERIAL</span><span class=p>,</span> <span class=n>COLUMN_BIN</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_create</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>cols</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span>
+            <span class=nb>str</span><span class=p>,</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>],</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Event</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time</span>
+<span class=sd>        :param cols: the csv columns</span>
+<span class=sd>        :param data: the csv data</span>
+<span class=sd>        :return: the event</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_MATERIAL</span><span class=p>]],</span> <span class=n>data</span><span class=p>[</span><span class=n>cols</span><span class=p>[</span><span class=n>COLUMN_BIN</span><span class=p>]])</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_col_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_MATERIAL</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the type of material associated with the event"</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_BIN</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the bin into which material was stored or taken out of"</span>
+        <span class=k>return</span> <span class=kc>None</span></div>
+
+
+
+<div class=viewcode-block id=BinIn>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.BinIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>BinIn</span><span class=p>(</span><span class=n>BinEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Put some material in a bin."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"bin_in"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"one unit of a material was stored into one bin, thus "</span>
+                <span class=s2>"fully occupying this bin."</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=BinOut>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.event.BinOut>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>BinOut</span><span class=p>(</span><span class=n>BinEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Take some material from a bin."""</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"bin_out"</span>
+
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"one unit of a material was taken out of one bin, making "</span>
+                <span class=s2>"the bin empty."</span><span class=p>)</span></div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.event</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

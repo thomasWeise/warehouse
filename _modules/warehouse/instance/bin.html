@@ -1,0 +1,235 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.bin — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/bin.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.bin</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.bin</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A class for identifying a bin.</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     m1 = Material(None, "Shoe")</span>
+<span class=sd>...     m2 = Material(1, "Hat")</span>
+<span class=sd>...     m3 = Material(2, "Skirt")</span>
+<span class=sd>...     m4 = Material(None, "T-Shirt")</span>
+<span class=sd>...     b1 = Bin(None, "shelf", m1)</span>
+<span class=sd>...     b2 = Bin(1, "cupboard")</span>
+<span class=sd>...     b3 = Bin(None, "wardrobe", 3)</span>
+<span class=sd>...     b4 = Bin(None, "drawer", "Skirt")</span>
+<span class=sd>...     b5 = Bin(4, "shed", None)</span>
+
+<span class=sd>>>> repr(b1)</span>
+<span class=sd>"Bin(key=0, name='shelf', material=Material(key=0, name='Shoe'))"</span>
+<span class=sd>>>> repr(b2)</span>
+<span class=sd>"Bin(key=1, name='cupboard', material=None)"</span>
+<span class=sd>>>> repr(b3)</span>
+<span class=sd>"Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt'))"</span>
+<span class=sd>>>> repr(b4)</span>
+<span class=sd>"Bin(key=3, name='drawer', material=Material(key=2, name='Skirt'))"</span>
+<span class=sd>>>> repr(b5)</span>
+<span class=sd>"Bin(key=4, name='shed', material=None)"</span>
+
+<span class=sd>>>> csv_1 = list(Bin.to_csv((b1, b2, b3, b4, b5)))</span>
+<span class=sd>>>> for row in csv_1[:-3]:</span>
+<span class=sd>...     print(row)</span>
+<span class=sd>key;name;material</span>
+<span class=sd>0;shelf;Shoe</span>
+<span class=sd>1;cupboard</span>
+<span class=sd>2;wardrobe;T-Shirt</span>
+<span class=sd>3;drawer;Skirt</span>
+<span class=sd>4;shed</span>
+<span class=sd># key: the unique key of the element within its type</span>
+<span class=sd># name: the unique name of the element (unique over all elements of all types)</span>
+<span class=sd># material: the material to be stored in the bin; empty for random bins</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     m1 = Material(None, "Shoe")</span>
+<span class=sd>...     m2 = Material(1, "Hat")</span>
+<span class=sd>...     m3 = Material(2, "Skirt")</span>
+<span class=sd>...     m4 = Material(None, "T-Shirt")</span>
+<span class=sd>...     for xbin in Bin.from_csv(csv_1):</span>
+<span class=sd>...         print(repr(xbin))</span>
+<span class=sd>Bin(key=0, name='shelf', material=Material(key=0, name='Shoe'))</span>
+<span class=sd>Bin(key=1, name='cupboard', material=None)</span>
+<span class=sd>Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt'))</span>
+<span class=sd>Bin(key=3, name='drawer', material=Material(key=2, name='Skirt'))</span>
+<span class=sd>Bin(key=4, name='shed', material=None)</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>TypeVar</span><span class=p>,</span> <span class=n>cast</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>csv_column_or_none</span><span class=p>,</span>
+    <span class=n>csv_scope</span><span class=p>,</span>
+    <span class=n>csv_str_or_none</span><span class=p>,</span>
+    <span class=n>csv_val_or_none</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>type_error</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvReader</span> <span class=k>as</span> <span class=n>CsvReaderBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvWriter</span> <span class=k>as</span> <span class=n>CsvWriterBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>Element</span><span class=p>,</span> <span class=n>context</span><span class=p>,</span> <span class=n>prepare_to_csv</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.material</span><span class=w> </span><span class=kn>import</span> <span class=n>Material</span>
+
+<span class=c1>#: the CSV material column</span>
+<span class=n>COLUMN_MATERIAL</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"material"</span>
+
+
+<div class=viewcode-block id=Bin>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.Bin>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>Bin</span><span class=p>(</span><span class=n>Element</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A class for describing bins."""</span>
+
+    <span class=c1>#: the material bins that can only contain one material (fixed</span>
+    <span class=c1>#: bins), `None` for random bins that can contain any material</span>
+    <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>|</span> <span class=kc>None</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>key</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>,</span> <span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span>
+                 <span class=n>material</span><span class=p>:</span> <span class=n>Material</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a new bin.</span>
+
+<span class=sd>        :param key: the bin key</span>
+<span class=sd>        :param name: the bin name</span>
+<span class=sd>        :param material: the material or material name</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+            <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>key</span><span class=o>=</span><span class=n>key</span><span class=p>,</span> <span class=n>name</span><span class=o>=</span><span class=n>name</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>material</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span><span class=p>):</span>
+                    <span class=n>material</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Material</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=n>Material</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=p>(</span>
+                        <span class=nb>str</span><span class=p>,</span> <span class=n>Material</span><span class=p>,</span> <span class=nb>type</span><span class=p>(</span><span class=kc>None</span><span class=p>)))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"material"</span><span class=p>,</span> <span class=n>material</span><span class=p>)</span>
+
+<div class=viewcode-block id=Bin.to_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.Bin.to_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Bin"</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>   <span class=c1># type: ignore</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Convert an iterable of the object to a CSV stream.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :return: the stream</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>CsvWriter</span><span class=p>[</span><span class=n>Bin</span><span class=p>]</span><span class=o>.</span><span class=n>write</span><span class=p>(</span>  <span class=c1># type: ignore</span>
+            <span class=n>data</span><span class=o>=</span><span class=n>prepare_to_csv</span><span class=p>(</span><span class=n>data</span><span class=p>))</span>  <span class=c1># type: ignore</span></div>
+
+
+<div class=viewcode-block id=Bin.from_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.Bin.from_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>rows</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Bin"</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the data from CSV.</span>
+
+<span class=sd>        :param rows: the rows</span>
+<span class=sd>        :return: the sequence of objects</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=k>yield from</span> <span class=n>CsvReader</span><span class=p>[</span><span class=n>Bin</span><span class=p>]</span><span class=o>.</span><span class=n>read</span><span class=p>(</span><span class=n>rows</span><span class=o>=</span><span class=n>rows</span><span class=p>,</span> <span class=n>clazz</span><span class=o>=</span><span class=bp>cls</span><span class=p>)</span></div>
+</div>
+
+
+
+<span class=c1>#: the type variable for data to be written to CSV or to be read from CSV</span>
+<span class=n>T</span> <span class=o>=</span> <span class=n>TypeVar</span><span class=p>(</span><span class=s2>"T"</span><span class=p>,</span> <span class=n>bound</span><span class=o>=</span><span class=s2>"Bin"</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=CsvReader>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvReader>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvReader</span><span class=p>(</span><span class=n>CsvReaderBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""A CsvReader that reads named objects from a CSV file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>columns</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span><span class=p>],</span>
+                 <span class=n>clazz</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>]</span> <span class=o>=</span> <span class=n>cast</span><span class=p>(</span><span class=s2>"type[T]"</span><span class=p>,</span> <span class=n>Bin</span><span class=p>)):</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize.</span>
+
+<span class=sd>        :param columns: the named object columns</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>clazz</span><span class=p>)</span>
+        <span class=c1>#: the material key</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_material_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column_or_none</span><span class=p>(</span>
+            <span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_MATERIAL</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+
+<div class=viewcode-block id=CsvReader.parse_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvReader.parse_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>parse_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Parse a data row.</span>
+
+<span class=sd>        :param data: the data row</span>
+<span class=sd>        :return: the instance</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>clazz</span><span class=p>(</span><span class=n>key</span><span class=o>=</span><span class=n>csv_val_or_none</span><span class=p>(</span>
+            <span class=n>data</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>),</span> <span class=n>name</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=p>],</span>
+            <span class=n>material</span><span class=o>=</span><span class=n>csv_str_or_none</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_material_key</span><span class=p>))</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=CsvWriter>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvWriter>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvWriter</span><span class=p>(</span><span class=n>CsvWriterBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""Write the data to a csv file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>scope</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize the CSV writer.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :param scope: the scope</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=n>scope</span><span class=p>)</span>
+
+        <span class=n>needs_material</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=kc>False</span>
+        <span class=k>for</span> <span class=n>xbin</span> <span class=ow>in</span> <span class=n>data</span><span class=p>:</span>
+            <span class=k>if</span> <span class=n>xbin</span><span class=o>.</span><span class=n>material</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=n>needs_material</span> <span class=o>=</span> <span class=kc>True</span>
+                <span class=k>break</span>
+
+        <span class=c1>#: the key column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_material</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span>
+            <span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_MATERIAL</span><span class=p>)</span> <span class=k>if</span> <span class=n>needs_material</span> <span class=k>else</span> <span class=kc>None</span>
+
+<div class=viewcode-block id=CsvWriter.get_column_titles>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvWriter.get_column_titles>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_column_titles</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column titles.</span>
+
+<span class=sd>        :returns: the column titles</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_column_titles</span><span class=p>()</span>
+        <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_material</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_material</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvWriter.get_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Render a single named object  CSV row.</span>
+
+<span class=sd>        :param data: the named object</span>
+<span class=sd>        :returns: the row iterator</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_row</span><span class=p>(</span><span class=n>data</span><span class=p>)</span>
+        <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_material</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=k>yield</span> <span class=s2>""</span> <span class=k>if</span> <span class=n>data</span><span class=o>.</span><span class=n>material</span> <span class=ow>is</span> <span class=kc>None</span> <span class=k>else</span> <span class=n>data</span><span class=o>.</span><span class=n>material</span><span class=o>.</span><span class=n>name</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_footer_comments>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.bin.CsvWriter.get_footer_comments>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_footer_comments</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the footer comments.</span>
+
+<span class=sd>        :return: the footer comments</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_footer_comments</span><span class=p>()</span>
+        <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_material</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=k>yield</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_material</span><span class=si>}</span><span class=s2>: the material to be stored in "</span>
+                   <span class=s2>"the bin; empty for random bins"</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.bin</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

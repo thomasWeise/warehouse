@@ -1,0 +1,564 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.element — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/element.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.element</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.element</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A class for identifying an element.</span>
+
+<span class=sd>Element objects are the basis for our model.</span>
+<span class=sd>They are the base classes for bins and materials.</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     e1 = Element(0, "A")</span>
+<span class=sd>...     e2 = Element(None, "B")</span>
+<span class=sd>...     e3 = Element(2, "C")</span>
+<span class=sd>...     e4 = Element(None, "D")</span>
+
+<span class=sd>>>> str(e1)</span>
+<span class=sd>'E0'</span>
+<span class=sd>>>> str(e2)</span>
+<span class=sd>'E1'</span>
+<span class=sd>>>> str(e3)</span>
+<span class=sd>'E2'</span>
+<span class=sd>>>> str(e4)</span>
+<span class=sd>'E3'</span>
+
+<span class=sd>>>> repr(e1)</span>
+<span class=sd>"Element(key=0, name='A')"</span>
+<span class=sd>>>> repr(e2)</span>
+<span class=sd>"Element(key=1, name='B')"</span>
+<span class=sd>>>> repr(e3)</span>
+<span class=sd>"Element(key=2, name='C')"</span>
+<span class=sd>>>> repr(e4)</span>
+<span class=sd>"Element(key=3, name='D')"</span>
+
+
+<span class=sd>>>> csv1 = list(Element.to_csv((e1, e2, e3, e4)))</span>
+<span class=sd>>>> for txt in csv1[:-3]:</span>
+<span class=sd>...     print(txt)</span>
+<span class=sd>key;name</span>
+<span class=sd>0;A</span>
+<span class=sd>1;B</span>
+<span class=sd>2;C</span>
+<span class=sd>3;D</span>
+<span class=sd># key: the unique key of the element within its type</span>
+<span class=sd># name: the unique name of the element (unique over all elements of all types)</span>
+
+<span class=sd>>>> for elem in Element.from_csv(csv1):</span>
+<span class=sd>...     print(repr(elem))</span>
+<span class=sd>Element(key=0, name='A')</span>
+<span class=sd>Element(key=1, name='B')</span>
+<span class=sd>Element(key=2, name='C')</span>
+<span class=sd>Element(key=3, name='D')</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>contextlib</span><span class=w> </span><span class=kn>import</span> <span class=n>suppress</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span><span class=p>,</span> <span class=n>field</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>Self</span><span class=p>,</span> <span class=n>TypeVar</span><span class=p>,</span> <span class=n>cast</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>CSV_SEPARATOR</span><span class=p>,</span>
+    <span class=n>csv_column</span><span class=p>,</span>
+    <span class=n>csv_column_or_none</span><span class=p>,</span>
+    <span class=n>csv_scope</span><span class=p>,</span>
+    <span class=n>csv_val_or_none</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvReader</span> <span class=k>as</span> <span class=n>CsvReaderBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvWriter</span> <span class=k>as</span> <span class=n>CsvWriterBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>check_int_range</span>
+
+<span class=c1>#: the CSV key column</span>
+<span class=n>COLUMN_KEY</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"key"</span>
+<span class=c1>#: the CSV name column</span>
+<span class=n>COLUMN_NAME</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"name"</span>
+
+
+<div class=viewcode-block id=Element>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.Element>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>Element</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""A class representing the basic elements of our simulation."""</span>
+
+    <span class=c1>#: the internal object id</span>
+    <span class=n>key</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+    <span class=c1>#: the name of the element</span>
+    <span class=n>name</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+    <span class=c1>#: the unique hash key</span>
+    <span class=n>_hash</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>repr</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=nb>hash</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>key</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>,</span> <span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>):</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a new element.</span>
+
+<span class=sd>        :param key: the unique key identifying the object within its type</span>
+<span class=sd>        :param name: the element name</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+            <span class=n>ctx</span><span class=o>.</span><span class=n>_create_element</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>key</span><span class=p>,</span> <span class=n>name</span><span class=p>)</span>  <span class=c1># type: ignore  # noqa</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__hash__</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the hash code of the element.</span>
+
+<span class=sd>        :return: the hash code</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> hash(a)</span>
+<span class=sd>        0</span>
+<span class=sd>        >>> hash(b)</span>
+<span class=sd>        1</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_hash</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__str__</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the string representation of the element.</span>
+
+<span class=sd>        :return: the string representation</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> str(a)</span>
+<span class=sd>        'E0'</span>
+<span class=sd>        >>> str(b)</span>
+<span class=sd>        'E1'</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=o>.</span><span class=vm>__name__</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=si>}{</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span><span class=si>}</span><span class=s2>"</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__lt__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "smaller".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is less, `False` otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a < b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> a < a</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b < b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b < a</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o><</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__le__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "smaller or equal".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is less or equal, `False`</span>
+<span class=sd>            otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a <= b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> a <= a</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b <= b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b <= a</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o><=</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__eq__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "equality".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is equal, `False` otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a == b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> a == a</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b == b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b == a</span>
+<span class=sd>        False</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ge__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "greater or equal".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is greater or equal, `False`</span>
+<span class=sd>            otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a >= b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> a >= a</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b >= b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> b >= a</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>>=</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__gt__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "greater".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is greater, `False` otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a > b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> a > a</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b > b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b > a</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>></span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ne__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two elements for "not equal".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is not equal, `False` otherwise</span>
+
+<span class=sd>        >>> with context():</span>
+<span class=sd>        ...     a = Element(None, "A")</span>
+<span class=sd>        ...     b = Element(1, "B")</span>
+
+<span class=sd>        >>> a != b</span>
+<span class=sd>        True</span>
+<span class=sd>        >>> a != a</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b != b</span>
+<span class=sd>        False</span>
+<span class=sd>        >>> b != a</span>
+<span class=sd>        True</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>other</span><span class=p>,</span> <span class=n>Element</span><span class=p>)</span> \
+            <span class=k>else</span> <span class=bp>NotImplemented</span>
+
+<div class=viewcode-block id=Element.to_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.Element.to_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Element"</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Convert an iterable of the object to a CSV stream.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :return: the stream</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>CsvWriter</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>data</span><span class=o>=</span><span class=n>prepare_to_csv</span><span class=p>(</span><span class=n>data</span><span class=p>))</span></div>
+
+
+<div class=viewcode-block id=Element.from_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.Element.from_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>rows</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"Element"</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the data from CSV.</span>
+
+<span class=sd>        :param rows: the rows</span>
+<span class=sd>        :return: the sequence of objects</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=k>yield from</span> <span class=n>CsvReader</span><span class=o>.</span><span class=n>read</span><span class=p>(</span><span class=n>rows</span><span class=o>=</span><span class=n>rows</span><span class=p>,</span> <span class=n>clazz</span><span class=o>=</span><span class=bp>cls</span><span class=p>)</span>   <span class=c1># type: ignore</span></div>
+</div>
+
+
+
+<span class=c1>#: the type variable for data to be written to CSV or to be read from CSV</span>
+<span class=n>T</span> <span class=o>=</span> <span class=n>TypeVar</span><span class=p>(</span><span class=s2>"T"</span><span class=p>,</span> <span class=n>bound</span><span class=o>=</span><span class=s2>"Element"</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=CsvReader>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvReader>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvReader</span><span class=p>(</span><span class=n>CsvReaderBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""A CsvReader that reads named objects from a CSV file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>columns</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span><span class=p>],</span>
+                 <span class=n>clazz</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>]</span> <span class=o>=</span> <span class=n>cast</span><span class=p>(</span><span class=s2>"type[T]"</span><span class=p>,</span> <span class=n>Element</span><span class=p>)):</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize.</span>
+
+<span class=sd>        :param columns: the named object columns</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>columns</span><span class=p>)</span>
+        <span class=c1>#: the class function</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>clazz</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>]]</span> <span class=o>=</span> <span class=n>clazz</span>
+        <span class=c1>#: the key column is required</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column_or_none</span><span class=p>(</span>
+            <span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_KEY</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+        <span class=c1>#: the name column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_NAME</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+
+<div class=viewcode-block id=CsvReader.parse_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvReader.parse_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>parse_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Parse a data row.</span>
+
+<span class=sd>        :param data: the data row</span>
+<span class=sd>        :return: the instance</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>clazz</span><span class=p>(</span><span class=n>key</span><span class=o>=</span><span class=n>csv_val_or_none</span><span class=p>(</span>
+            <span class=n>data</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>),</span> <span class=n>name</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=p>])</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=CsvWriter>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvWriter>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvWriter</span><span class=p>(</span><span class=n>CsvWriterBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""Write the data to a csv file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>scope</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize the CSV writer.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :param scope: the scope</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=n>scope</span><span class=p>)</span>
+        <span class=c1>#: the key column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_KEY</span><span class=p>)</span>
+        <span class=c1>#: column name</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_NAME</span><span class=p>)</span>
+
+<div class=viewcode-block id=CsvWriter.get_column_titles>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvWriter.get_column_titles>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_column_titles</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column titles.</span>
+
+<span class=sd>        :returns: the column titles</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_name</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_row>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvWriter.get_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Render a single element  CSV row.</span>
+
+<span class=sd>        :param data: the element</span>
+<span class=sd>        :returns: the row iterator</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=nb>str</span><span class=p>(</span><span class=n>data</span><span class=o>.</span><span class=n>key</span><span class=p>)</span>
+        <span class=k>yield</span> <span class=n>data</span><span class=o>.</span><span class=n>name</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_footer_comments>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.CsvWriter.get_footer_comments>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_footer_comments</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the footer comments.</span>
+
+<span class=sd>        :return: the footer comments</span>
+<span class=sd>        """</span>
+        <span class=k>yield</span> <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=si>}</span><span class=s2>: the unique key of the element within its type"</span>
+        <span class=k>yield</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=si>}</span><span class=s2>: the unique name of the element (unique over "</span>
+               <span class=s2>"all elements of all types)"</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=prepare_to_csv>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.prepare_to_csv>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>prepare_to_csv</span><span class=p>(</span><span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Element</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Element</span><span class=p>]:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Prepare an element stream for CSV output.</span>
+
+<span class=sd>    :param data: the data</span>
+<span class=sd>    :return: the prepared data stream</span>
+<span class=sd>    """</span>
+    <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=nb>list</span><span class=p>):</span>
+        <span class=n>data</span><span class=o>.</span><span class=n>sort</span><span class=p>()</span>
+        <span class=k>return</span> <span class=n>data</span>
+    <span class=k>return</span> <span class=nb>sorted</span><span class=p>(</span><span class=n>data</span><span class=p>)</span></div>
+
+
+
+<span class=c1>#: the singleton attr name</span>
+<span class=n>_ATTR_NAME</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"__context_instance"</span>
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>_process_name</span><span class=p>(</span><span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Process a name for lookup.</span>
+
+<span class=sd>    :param name: the name</span>
+<span class=sd>    :return: the processed name</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>str</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>lower</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>name</span><span class=p>)),</span> <span class=s2>" "</span><span class=p>,</span> <span class=s2>""</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=ElementResolver>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.ElementResolver>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>ElementResolver</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""The base class for element resolvers."""</span>
+
+<div class=viewcode-block id=ElementResolver.resolve>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.ElementResolver.resolve>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>resolve</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=bp>cls</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>name_or_key</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the element of the given name and type.</span>
+
+<span class=sd>        :param cls: the element class</span>
+<span class=sd>        :param name_or_key: the element name or key</span>
+
+<span class=sd>        :return: the element</span>
+<span class=sd>        """</span>
+        <span class=k>raise</span> <span class=ne>NotImplementedError</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=context>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.context>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>context</span><span class=p>(</span><span class=n>ElementResolver</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A context for constructing elements."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__new__</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=s2>"context"</span><span class=p>:</span>  <span class=c1># noqa</span>
+<span class=w>        </span><span class=sd>"""Initialize the context manager."""</span>
+        <span class=k>if</span> <span class=nb>hasattr</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>_ATTR_NAME</span><span class=p>):</span>
+            <span class=k>return</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>_ATTR_NAME</span><span class=p>)</span>
+
+        <span class=n>inst</span> <span class=o>=</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__new__</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span>
+        <span class=nb>setattr</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>_ATTR_NAME</span><span class=p>,</span> <span class=n>inst</span><span class=p>)</span>
+        <span class=n>inst</span><span class=o>.</span><span class=n>__depth</span> <span class=o>=</span> <span class=mi>0</span>  <span class=c1># type: ignore</span>
+        <span class=n>inst</span><span class=o>.</span><span class=n>__elements_by_name</span> <span class=o>=</span> <span class=p>{}</span>  <span class=c1># type: ignore</span>
+        <span class=n>inst</span><span class=o>.</span><span class=n>__elements_by_prepared_name</span> <span class=o>=</span> <span class=p>{}</span>  <span class=c1># type: ignore</span>
+        <span class=n>inst</span><span class=o>.</span><span class=n>__element_lists</span> <span class=o>=</span> <span class=p>{}</span>  <span class=c1># type: ignore</span>
+        <span class=k>return</span> <span class=n>inst</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__enter__</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Self</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Acquire the element construction context.</span>
+
+<span class=sd>        :return: the element construction context</span>
+<span class=sd>        """</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__depth</span> <span class=o>+=</span> <span class=mi>1</span>  <span class=c1># type: ignore</span>
+        <span class=k>return</span> <span class=bp>self</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__exit__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>exc_type</span><span class=p>,</span> <span class=n>_</span><span class=p>,</span> <span class=n>__</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Leave the element construction context.</span>
+
+<span class=sd>        :param exc_type: ignored</span>
+<span class=sd>        :returns: `True` to suppress an exception, `False` to rethrow it</span>
+<span class=sd>        """</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__depth</span> <span class=o>-=</span> <span class=mi>1</span>  <span class=c1># type: ignore</span>
+        <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>__depth</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>  <span class=c1># type: ignore</span>
+            <span class=nb>delattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span><span class=p>,</span> <span class=n>_ATTR_NAME</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>exc_type</span> <span class=ow>is</span> <span class=kc>None</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_create_element</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>element</span><span class=p>:</span> <span class=n>Element</span><span class=p>,</span>
+                        <span class=n>key</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>,</span>
+                        <span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Register an element and set its memeber variables.</span>
+
+<span class=sd>        :param element: the element to register</span>
+<span class=sd>        """</span>
+        <span class=n>use_name</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>name</span><span class=p>)</span>
+        <span class=n>use_cls</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>type</span><span class=p>]</span> <span class=o>=</span> <span class=n>element</span><span class=o>.</span><span class=vm>__class__</span>
+
+        <span class=k>if</span> <span class=n>use_cls</span> <span class=ow>not</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__element_lists</span><span class=p>:</span>  <span class=c1># type: ignore</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__element_lists</span><span class=p>[</span><span class=n>use_cls</span><span class=p>]</span> <span class=o>=</span> <span class=n>lst</span> <span class=o>=</span> <span class=p>[]</span>  <span class=c1># type: ignore</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>lst</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__element_lists</span><span class=p>[</span><span class=n>use_cls</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+        <span class=n>cls_key</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>lst</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>key</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=n>key</span> <span class=o>=</span> <span class=n>cls_key</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>element</span><span class=p>,</span> <span class=s2>"key"</span><span class=p>,</span> <span class=n>check_int_range</span><span class=p>(</span><span class=n>key</span><span class=p>,</span> <span class=s2>"key"</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>element</span><span class=p>,</span> <span class=s2>"name"</span><span class=p>,</span> <span class=n>use_name</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>key</span> <span class=o>!=</span> <span class=n>cls_key</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Element </span><span class=si>{</span><span class=n>element</span><span class=si>!r}</span><span class=s2> should have "</span>
+                             <span class=sa>f</span><span class=s2>"key </span><span class=si>{</span><span class=n>cls_key</span><span class=si>}</span><span class=s2> but has key </span><span class=si>{</span><span class=n>key</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>if</span> <span class=nb>str</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>use_name</span><span class=p>)</span> <span class=o><</span> <span class=mi>1</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Name of element </span><span class=si>{</span><span class=n>element</span><span class=si>!r}</span><span class=s2> cannot be empty, "</span>
+                             <span class=sa>f</span><span class=s2>"but got </span><span class=si>{</span><span class=n>name</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>CSV_SEPARATOR</span> <span class=ow>in</span> <span class=n>use_name</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Name of element </span><span class=si>{</span><span class=n>element</span><span class=si>!r}</span><span class=s2> must not contain "</span>
+                             <span class=sa>f</span><span class=s2>" </span><span class=si>{</span><span class=n>CSV_SEPARATOR</span><span class=si>!r}</span><span class=s2>, but got </span><span class=si>{</span><span class=n>name</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=n>check_name</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>_process_name</span><span class=p>(</span><span class=n>use_name</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>check_name</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_prepared_name</span><span class=p>:</span>  <span class=c1># type: ignore</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Element </span><span class=si>{</span><span class=n>element</span><span class=si>!r}</span><span class=s2> with name </span><span class=si>{</span><span class=n>name</span><span class=si>!r}</span><span class=s2> clashes"</span>
+                             <span class=sa>f</span><span class=s2>" with </span><span class=si>{</span><span class=n>check_name</span><span class=si>!r}</span><span class=s2> that is already in use."</span><span class=p>)</span>
+        <span class=n>lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>element</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_prepared_name</span><span class=p>[</span><span class=n>check_name</span><span class=p>]</span> <span class=o>=</span> <span class=n>element</span>  <span class=c1># type: ignore</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_name</span><span class=p>[</span><span class=n>use_name</span><span class=p>]</span> <span class=o>=</span> <span class=n>element</span>  <span class=c1># type: ignore</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=n>element</span><span class=p>,</span> <span class=s2>"_hash"</span><span class=p>,</span> <span class=nb>dict</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_name</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+
+<div class=viewcode-block id=context.resolve>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.element.context.resolve>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>resolve</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=bp>cls</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>name_or_key</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the element of the given name and type.</span>
+
+<span class=sd>        :param cls: the element class</span>
+<span class=sd>        :param name_or_key: the element name or key</span>
+
+<span class=sd>        :return: the element</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>):</span>
+            <span class=k>try</span><span class=p>:</span>
+                <span class=n>got</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__element_lists</span><span class=p>[</span><span class=bp>cls</span><span class=p>][</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>except</span> <span class=ne>IndexError</span> <span class=k>as</span> <span class=n>ie</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span><span class=si>}</span><span class=s2> with key </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2> "</span>
+                                 <span class=s2>"does not exist."</span><span class=p>)</span> <span class=kn>from</span><span class=w> </span><span class=nn>ie</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>got</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_name</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+            <span class=k>if</span> <span class=n>got</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=n>got</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__elements_by_prepared_name</span><span class=o>.</span><span class=n>get</span><span class=p>(</span>  <span class=c1># type: ignore</span>
+                    <span class=n>_process_name</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>))</span>
+                <span class=k>if</span> <span class=n>got</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+                    <span class=k>with</span> <span class=n>suppress</span><span class=p>(</span><span class=ne>ValueError</span><span class=p>,</span> <span class=ne>IndexError</span><span class=p>):</span>
+                        <span class=n>got</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__element_lists</span><span class=p>[</span><span class=bp>cls</span><span class=p>][</span>  <span class=c1># type: ignore</span>
+                            <span class=nb>int</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>)]</span>
+        <span class=k>if</span> <span class=n>got</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span><span class=si>}</span><span class=s2> with name </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2> does not exist."</span><span class=p>)</span>
+        <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>got</span><span class=o>.</span><span class=vm>__class__</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>TypeError</span><span class=p>(</span>
+                <span class=sa>f</span><span class=s2>"Expected </span><span class=si>{</span><span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span><span class=si>!r}</span><span class=s2> element with name </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2>"</span>
+                <span class=sa>f</span><span class=s2>", but got instance of </span><span class=si>{</span><span class=n>got</span><span class=o>.</span><span class=vm>__class__</span><span class=o>.</span><span class=vm>__name__</span><span class=si>!r}</span><span class=s2> instead. "</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>got</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.element</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
