@@ -9,4 +9,4 @@ def test_examples_in_examples_directory() -> None:
     """Test all the examples in the examples directory."""
     # First, we resolve the directories
     check_examples_in_dir(file_path(__file__).up(2).resolve_inside(
-        "examples"))
+        "examples"), False)

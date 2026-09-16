@@ -1,0 +1,12 @@
+time;type;material;amount;bin
+
+2026-09-16T09:00:00;start
+
+2026-09-16T09:30:00;warehouse_in;hat;10
+2026-09-16T09:40:00;warehouse_in;socks;25
+
+2026-09-16T15:23:00;warehouse_out;socks;15
+2026-09-16T16:25:00;warehouse_out;hat;5
+
+
+2026-09-17T10:05:00;warehouse_out;hat;5

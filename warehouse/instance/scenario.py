@@ -35,6 +35,9 @@ Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt')), \
 Bin(key=3, name='drawer', material=Material(key=2, name='Skirt')), \
 Bin(key=4, name='shed', material=None))
 
+>>> scenario.n_events
+2
+
 >>> scenario.events
 (StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \
 material=Material(key=2, name='Skirt'), amount=12))
@@ -46,11 +49,14 @@ material=Material(key=2, name='Skirt'), amount=12))
 
 >>> scenario_2.n_materials
 4
+
 >>> scenario_2.materials
 (Material(key=0, name='Shoe'), Material(key=1, name='Hat'), \
 Material(key=2, name='Skirt'), Material(key=3, name='T-Shirt'))
+
 >>> scenario_2.n_bins
 5
+
 >>> scenario_2.bins
 (Bin(key=0, name='shelf', material=Material(key=0, name='Shoe')), \
 Bin(key=1, name='cupboard', material=None), \
@@ -60,6 +66,7 @@ Bin(key=4, name='shed', material=None))
 
 >>> scenario_2.resolve(Bin, "shed")
 Bin(key=4, name='shed', material=None)
+
 >>> scenario_2.resolve(Bin, 3)
 Bin(key=3, name='drawer', material=Material(key=2, name='Skirt'))
 
@@ -69,6 +76,9 @@ Material(key=0, name='Shoe')
 >>> scenario_2.resolve(Material, 2)
 Material(key=2, name='Skirt')
 
+>>> scenario.n_events
+2
+
 >>> scenario_2.events
 (StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \
 material=Material(key=2, name='Skirt'), amount=12))
@@ -77,8 +87,9 @@ material=Material(key=2, name='Skirt'), amount=12))
 from dataclasses import dataclass
 from typing import Final, Iterable, TypeVar
 
-from pycommons.io.path import Path, directory_path
+from pycommons.io.path import Path, directory_path, write_lines
 from pycommons.types import type_error
+from pycommons.io.console import logger
 
 from warehouse.instance.bin import Bin
 from warehouse.instance.element import Element, ElementResolver, context
@@ -110,6 +121,8 @@ class Scenario(ElementResolver):
     n_materials: int
     #: the number of bins
     n_bins: int
+    #: the number of events
+    n_events: int
     #: the material types available for the warehouse
     materials: tuple[Material, ...]
     #: the bin configuration of the warehouse
@@ -200,6 +213,7 @@ class Scenario(ElementResolver):
 
         object.__setattr__(self, "n_materials", n_materials)
         object.__setattr__(self, "n_bins", n_bins)
+        object.__setattr__(self, "n_events", tuple.__len__(events))
         object.__setattr__(self, "materials", tuple(material_lst))
         object.__setattr__(self, "bins", tuple(bin_lst))
         object.__setattr__(self, "events", events)
@@ -236,26 +250,42 @@ class Scenario(ElementResolver):
         :return: the scenario
         """
         source: Final[Path] = directory_path(directory)
+        logger(f"Beginning to load scenario from {source!r}.")
 
         with context():
+            file: Path = source.resolve_inside(FILE_MATERIALS)
+            file.enforce_file()
+            logger(f"Now loading materials from {file!r}.")
             materials: Final[list[Material]] = []
-            with source.resolve_inside(
-                    FILE_MATERIALS).open_for_read() as stream:
+            with file.open_for_read() as stream:
                 materials.extend(Material.from_csv(stream))  # type: ignore
+            logger(f"Finished loading {len(materials)} materials "
+                   f"from {file!r}.")
 
+            file = source.resolve_inside(FILE_BINS)
+            file.enforce_file()
+            logger(f"Now loading bins from {file!r}.")
             bins: Final[list[Bin]] = []
-            with source.resolve_inside(
-                    FILE_BINS).open_for_read() as stream:
+            with file.open_for_read() as stream:
                 bins.extend(Bin.from_csv(stream))  # type: ignore
+            logger(f"Finished loading {len(bins)} bins from {file!r}.")
 
-            events_file = source.resolve_inside(FILE_EVENTS)
+            file = source.resolve_inside(FILE_EVENTS)
             events: list[Event] | None = None
-            if events_file.is_file():
+            if file.exists():
+                file.enforce_file()
+                logger(f"Now loading events from {file!r}.")
                 events = []
-                with events_file.open_for_read() as stream:
+                with file.open_for_read() as stream:
                     events.extend(Event.from_csv(stream))
+                logger(f"Finished loading {len(bins)} events "
+                       f"from {file!r}.")
+            else:
+                logger(f"{file!r} does not exist, so we cannot load bins.")
 
-            return Scenario(materials=materials, bins=bins, events=events)
+            result = Scenario(materials=materials, bins=bins, events=events)
+        logger(f"Finished loading scenario from {source!r}.")
+        return result
 
     def to_directory(self, directory: str) -> None:
         """
@@ -265,22 +295,25 @@ class Scenario(ElementResolver):
         """
         dest: Final[Path] = Path(directory)
         dest.ensure_dir_exists()
+        logger(f"Beginning to store scenario into {dest!r}.")
 
-        with dest.resolve_inside(FILE_MATERIALS).open_for_write() as stream:
-            w = stream.write
-            for row in Material.to_csv(self.materials):
-                w(row)
-                w("\n")
+        file: Path = dest.resolve_inside(FILE_MATERIALS)
+        logger(f"Storing materials into {file!r}.")
+        with file.open_for_write() as stream:
+            write_lines(Material.to_csv(self.materials), stream)
 
-        with dest.resolve_inside(FILE_BINS).open_for_write() as stream:
-            w = stream.write
-            for row in Bin.to_csv(self.bins):
-                w(row)
-                w("\n")
+        file = dest.resolve_inside(FILE_BINS)
+        logger(f"Storing bins into {file!r}.")
+        with file.open_for_write() as stream:
+            write_lines(Bin.to_csv(self.bins), stream)
 
         if tuple.__len__(self.events) > 0:
-            with dest.resolve_inside(FILE_EVENTS).open_for_write() as stream:
-                w = stream.write
-                for row in Event.to_csv(self.events):
-                    w(row)
-                    w("\n")
+            file = dest.resolve_inside(FILE_EVENTS)
+            logger(f"Storing events into {file!r}.")
+            with file.open_for_write() as stream:
+                write_lines(Event.to_csv(self.events), stream)
+        else:
+            logger("Scenario does not have events, "
+                   "so we don't need to store them.")
+
+        logger(f"Finished storing scenario into {dest!r}.")

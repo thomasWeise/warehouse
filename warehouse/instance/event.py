@@ -43,8 +43,8 @@ time;type;material;amount;bin
 2029-11-14T22:40:00+08:00;warehouse_out;Hat;8
 2030-03-10T16:26:40+08:00;overstock_in;Skirt;4
 2033-05-11T02:13:20+08:00;overstock_out;Skirt;3
-2036-07-11T12:00:00+08:00;bin_in;Hat;;cupboard
-2036-11-04T05:46:40+08:00;bin_out;Hat;;cupboard
+2036-07-11T12:00:00+08:00;bin_in;Hat;1;cupboard
+2036-11-04T05:46:40+08:00;bin_out;Hat;1;cupboard
 2036-11-11T15:06:40+08:00;end
 ------
 StartEvent(time=1789361500000)
@@ -68,8 +68,8 @@ time;type;material;amount;bin
 2029-11-14T22:40:00+08:00;warehouse_out;Hat;8
 2030-03-10T16:26:40+08:00;overstock_in;Skirt;4
 2033-05-11T02:13:20+08:00;overstock_out;Skirt;3
-2036-07-11T12:00:00+08:00;bin_in;Hat;;cupboard
-2036-11-04T05:46:40+08:00;bin_out;Hat;;cupboard
+2036-07-11T12:00:00+08:00;bin_in;Hat;1;cupboard
+2036-11-04T05:46:40+08:00;bin_out;Hat;1;cupboard
 2036-11-11T15:06:40+08:00;end
 """
 
@@ -791,6 +791,8 @@ class BinEvent(Event):
             return self.material.name
         if column == COLUMN_BIN:
             return str(self.where.name)
+        if column == COLUMN_AMOUNT:
+            return "1"
         return ""
 
     @classmethod
