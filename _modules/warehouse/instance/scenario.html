@@ -1,0 +1,300 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.scenario — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/scenario.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.scenario</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.scenario</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A warehouse setup.</span>
+
+<span class=sd>>>> from warehouse.instance.event import WarehouseIn</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     m1 = Material(None, "Shoe")</span>
+<span class=sd>...     m2 = Material(1, "Hat")</span>
+<span class=sd>...     m3 = Material(2, "Skirt")</span>
+<span class=sd>...     m4 = Material(None, "T-Shirt")</span>
+<span class=sd>...     b1 = Bin(None, "shelf", m1)</span>
+<span class=sd>...     b2 = Bin(1, "cupboard")</span>
+<span class=sd>...     b3 = Bin(None, "wardrobe", 3)</span>
+<span class=sd>...     b4 = Bin(None, "drawer", "Skirt")</span>
+<span class=sd>...     b5 = Bin(4, "shed", None)</span>
+<span class=sd>...     ev0 = StartEvent(10 ** 12 + 1)</span>
+<span class=sd>...     ev1 = WarehouseIn(10 ** 12 + 2, m3, 12)</span>
+<span class=sd>...     scenario = Scenario((m1, m2, m3, m4), (b1, b2, b3, b4, b5),</span>
+<span class=sd>...                         (ev0, ev1))</span>
+
+<span class=sd>>>> scenario.n_materials</span>
+<span class=sd>4</span>
+
+<span class=sd>>>> scenario.materials</span>
+<span class=sd>(Material(key=0, name='Shoe'), Material(key=1, name='Hat'), \</span>
+<span class=sd>Material(key=2, name='Skirt'), Material(key=3, name='T-Shirt'))</span>
+
+<span class=sd>>>> scenario.n_bins</span>
+<span class=sd>5</span>
+
+<span class=sd>>>> scenario.bins</span>
+<span class=sd>(Bin(key=0, name='shelf', material=Material(key=0, name='Shoe')), \</span>
+<span class=sd>Bin(key=1, name='cupboard', material=None), \</span>
+<span class=sd>Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt')), \</span>
+<span class=sd>Bin(key=3, name='drawer', material=Material(key=2, name='Skirt')), \</span>
+<span class=sd>Bin(key=4, name='shed', material=None))</span>
+
+<span class=sd>>>> scenario.events</span>
+<span class=sd>(StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \</span>
+<span class=sd>material=Material(key=2, name='Skirt'), amount=12))</span>
+
+<span class=sd>>>> from pycommons.io.temp import temp_dir</span>
+<span class=sd>>>> with temp_dir() as td:</span>
+<span class=sd>...     scenario.to_directory(td)</span>
+<span class=sd>...     scenario_2 = Scenario.from_directory(td)</span>
+
+<span class=sd>>>> scenario_2.n_materials</span>
+<span class=sd>4</span>
+<span class=sd>>>> scenario_2.materials</span>
+<span class=sd>(Material(key=0, name='Shoe'), Material(key=1, name='Hat'), \</span>
+<span class=sd>Material(key=2, name='Skirt'), Material(key=3, name='T-Shirt'))</span>
+<span class=sd>>>> scenario_2.n_bins</span>
+<span class=sd>5</span>
+<span class=sd>>>> scenario_2.bins</span>
+<span class=sd>(Bin(key=0, name='shelf', material=Material(key=0, name='Shoe')), \</span>
+<span class=sd>Bin(key=1, name='cupboard', material=None), \</span>
+<span class=sd>Bin(key=2, name='wardrobe', material=Material(key=3, name='T-Shirt')), \</span>
+<span class=sd>Bin(key=3, name='drawer', material=Material(key=2, name='Skirt')), \</span>
+<span class=sd>Bin(key=4, name='shed', material=None))</span>
+
+<span class=sd>>>> scenario_2.resolve(Bin, "shed")</span>
+<span class=sd>Bin(key=4, name='shed', material=None)</span>
+<span class=sd>>>> scenario_2.resolve(Bin, 3)</span>
+<span class=sd>Bin(key=3, name='drawer', material=Material(key=2, name='Skirt'))</span>
+
+<span class=sd>>>> scenario_2.resolve(Material, "Shoe")</span>
+<span class=sd>Material(key=0, name='Shoe')</span>
+
+<span class=sd>>>> scenario_2.resolve(Material, 2)</span>
+<span class=sd>Material(key=2, name='Skirt')</span>
+
+<span class=sd>>>> scenario_2.events</span>
+<span class=sd>(StartEvent(time=1000000000001), WarehouseIn(time=1000000000002, \</span>
+<span class=sd>material=Material(key=2, name='Skirt'), amount=12))</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>TypeVar</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.path</span><span class=w> </span><span class=kn>import</span> <span class=n>Path</span><span class=p>,</span> <span class=n>directory_path</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>type_error</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin</span><span class=w> </span><span class=kn>import</span> <span class=n>Bin</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>Element</span><span class=p>,</span> <span class=n>ElementResolver</span><span class=p>,</span> <span class=n>context</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>EARLIEST_START</span><span class=p>,</span>
+    <span class=n>LATEST_END</span><span class=p>,</span>
+    <span class=n>EndEvent</span><span class=p>,</span>
+    <span class=n>Event</span><span class=p>,</span>
+    <span class=n>StartEvent</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.material</span><span class=w> </span><span class=kn>import</span> <span class=n>Material</span>
+
+<span class=c1>#: the materials file</span>
+<span class=n>FILE_MATERIALS</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"materials.csv"</span>
+<span class=c1>#: the bins file</span>
+<span class=n>FILE_BINS</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"bins.csv"</span>
+<span class=c1>#: the events file</span>
+<span class=n>FILE_EVENTS</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"events.csv"</span>
+
+<span class=c1>#: the type variable for data to be written to CSV or to be read from CSV</span>
+<span class=n>T</span> <span class=o>=</span> <span class=n>TypeVar</span><span class=p>(</span><span class=s2>"T"</span><span class=p>,</span> <span class=n>bound</span><span class=o>=</span><span class=n>Element</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=Scenario>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.scenario.Scenario>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>Scenario</span><span class=p>(</span><span class=n>ElementResolver</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A warehousing scenario."""</span>
+
+    <span class=c1>#: the number of materials</span>
+    <span class=n>n_materials</span><span class=p>:</span> <span class=nb>int</span>
+    <span class=c1>#: the number of bins</span>
+    <span class=n>n_bins</span><span class=p>:</span> <span class=nb>int</span>
+    <span class=c1>#: the material types available for the warehouse</span>
+    <span class=n>materials</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Material</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span>
+    <span class=c1>#: the bin configuration of the warehouse</span>
+    <span class=n>bins</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Bin</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span>
+    <span class=c1>#: the pre-defined events for the scenario</span>
+    <span class=n>events</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Event</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>materials</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Material</span><span class=p>],</span>
+                 <span class=n>bins</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Bin</span><span class=p>],</span>
+                 <span class=n>events</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Event</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create an instance of the warehousing scenario.</span>
+
+<span class=sd>        :param materials: the materials</span>
+<span class=sd>        :param bins: the bins</span>
+<span class=sd>        :param events: the events</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>materials</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>materials</span><span class=p>,</span> <span class=s2>"materials"</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>)</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>bins</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>bins</span><span class=p>,</span> <span class=s2>"bins"</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>)</span>
+
+        <span class=n>material_lst</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Material</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>bin_lst</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Bin</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>names</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=n>Element</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>material</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>materials</span><span class=p>):</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=n>Material</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>material</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"materials[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>Material</span><span class=p>)</span>
+            <span class=n>name</span> <span class=o>=</span> <span class=n>material</span><span class=o>.</span><span class=n>name</span>
+            <span class=k>if</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>names</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Name of </span><span class=si>{</span><span class=n>material</span><span class=si>!r}</span><span class=s2> already in use."</span><span class=p>)</span>
+            <span class=n>names</span><span class=p>[</span><span class=n>material</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>material</span>
+            <span class=n>material_lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>material</span><span class=p>)</span>
+
+        <span class=n>n_materials</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>material_lst</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>n_materials</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>"No materials specified."</span><span class=p>)</span>
+
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>xbin</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>bins</span><span class=p>):</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>xbin</span><span class=p>,</span> <span class=n>Bin</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>xbin</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"bins[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>Bin</span><span class=p>)</span>
+            <span class=n>name</span> <span class=o>=</span> <span class=n>xbin</span><span class=o>.</span><span class=n>name</span>
+            <span class=k>if</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>names</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Name of </span><span class=si>{</span><span class=n>xbin</span><span class=si>!r}</span><span class=s2> already in use."</span><span class=p>)</span>
+            <span class=n>names</span><span class=p>[</span><span class=n>xbin</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>xbin</span>
+            <span class=n>bin_lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>xbin</span><span class=p>)</span>
+
+        <span class=n>n_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>bin_lst</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>n_bins</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>"No bins specified."</span><span class=p>)</span>
+
+        <span class=n>material_lst</span><span class=o>.</span><span class=n>sort</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>material</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>material_lst</span><span class=p>):</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>material</span><span class=o>.</span><span class=n>key</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Inconsistent key for </span><span class=si>{</span><span class=n>material</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=n>bin_lst</span><span class=o>.</span><span class=n>sort</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>xbin</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>bin_lst</span><span class=p>):</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>xbin</span><span class=o>.</span><span class=n>key</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Inconsistent key for </span><span class=si>{</span><span class=n>xbin</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>events</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=n>events</span> <span class=o>=</span> <span class=p>()</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>events</span> <span class=o>=</span> <span class=nb>sorted</span><span class=p>(</span><span class=n>events</span><span class=p>)</span>
+            <span class=n>last_time</span> <span class=o>=</span> <span class=n>EARLIEST_START</span>
+            <span class=n>i</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span>
+            <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>event</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>events</span><span class=p>):</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>Event</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"event[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>Event</span><span class=p>)</span>
+                <span class=n>time</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=p>(</span><span class=n>EARLIEST_START</span> <span class=o><=</span> <span class=n>last_time</span> <span class=o><=</span> <span class=n>time</span> <span class=o><=</span> <span class=n>LATEST_END</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Inconsistent time for </span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>last_time</span> <span class=o>=</span> <span class=n>time</span>
+                <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>StartEvent</span><span class=p>):</span>
+                    <span class=k>if</span> <span class=n>i</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                            <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2> not permitted at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=k>elif</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>EndEvent</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+                        <span class=n>i</span> <span class=o><</span> <span class=p>(</span><span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>events</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>)):</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2> not permitted at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=p>()</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>events</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>StartEvent</span><span class=p>):</span>
+                    <span class=n>events</span><span class=o>.</span><span class=n>insert</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=n>StartEvent</span><span class=p>(</span><span class=n>events</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>time</span><span class=p>))</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>events</span><span class=p>)</span>
+
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"n_materials"</span><span class=p>,</span> <span class=n>n_materials</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"n_bins"</span><span class=p>,</span> <span class=n>n_bins</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"materials"</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>material_lst</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"bins"</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>bin_lst</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"events"</span><span class=p>,</span> <span class=n>events</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"_names"</span><span class=p>,</span> <span class=n>names</span><span class=p>)</span>
+
+<div class=viewcode-block id=Scenario.resolve>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.scenario.Scenario.resolve>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>resolve</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=bp>cls</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>name_or_key</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the element of the given name and type.</span>
+
+<span class=sd>        :param cls: the element class</span>
+<span class=sd>        :param name_or_key: the element name or key</span>
+
+<span class=sd>        :return: the element</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>):</span>
+            <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=n>Bin</span><span class=p>:</span>
+                <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>bins</span><span class=p>[</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=n>Material</span><span class=p>:</span>
+                <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>materials</span><span class=p>[</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>raise</span> <span class=ne>TypeError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Unsupported type </span><span class=si>{</span><span class=bp>cls</span><span class=si>}</span><span class=s2> for </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=n>res</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_names</span><span class=p>[</span>  <span class=c1># type: ignore  # noqa  # pylint: disable=E1101</span>
+            <span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>)]</span>
+        <span class=k>if</span> <span class=n>res</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=bp>cls</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>TypeError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Excepted instance of </span><span class=si>{</span><span class=bp>cls</span><span class=si>}</span><span class=s2> for </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2>,"</span>
+                            <span class=sa>f</span><span class=s2>" but got </span><span class=si>{</span><span class=n>res</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>res</span></div>
+
+
+<div class=viewcode-block id=Scenario.from_directory>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.scenario.Scenario.from_directory>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_directory</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>directory</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=s2>"Scenario"</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Load a scenario from a directory.</span>
+
+<span class=sd>        :param directory: the directory</span>
+<span class=sd>        :return: the scenario</span>
+<span class=sd>        """</span>
+        <span class=n>source</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Path</span><span class=p>]</span> <span class=o>=</span> <span class=n>directory_path</span><span class=p>(</span><span class=n>directory</span><span class=p>)</span>
+
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=n>materials</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Material</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+            <span class=k>with</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span>
+                    <span class=n>FILE_MATERIALS</span><span class=p>)</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>materials</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>Material</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>  <span class=c1># type: ignore</span>
+
+            <span class=n>bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Bin</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+            <span class=k>with</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span>
+                    <span class=n>FILE_BINS</span><span class=p>)</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>bins</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>Bin</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>  <span class=c1># type: ignore</span>
+
+            <span class=n>events_file</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_EVENTS</span><span class=p>)</span>
+            <span class=n>events</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Event</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span>
+            <span class=k>if</span> <span class=n>events_file</span><span class=o>.</span><span class=n>is_file</span><span class=p>():</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=p>[]</span>
+                <span class=k>with</span> <span class=n>events_file</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                    <span class=n>events</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>Event</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>
+
+            <span class=k>return</span> <span class=n>Scenario</span><span class=p>(</span><span class=n>materials</span><span class=o>=</span><span class=n>materials</span><span class=p>,</span> <span class=n>bins</span><span class=o>=</span><span class=n>bins</span><span class=p>,</span> <span class=n>events</span><span class=o>=</span><span class=n>events</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=Scenario.to_directory>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.scenario.Scenario.to_directory>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_directory</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>directory</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Store a scenario into a directory.</span>
+
+<span class=sd>        :param directory: the directory</span>
+<span class=sd>        """</span>
+        <span class=n>dest</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Path</span><span class=p>]</span> <span class=o>=</span> <span class=n>Path</span><span class=p>(</span><span class=n>directory</span><span class=p>)</span>
+        <span class=n>dest</span><span class=o>.</span><span class=n>ensure_dir_exists</span><span class=p>()</span>
+
+        <span class=k>with</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_MATERIALS</span><span class=p>)</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+            <span class=n>w</span> <span class=o>=</span> <span class=n>stream</span><span class=o>.</span><span class=n>write</span>
+            <span class=k>for</span> <span class=n>row</span> <span class=ow>in</span> <span class=n>Material</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>materials</span><span class=p>):</span>
+                <span class=n>w</span><span class=p>(</span><span class=n>row</span><span class=p>)</span>
+                <span class=n>w</span><span class=p>(</span><span class=s2>"</span><span class=se>\n</span><span class=s2>"</span><span class=p>)</span>
+
+        <span class=k>with</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_BINS</span><span class=p>)</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+            <span class=n>w</span> <span class=o>=</span> <span class=n>stream</span><span class=o>.</span><span class=n>write</span>
+            <span class=k>for</span> <span class=n>row</span> <span class=ow>in</span> <span class=n>Bin</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>bins</span><span class=p>):</span>
+                <span class=n>w</span><span class=p>(</span><span class=n>row</span><span class=p>)</span>
+                <span class=n>w</span><span class=p>(</span><span class=s2>"</span><span class=se>\n</span><span class=s2>"</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>events</span><span class=p>)</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>with</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_EVENTS</span><span class=p>)</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>w</span> <span class=o>=</span> <span class=n>stream</span><span class=o>.</span><span class=n>write</span>
+                <span class=k>for</span> <span class=n>row</span> <span class=ow>in</span> <span class=n>Event</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>events</span><span class=p>):</span>
+                    <span class=n>w</span><span class=p>(</span><span class=n>row</span><span class=p>)</span>
+                    <span class=n>w</span><span class=p>(</span><span class=s2>"</span><span class=se>\n</span><span class=s2>"</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.scenario</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
