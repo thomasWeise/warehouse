@@ -75,7 +75,7 @@ time;type;material;amount;bin
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import ClassVar, Final, Iterable
+from typing import ClassVar, Final, Iterable, Self
 from zoneinfo import ZoneInfo
 
 from pycommons.io.csv import CsvReader as CsvReaderBase
@@ -159,7 +159,7 @@ class Event:
     """The base class for events."""
 
     #: all subclasses
-    _subclasses: ClassVar[Final[dict[str, type["Event"]]]] = {}
+    _subclasses: ClassVar[dict[str, type["Event"]]] = {}
 
     #: the time associated with the event
     time: int = field(init=False, repr=True, hash=False, compare=False)
@@ -236,6 +236,14 @@ class Event:
         """
         object.__setattr__(self, "time", check_int_range(
             time, "time", EARLIEST_START, LATEST_END))
+
+    def copy(self) -> Self:
+        """
+        Create a copy of this event.
+
+        :return: an independent copy of this event
+        """
+        return self.__class__(self.time)
 
     def __hash__(self) -> int:
         """
@@ -570,6 +578,14 @@ class StorageEvent(Event):
         object.__setattr__(self, "amount", check_int_range(
             amount, "amount", 1, 1_000_000))
 
+    def copy(self) -> Self:
+        """
+        Create a copy of this event.
+
+        :return: an independent copy of this event
+        """
+        return self.__class__(self.time, self.material, self.amount)
+
     @classmethod
     def _get_col_desc(cls, col: str) -> str | None:
         """
@@ -755,6 +771,14 @@ class BinEvent(Event):
             raise type_error(where, "where", (Bin, int, str))
         object.__setattr__(self, "material", material)
         object.__setattr__(self, "where", where)
+
+    def copy(self) -> Self:
+        """
+        Create a copy of this event.
+
+        :return: an independent copy of this event
+        """
+        return self.__class__(self.time, self.material, self.where)
 
     def _get_csv_value(self, column: str) -> str:
         """
