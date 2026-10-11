@@ -2,4 +2,4 @@
 # Dependencies Required to Use `warehouse`
 
 # the common tools package
-pycommons == 0.8.105
+pycommons == 0.8.107

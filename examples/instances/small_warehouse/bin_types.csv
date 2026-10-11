@@ -1,0 +1,6 @@
+key;name;amount
+0;random_small;1024
+1;random_large;512
+2;hat_bins;256
+3;shoe_bin;128
+4;sock_bin;64

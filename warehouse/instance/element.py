@@ -4,6 +4,16 @@ A class for identifying an element.
 Element objects are the basis for our model.
 They are the base classes for bins and materials.
 
+Note regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only* use
+the :attr:`~Element.key` attribute.
+The same holds for the hash code returned by :func:`hash`.
+This if for performance reasons, as sorting and priority-queueing usually only
+use `<` comparisons and each element with a different key must also have a
+different name anyway.
+
+However, `==` and `!=` *also* use the :attr:`~Element.name` attribute.
+This may be useful for comparing data across instances.
+
 >>> with context():
 ...     e1 = Element(0, "A")
 ...     e2 = Element(None, "B")
@@ -191,8 +201,8 @@ class Element:
         >>> b == a
         False
         """
-        return (self.key == other.key) if isinstance(other, Element) \
-            else NotImplemented
+        return ((self.key == other.key) and (self.name == other.name)) \
+            if isinstance(other, Element) else NotImplemented
 
     def __ge__(self, other) -> bool:
         """
@@ -261,8 +271,8 @@ class Element:
         >>> b != a
         True
         """
-        return (self.key != other.key) if isinstance(other, Element) \
-            else NotImplemented
+        return ((self.key != other.key) or (self.name != other.name)) \
+            if isinstance(other, Element) else NotImplemented
 
     @classmethod
     def to_csv(cls, data: Iterable["Element"]) -> Iterable[str]:
@@ -449,7 +459,7 @@ class context(ElementResolver):
                         key: int | None,
                         name: str) -> None:
         """
-        Register an element and set its memeber variables.
+        Register an element and set its member variables.
 
         :param element: the element to register
         """

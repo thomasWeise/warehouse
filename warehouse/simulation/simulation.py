@@ -1,99 +1,100 @@
 """The warehouse simulation."""
 
+from array import array
 from heapq import heapify, heappop, heappush
 from typing import Callable, Final, Generator, Iterable
 
 from pycommons.types import type_error
 
-from warehouse.instance.bin import Bin
-from warehouse.instance.event import (
-    EARLIEST_START,
-    BinIn,
-    BinOut,
-    EndEvent,
-    Event,
+from warehouse.event.bins import BinEvent, BinIn, BinOut
+from warehouse.event.storage import (
+    InsufficientMaterial,
     OverstockIn,
     OverstockOut,
-    StartEvent,
+    StorageEvent,
     WarehouseIn,
     WarehouseOut,
 )
-from warehouse.instance.scenario import Scenario
+from warehouse.event.time import (
+    EndEvent,
+    StartEvent,
+)
+from warehouse.instance.bin_type import BinType
+from warehouse.instance.event import Event
+from warehouse.instance.instance import Instance
+from warehouse.instance.material import Material
+from warehouse.instance.time import EARLIEST_START, LATEST_END
 
 
 class Simulation:
     """A warehouse simulation."""
 
-    def __init__(self, scenario: Scenario) -> None:
+    def __init__(self, instance: Instance) -> None:
         """
         Create the simulation.
 
-        :param scenario: the scenario to simulate
+        :param instance: the scenario/instance to simulate
         """
-        if not isinstance(scenario, Scenario):
-            raise type_error(scenario, "scenarion", Scenario)
+        if not isinstance(instance, Instance):
+            raise type_error(instance, "instance", Instance)
 
-        #: the scenario we are simulating
-        self.scenario: Final[Scenario] = scenario
+        #: the instance we are simulating
+        self.instance: Final[Instance] = instance
         #: the time index
         self.time: int = EARLIEST_START
 
         #: the internal queue
         self.__queue: Final[list[Event]] = []
-        #: the amount of over
-        self.__overstock: Final[list[int]] = [0] * scenario.n_materials
 
-        #: the eligible bins for a given material
-        self.__empty_material_bins: Final[tuple[list[int], ...]] = tuple(
-            [] for _ in range(scenario.n_materials))
-        #: the empty random bins
-        self.__empty_random_bins: Final[list[int]] = []
-        #: the used bins for a given material
-        self.__used_material_bins: Final[tuple[list[int], ...]] = tuple(
-            [] for _ in range(scenario.n_materials))
+        #: the amount of materials currently in overstock
+        self.__in_overstock: Final[array[int]] = array(
+            "q", [0] * instance.n_materials)
+        #: the empty bins of the given types
+        self.__empty_bins: Final[array[int]] = array(
+            "q", [0] * instance.n_bin_types)
+        #: the amount of the material currently inside bins
+        self.__in_bins: Final[array[int]] = array(
+            "q", self.__in_overstock)
 
-        use_material = scenario.materials[0]
-        use_bin = scenario.bins[0]
+        use_material: Final[Material] = instance.materials[0]
+        use_bin_type: Final[BinType] = instance.bin_types[0]
+
         #: the shared BinIn event
         self.__bin_in: Final[BinIn] = BinIn(
-            EARLIEST_START, use_material, use_bin)
+            EARLIEST_START, use_material, 1, use_bin_type)
         #: the shared BinOut event
         self.__bin_out: Final[BinOut] = BinOut(
-            EARLIEST_START, use_material, use_bin)
+            EARLIEST_START, use_material, 1, use_bin_type)
         #: the shared overstock in event
         self.__overstock_in: Final[OverstockIn] = OverstockIn(
             EARLIEST_START, use_material, 1)
         #: the shared overstock out event
         self.__overstock_out: Final[OverstockOut] = OverstockOut(
             EARLIEST_START, use_material, 1)
+        #: the shared insufficient event
+        self.__insufficient: Final[InsufficientMaterial] = \
+            InsufficientMaterial(EARLIEST_START, use_material, 1)
         #: the bins
-        self.__bins: Final[tuple[Bin, ...]] = scenario.bins
+        self.__bin_types: Final[tuple[BinType, ...]] = instance.bin_types
 
     def __start(self) -> None:
         """Begin the simulation."""
-        os: Final[list[int]] = self.__overstock
-        emb: Final[tuple[list[int], ...]] = self.__empty_material_bins
-        erb: Final[list[int]] = self.__empty_random_bins
-        umb: Final[tuple[list[int], ...]] = self.__used_material_bins
+        ios: Final[array[int]] = self.__in_overstock
+        ib: Final[array[int]] = self.__in_bins
+        eb: Final[array[int]] = self.__empty_bins
+        bts: Final[tuple[BinType, ...]] = self.__bin_types
 
-        erb.clear()
-        for i, eb in enumerate(emb):
-            os[i] = 0
-            eb.clear()
-            umb[i].clear()
+        for i in range(array.__len__(ios)):
+            ios[i] = 0
+            ib[i] = 0
 
-        for xbin in self.scenario.bins:
-            mat = xbin.material
-            if mat is None:
-                erb.append(xbin.key)
-            else:
-                emb[mat.key].append(xbin.key)
+        for i in range(array.__len__(eb)):
+            eb[i] = bts[i].amount
 
         queue: Final[list[Event]] = self.__queue
         queue.clear()
-        queue.extend(self.scenario.events)
+        queue.extend(self.instance.events)
         heapify(queue)
-
         self.time = EARLIEST_START
 
     def simulate(self) -> Generator[Event, None, None]:
@@ -113,23 +114,23 @@ class Simulation:
 
         router: Final = _EVENT_ROUTER
         quitter = _QUIT
-        eid: int | None = None
+        end_event: Event | None = None
+        end_time: int = LATEST_END
         while queue:
             event: Event = heappop(queue)
-            self.time = event.time
-            yield event
+            self.time = time = event.time
 
             eid = id(event.__class__)
             if eid == quitter:
+                end_event = event
+                end_time = time
+                continue
+            if time > end_time:
                 break
-            nested = router(eid)(self, event)
-            if nested is not None:
-                yield from nested
+            yield from router(eid)(self, event)
 
         queue.clear()
-
-        if (eid is None) or (eid != quit):
-            yield EndEvent(self.time)
+        yield end_event if end_event is not None else EndEvent(self.time)
 
     def enqueue(self, event: Event) -> None:
         """
@@ -139,12 +140,14 @@ class Simulation:
         """
         heappush(self.__queue, event)
 
-    def _ignore(self, _: Event) -> None:
+    def _forward(self, event: Event) -> Generator[
+            Event, None, None]:
         """
-        Ignore this kind of event.
+        Ignore this kind of event and just forward it directly.
 
-        :param _: the event
+        :param event: the event
         """
+        yield event
 
     def _error(self, event: Event) -> None:
         """
@@ -168,37 +171,34 @@ class Simulation:
             to be stored
         :return: the event stream
         """
-        bin_in: Final[BinIn] = self.__bin_in
-        object.__setattr__(bin_in, "time", self.time)
-        object.__setattr__(bin_in, "material", event.material)
+        yield event
 
-        material: Final[int] = event.material.key
-        used_mat_bins: Final[list[int]] = self.__used_material_bins[material]
-        empty_mat_bins: Final[list[int]] = self.__empty_material_bins[material]
-        empty_random_bins: Final[list[int]] = self.__empty_random_bins
-        bins: Final[tuple[Bin, ...]] = self.__bins
+        material: Final[Material] = event.material
+        mat_key: Final[int] = material.key
+        bin_type: Final[BinType] = material.bin_type
+        bin_key: Final[int] = bin_type.key
         amount: int = event.amount
+        empty: Final[array[int]] = self.__empty_bins
+        in_bin: Final[array[int]] = self.__in_bins
 
-        source: list[int] = empty_mat_bins
-        while amount > 0:
-            if not source:
-                if source is empty_random_bins:
-                    break
-                source = empty_random_bins
-                continue
-            xbin = source.pop()
-            object.__setattr__(bin_in, "where", bins[xbin])
+        use: int = min(empty[bin_key], amount)
+        if use > 0:
+            bin_in: Final[BinIn] = self.__bin_in
+            bin_in.material = material
+            bin_in.bin_type = bin_type
+            bin_in.amount = use
+            empty[bin_key] -= use
+            in_bin[mat_key] += use
             yield bin_in
-            used_mat_bins.append(xbin)
-            amount -= 1
+            amount -= use
+            if amount <= 0:
+                return
 
-        if amount > 0:
-            overstock_in: Final[OverstockIn] = self.__overstock_in
-            object.__setattr__(overstock_in, "time", self.time)
-            object.__setattr__(overstock_in, "material", event.material)
-            object.__setattr__(overstock_in, "amount", amount)
-            yield overstock_in
-            self.__overstock[material] += amount
+        self.__in_overstock[mat_key] += amount
+        over_in: Final[OverstockIn] = self.__overstock_in
+        over_in.material = material
+        over_in.amount = amount
+        yield over_in
 
     def _warehouse_out(self, event: WarehouseOut) -> Generator[
             Event, None, None]:
@@ -207,45 +207,66 @@ class Simulation:
 
         :param event: the event
         """
-        material: Final[int] = event.material.key
+        material: Final[Material] = event.material
+        mat_key: Final[int] = material.key
+        bin_type: Final[BinType] = material.bin_type
+        bin_key: Final[int] = bin_type.key
         amount: int = event.amount
-        overstock: Final[list[int]] = self.__overstock
 
-        overstocked = overstock[material]
-        if overstocked > 0:
-            reduction = min(overstocked, amount)
-            amount -= reduction
-            overstock[material] = overstocked - reduction
-            overstock_out: Final[OverstockOut] = self.__overstock_out
-            object.__setattr__(overstock_out, "time", self.time)
-            object.__setattr__(overstock_out, "material", event.material)
-            object.__setattr__(overstock_out, "amount", reduction)
-            yield overstock_out
+        empty: Final[array[int]] = self.__empty_bins
+        in_bin: Final[array[int]] = self.__in_bins
+        in_over: Final[array[int]] = self.__in_overstock
 
-        if amount <= 0:
-            return
-
-        bins: Final[tuple[Bin, ...]] = self.__bins
-        used_mat_bins: Final[list[int]] = self.__used_material_bins[material]
-        empty_mat_bins: Final[list[int]] = \
-            self.__empty_material_bins[material]
-        empty_random_bins: Final[list[int]] = self.__empty_random_bins
         bin_out: Final[BinOut] = self.__bin_out
-        object.__setattr__(bin_out, "time", self.time)
-        object.__setattr__(bin_out, "material", event.material)
+        bin_out.material = material
+        bin_out.bin_type = bin_type
 
-        # We will get an IndexError if you try to take out more material than
-        # what is currently stored in the warehouse
+        has_over = in_over[mat_key]
+        has_bin = in_bin[mat_key]
+        has_empty = empty[bin_key]
+
         while amount > 0:
-            xbin = used_mat_bins.pop()
-            vbin = bins[xbin]
-            if vbin.material is None:
-                empty_random_bins.append(xbin)
-            else:
-                empty_mat_bins.append(xbin)
-            object.__setattr__(bin_out, "where", vbin)
+            use = min(has_bin, amount)
+            if use <= 0:
+                ins: InsufficientMaterial = self.__insufficient
+                ins.material = material
+                ins.amount = amount
+                yield ins
+
+                event = event.copy()
+                event.amount = amount
+                break
+
+            amount -= use
+            bin_out.amount = use
+            has_bin -= use
+            in_bin[mat_key] = has_bin
+            has_empty += use
+            empty[bin_key] = has_empty
             yield bin_out
-            amount -= 1
+
+            if has_over > 0:
+                use = min(has_empty, has_over)
+                has_over -= use
+                in_over[mat_key] = has_over
+
+                over_out = self.__overstock_out
+                over_out.material = material
+                over_out.amount = use
+                yield over_out
+
+                has_empty -= use
+                empty[bin_key] = has_empty
+                has_bin += use
+                in_bin[mat_key] = has_bin
+
+                bin_in = self.__bin_in
+                bin_in.material = material
+                bin_in.bin_type = bin_type
+                bin_in.amount = use
+                yield bin_in
+
+        yield event
 
 
 #: the end event
@@ -253,12 +274,15 @@ _QUIT: Final[int] = id(EndEvent)
 
 #: the event router
 _EVENT_ROUTER: Final[Callable[[int], Callable[[
-    Simulation, Event], Iterable[Event] | None]]] = {
-    _QUIT: Simulation._ignore,  # type: ignore
-    id(StartEvent): Simulation._ignore,  # type: ignore
+    Simulation, Event], Iterable[Event]]]] = {
+    _QUIT: Simulation._forward,  # type: ignore
+    id(StartEvent): Simulation._forward,  # type: ignore
     id(Event): Simulation._error,  # type: ignore
+    id(StorageEvent): Simulation._error,  # type: ignore
+    id(BinEvent): Simulation._error,  # type: ignore
     id(BinIn): Simulation._error,  # type: ignore
     id(BinOut): Simulation._error,  # type: ignore
+    id(InsufficientMaterial): Simulation._error,  # type: ignore
     id(OverstockIn): Simulation._error,  # type: ignore
     id(OverstockOut): Simulation._error,  # type: ignore
     id(WarehouseIn): Simulation._warehouse_in,  # type: ignore
