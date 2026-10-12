@@ -314,6 +314,28 @@ class WarehouseOut(StorageEvent):
                 "from there.")
 
 
+class WarehouseDelivers(StorageEvent):
+    """Material was retrieved from the warehouse."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "warehouse_delivered"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "a certain amount of a material is shipped by the warehouse"
+
+
 class OverstockIn(StorageEvent):
     """Store material in the overstock."""
 

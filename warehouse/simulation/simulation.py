@@ -67,7 +67,9 @@ class Simulation(WarehouseModule):
         queue: Final[list[Event]] = self.__queue
         if list.__len__(queue) <= 0:
             yield StartEvent(self.time)
-        elif queue[0].__class__ is not StartEvent:
+            return
+
+        if queue[0].__class__ is not StartEvent:
             self.time = queue[0].time
             yield StartEvent(queue[0].time)
 
@@ -91,7 +93,11 @@ class Simulation(WarehouseModule):
                 continue
             if time > end_time:
                 break
-            yield from router(eid)(self, event)
+
+            yield event
+            events = router(eid)(self, event)
+            if events is not None:
+                yield from events
 
         queue.clear()
         yield end_event if end_event is not None else EndEvent(self.time)
@@ -104,14 +110,9 @@ class Simulation(WarehouseModule):
         """
         heappush(self.__queue, event)
 
-    def _forward(self, event: Event) -> Generator[
-            Event, None, None]:
-        """
-        Ignore this kind of event and just forward it directly.
-
-        :param event: the event
-        """
-        yield event
+    def _ignore(self, _: Event) -> None:
+        """Ignore this kind of event and just forward it directly."""
+        return
 
     def _error(self, event: Event) -> None:
         """
@@ -132,9 +133,9 @@ _QUIT: Final[int] = id(EndEvent)
 
 #: the event router
 _EVENT_ROUTER: Final[Callable[[int], Callable[[
-    Simulation, Event], Iterable[Event]]]] = {
-    _QUIT: Simulation._forward,  # type: ignore
-    id(StartEvent): Simulation._forward,  # type: ignore
+    Simulation, Event], Iterable[Event] | None]]] = {
+    _QUIT: Simulation._ignore,  # type: ignore
+    id(StartEvent): Simulation._ignore,  # type: ignore
     id(Event): Simulation._error,  # type: ignore
     id(StorageEvent): Simulation._error,  # type: ignore
     id(BinEvent): Simulation._error,  # type: ignore

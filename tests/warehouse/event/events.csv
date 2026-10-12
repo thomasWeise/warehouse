@@ -30,6 +30,7 @@ time;type;material;amount;binType
 # - overstock_in: a certain amount of a material has arrived in the warehouse, but it could not be put into any bin, because all bins are full; the material was placed into the 'overstock', meaning that it is just lying around somewhere.
 # - overstock_out: a certain amount of a material was taken from the overstock: this material was not in any bin, because all bins were occupied; so it was just lying around.
 # - start: the time when the simulation begins
+# - warehouse_delivered: a certain amount of a material is shipped by the warehouse
 # - warehouse_in: a certain amount of a material has arrived at the warehouse and needs to be stored; it then needs to be decided where to put it.
 # - warehouse_out: a certain amount of a material is requested from the warehouse and needs to be taken out of the stored amount of this material; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
 #

@@ -17,6 +17,7 @@ from warehouse.event.storage import (
     InsufficientMaterial,
     OverstockIn,
     OverstockOut,
+    WarehouseDelivers,
     WarehouseIn,
     WarehouseOut,
 )
@@ -70,6 +71,9 @@ class WarehouseModule:
         #: the shared insufficient event
         self.__e_insufficient: Final[InsufficientMaterial] = \
             InsufficientMaterial(EARLIEST_START, use_material, 1)
+        #: the shared delivery event
+        self.__e_deliver: Final[WarehouseDelivers] = \
+            WarehouseDelivers(EARLIEST_START, use_material, 1)
 
         #: the bin types
         self.__bin_types: Final[tuple[BinType, ...]] = instance.bin_types
@@ -97,8 +101,6 @@ class WarehouseModule:
             to be stored
         :return: the event stream
         """
-        yield event
-
         material: Final[Material] = event.material
         mat_key: Final[int] = material.key
         bin_type: Final[BinType] = material.bin_type
@@ -159,8 +161,12 @@ class WarehouseModule:
                 return
 
             # Make a modified copy of the original event
-            event = event.copy()
-            event.amount = amount = use
+            amount = use
+
+        e_deliver: Final[WarehouseDelivers] = self.__e_deliver
+        e_deliver.material = material
+        e_deliver.amount = amount
+        e_deliver.time = time
 
         empty_bins: Final[list[int]] = self.__empty_bins
         e_bin_out: Final[BinOut] = self.__e_bin_out
@@ -260,7 +266,7 @@ class WarehouseModule:
 
         # When we get here, we have extracted all the required material and
         # can now ship it out of the warehouse.
-        yield event
+        yield e_deliver
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
