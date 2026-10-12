@@ -1,8 +1,7 @@
 time;type;material;amount;binType
-2026-01-02T19:09:22.5+08;start
-2026-01-04T05:18:45+08;warehouse_in;skirt;233
-2026-01-07T01:37:30+08;warehouse_in;trousers;1500
-2026-01-15T14:33:45+08;warehouse_out;trousers;1418
-2026-01-19T21:01:52.5+08;warehouse_out;skirt;200
-2026-01-22T17:20:37.5+08;warehouse_out;skirt;33
-2026-01-24T03:30+08;end
+2026-01-02T09:00+08;start
+2026-01-02T09:05+08;warehouse_in;skirt;500
+2026-01-02T09:10+08;warehouse_out;skirt;250
+2026-01-02T09:20+08;warehouse_in;trousers;750
+2026-01-02T09:30+08;warehouse_out;trousers;600
+2026-01-02T09:50+08;warehouse_in;trousers;1000

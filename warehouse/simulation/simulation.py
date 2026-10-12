@@ -77,7 +77,12 @@ class Simulation(WarehouseModule):
         end_time: int = LATEST_END
         while queue:
             event: Event = heappop(queue)
-            self.time = time = event.time
+            time = event.time
+            if time < self.time:
+                raise ValueError(
+                    f"Cannot set time to {time} if it is "
+                    f"already {self.time}!")
+            self.time = time
 
             eid = id(event.__class__)
             if eid == quitter:

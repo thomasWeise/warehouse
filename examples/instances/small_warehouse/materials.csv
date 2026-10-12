@@ -5,6 +5,9 @@ key;name;binType
 3;shoe;shoe_bin
 4;sock;sock_bin
 5;boot;shoe_bin
+6;hat;random_small
+7;tie;random_small
+8;jumpsuit;random_large
 # key: the unique key of the element within its type
 # name: the unique name of the element (unique over all elements of all types)
 # binType: the type of bin into which this material can be stored
