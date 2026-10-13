@@ -145,8 +145,9 @@ class Instance(ElementResolver):
         if not isinstance(parts, Iterable):
             raise type_error(parts, "parts", Iterable)
 
-        material_lst: Final[list[Part]] = []
+        part_lst: Final[list[Part]] = []
         bin_type_lst: Final[list[BinType]] = []
+        bin_type_parts: Final[list[int]] = []
         names: Final[dict[str, Element]] = {}
 
         for i, bin_type in enumerate(bin_types):
@@ -158,6 +159,7 @@ class Instance(ElementResolver):
                     f"Name of {bin_type!r} already in use for {names[name]}.")
             names[bin_type.name] = bin_type
             bin_type_lst.append(bin_type)
+            bin_type_parts.append(0)
 
         n_bin_types: Final[int] = list.__len__(bin_type_lst)
         if n_bin_types <= 0:
@@ -171,19 +173,25 @@ class Instance(ElementResolver):
                 raise ValueError(
                     f"Name of {part!r} already in use for {names[name]}.")
             mbt = part.bin_type
-            if mbt is not bin_type_lst[mbt.key]:
+            btk = mbt.key
+            if mbt is not bin_type_lst[btk]:
                 raise ValueError(f"Inconsistent bin type {mbt!r} of part "
                                  f"{part!r}, because we already got "
-                                 f"{bin_type_lst[mbt.key]!r}.")
+                                 f"{bin_type_lst[btk]!r}.")
             names[part.name] = part
-            material_lst.append(part)
+            bin_type_parts[btk] += 1
+            if (not mbt.is_random) and (bin_type_parts[btk] > 1):
+                raise ValueError(
+                    f"Bin type {mbt!r} is not random, but has multiple "
+                    f"associated materials, including {part!r}.")
+            part_lst.append(part)
 
-        n_parts: Final[int] = list.__len__(material_lst)
+        n_parts: Final[int] = list.__len__(part_lst)
         if n_parts <= 0:
             raise ValueError("No parts specified.")
 
-        material_lst.sort()
-        for i, part in enumerate(material_lst):
+        part_lst.sort()
+        for i, part in enumerate(part_lst):
             if i != part.key:
                 raise ValueError(
                     f"Inconsistent key for {i}-th part {part!r}.")
@@ -223,7 +231,7 @@ class Instance(ElementResolver):
         object.__setattr__(self, "n_parts", n_parts)
         object.__setattr__(self, "n_bin_types", n_bin_types)
         object.__setattr__(self, "n_events", tuple.__len__(events))
-        object.__setattr__(self, "parts", tuple(material_lst))
+        object.__setattr__(self, "parts", tuple(part_lst))
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)
         object.__setattr__(self, "_names", names)

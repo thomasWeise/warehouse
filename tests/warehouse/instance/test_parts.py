@@ -18,7 +18,7 @@ def create_default_parts() -> tuple[Part, ...]:
                 Part(None, "suitcase", "random_large"),
                 Part(None, "shoe", "shoe_bin"),
                 Part(None, "sock", "sock_bin"),
-                Part(None, "boot", "shoe_bin"))
+                Part(None, "boot", "random_small"))
 
 
 def test_default_parts() -> None:

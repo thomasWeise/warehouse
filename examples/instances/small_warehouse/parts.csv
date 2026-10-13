@@ -4,7 +4,7 @@ key;name;bin_type
 2;suitcase;random_large
 3;shoe;shoe_bin
 4;sock;sock_bin
-5;boot;shoe_bin
+5;boot;random_small
 6;hat;random_small
 7;tie;random_small
 8;jumpsuit;random_large
