@@ -14,7 +14,7 @@ logger(f"All data comes from and goes into directory {use_dir!r}.")
 logger("First loading the scenario.")
 instance = Instance.from_directory(use_dir)
 
-logger(f"We got a scenario with {instance.n_materials} materials, "
+logger(f"We got a scenario with {instance.n_parts} parts, "
        f"{instance.n_bin_types} bin types, and {instance.n_events} "
        f"predefined events.")
 

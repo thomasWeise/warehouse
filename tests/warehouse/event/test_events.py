@@ -6,7 +6,7 @@ from pycommons.io.path import Path, write_lines
 
 from tests.utils import assert_same
 from tests.warehouse.instance.test_bin_types import create_default_bin_types
-from tests.warehouse.instance.test_materials import create_default_materials
+from tests.warehouse.instance.test_parts import create_default_parts
 from warehouse.event.bins import BinIn, BinOut
 from warehouse.event.storage import (
     OverstockIn,
@@ -59,14 +59,14 @@ def test_default_events() -> None:
     """Test the default events."""
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
         events_1 = create_default_events()
     for event in events_1:
         assert isinstance(event, Event)
 
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
         events_2 = create_default_events()
     for event in events_2:
         assert isinstance(event, Event)
@@ -84,7 +84,7 @@ def test_csv() -> None:
     """Test the conversion to and from csv."""
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
 
         events_1 = create_default_events()
         text_1 = list(Event.to_csv(events_1))
@@ -103,7 +103,7 @@ def create_test_csv_resource() -> None:
     test_path = Path(__file__).up().resolve_inside("events.csv")
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
         events = create_default_events()
         with test_path.open_for_write() as stream:
             write_lines(Event.to_csv(events), stream)

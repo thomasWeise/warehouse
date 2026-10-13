@@ -2,11 +2,11 @@
 The warehouse simulation.
 
 In this class, we implement the functionality needed by the local warehouse.
-This only concerns the movement of material units inside the warehouse, the
-putting of units of material into the warehouse, and the taking of units of
-material out of the warehouse.
+This only concerns the movement of part units inside the warehouse, the
+putting of units of part into the warehouse, and the taking of units of
+part out of the warehouse.
 This is completely separate from any other logic, such as the re-ordering of
-material, the consumption of material at the assembly line, or anything else.
+part, the consumption of part at the assembly line, or anything else.
 """
 
 from collections import Counter
@@ -24,7 +24,7 @@ from warehouse.event.storage import (
 from warehouse.instance.bin_type import BinType
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
-from warehouse.instance.material import Material
+from warehouse.instance.part import Part
 
 
 class WarehouseModule:
@@ -36,18 +36,18 @@ class WarehouseModule:
 
         :param instance: the scenario/instance to simulate
         """
-        #: the materials per bin type.
+        #: the parts per bin type.
         self.__mat_bin: Final[tuple[tuple[int, ...], ...]] = tuple(
-            tuple(material.key for material in instance.materials if
-                  material.bin_type is bt) for bt in instance.bin_types)
-        #: the materials
-        self.__materials: Final[tuple[Material, ...]] = instance.materials
+            tuple(part.key for part in instance.parts if
+                  part.bin_type is bt) for bt in instance.bin_types)
+        #: the parts
+        self.__parts: Final[tuple[Part, ...]] = instance.parts
 
-        #: the amount of materials currently in overstock
-        self.__in_overstock: Final[list[int]] = [0] * instance.n_materials
+        #: the amount of parts currently in overstock
+        self.__in_overstock: Final[list[int]] = [0] * instance.n_parts
         #: the empty bins of the given types
         self.__empty_bins: Final[list[int]] = [0] * instance.n_bin_types
-        #: the amount of materials that are currently in the bins
+        #: the amount of parts that are currently in the bins
         self.__in_bin: Final[tuple[Counter[int], ...]] = tuple(
             Counter(dict.fromkeys(mb, 0)) for mb in self.__mat_bin)
 
@@ -71,15 +71,15 @@ class WarehouseModule:
     def _warehouse_in(self, event: WarehouseIn) -> Generator[
             Event, None, None]:
         """
-        Store material into the warehouse.
+        Store part into the warehouse.
 
-        :param event: the event with the information about the material
+        :param event: the event with the information about the part
             to be stored
         :return: the event stream
         """
-        material: Final[Material] = event.material
-        mat_key: Final[int] = material.key
-        bin_type: Final[BinType] = material.bin_type
+        part: Final[Part] = event.part
+        mat_key: Final[int] = part.key
+        bin_type: Final[BinType] = part.bin_type
         bin_key: Final[int] = bin_type.key
         amount: int = event.amount
         empty_bins: Final[list[int]] = self.__empty_bins
@@ -89,24 +89,24 @@ class WarehouseModule:
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][mat_key] += use
-            yield BinIn(time, material, use, bin_type)
+            yield BinIn(time, part, use, bin_type)
             amount -= use
             if amount <= 0:
                 return
 
         self.__in_overstock[mat_key] += amount
-        yield OverstockIn(time, material, amount)
+        yield OverstockIn(time, part, amount)
 
     def _warehouse_out(self, event: WarehouseOut) -> Generator[
             Event, None, None]:
         """
-        Remove material from the warehouse.
+        Remove part from the warehouse.
 
         :param event: the event
         """
-        material: Final[Material] = event.material
-        mat_key: Final[int] = material.key
-        bin_type: Final[BinType] = material.bin_type
+        part: Final[Part] = event.part
+        mat_key: Final[int] = part.key
+        bin_type: Final[BinType] = part.bin_type
         bin_key: Final[int] = bin_type.key
         amount: int = event.amount
         time: Final[int] = event.time
@@ -114,11 +114,11 @@ class WarehouseModule:
         in_bin: Final[Counter[int]] = self.__in_bin[bin_key]
         in_overstock: Final[list[int]] = self.__in_overstock
 
-        # Check how much material we can actually deliver.
+        # Check how much part we can actually deliver.
         use: int = in_bin[mat_key] + in_overstock[mat_key]
         if use < amount:
             # We cannot fulfill this request.
-            yield InsufficientMaterial(time, material, amount - use)
+            yield InsufficientMaterial(time, part, amount - use)
 
             if use <= 0:
                 return
@@ -127,7 +127,7 @@ class WarehouseModule:
             amount = use
 
         e_deliver: Final[WarehouseDelivers] = WarehouseDelivers(
-            time, material, amount)
+            time, part, amount)
 
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_type_empty = empty_bins[bin_key]
@@ -135,74 +135,74 @@ class WarehouseModule:
         while amount > 0:
             use = min(in_bin[mat_key], amount)
             if use > 0:
-                # We have material in the bin and can ship it.
-                # This means that we take the material out of the bin.
+                # We have part in the bin and can ship it.
+                # This means that we take the part out of the bin.
                 # This creates new empty bins
                 amount -= use
                 in_bin[mat_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
-                yield BinOut(time, material, use, bin_type)
+                yield BinOut(time, part, use, bin_type)
                 continue
 
-            # If we get here, we do not have our material in the bin.
+            # If we get here, we do not have our part in the bin.
             # It holds that mat_in_bin == 0
-            # Since we know that we have enough material, it must be in the
+            # Since we know that we have enough part, it must be in the
             # overstock.
             if bin_type_empty > 0:
                 use = min(bin_type_empty, in_overstock[mat_key])
                 if use <= 0:
                     raise ValueError(
                         f"Illegal state: We definitely got {amount} units of "
-                        f"material {material!r} in the combined stock of bins "
+                        f"part {part!r} in the combined stock of bins "
                         "and overstock, but the bins are empty and overstock "
                         f"has only {in_overstock[mat_key]} items left, while"
                         f" there now are {bin_type_empty} empty bins of type "
                         f"{bin_type!r}.")
 
                 in_overstock[mat_key] -= use
-                yield OverstockOut(time, material, use)
+                yield OverstockOut(time, part, use)
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[mat_key] += use
-                yield BinIn(time, material, use, bin_type)
+                yield BinIn(time, part, use, bin_type)
 
-                # In the next iteration, we can take the material out of
+                # In the next iteration, we can take the part out of
                 # the bin again.
                 continue
 
-            # Here we face a strange situation: We do have more material to
+            # Here we face a strange situation: We do have more part to
             # ship.
-            # This material is in the overstock.
+            # This part is in the overstock.
             # In order to ship it, we need to move it into the bins.
             # However, we cannot do that, because all bins are full.
-            # This must mean that some *other* material occupies the bins.
-            # So we first must transfer this material to the overstock.
-            # Then we can move our material from the overstock into the bin,
+            # This must mean that some *other* part occupies the bins.
+            # So we first must transfer this part to the overstock.
+            # Then we can move our part from the overstock into the bin,
             # just to take it out again right away...
             other_mat, other_amount = in_bin.most_common(1)[0]
             use = min(amount, other_amount)
             if use <= 0:
                 raise ValueError(
                     f"Illegal state: We definitely got {amount} units of "
-                    f"material {material!r} left in the combined "
+                    f"part {part!r} left in the combined "
                     "stock of bins and overstock, there are no empty bins, "
-                    "there are no units of the material in the bins, but "
+                    "there are no units of the part in the bins, but "
                     f"there are also at most no={other_amount} units of "
-                    f"other material in the bins of type {bin_type!r}. "
+                    f"other part in the bins of type {bin_type!r}. "
                     "So how can the bins be full?")
 
-            use_material = self.__materials[other_mat]
+            use_part = self.__parts[other_mat]
             in_bin[other_mat] -= use
             bin_type_empty += use
             empty_bins[bin_key] = bin_type_empty
-            yield BinOut(time, use_material, use, bin_type)
+            yield BinOut(time, use_part, use, bin_type)
 
             in_overstock[other_mat] += use
-            yield OverstockIn(time, use_material, use)
+            yield OverstockIn(time, use_part, use)
 
-        # When we get here, we have extracted all the required material and
+        # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
         yield e_deliver
 
@@ -211,14 +211,14 @@ class WarehouseModule:
             for other_mat in self.__mat_bin[bin_key]:
                 use = min(bin_type_empty, in_overstock[other_mat])
                 if use > 0:
-                    use_material = self.__materials[other_mat]
-                    yield OverstockOut(time, use_material, use)
+                    use_part = self.__parts[other_mat]
+                    yield OverstockOut(time, use_part, use)
 
                     bin_type_empty -= use
                     empty_bins[bin_key] = bin_type_empty
                     in_bin[other_mat] += use
                     in_overstock[other_mat] -= use
-                    yield BinIn(time, use_material, use, bin_type)
+                    yield BinIn(time, use_part, use, bin_type)
 
                     if bin_type_empty <= 0:
                         break

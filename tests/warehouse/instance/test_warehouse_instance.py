@@ -7,7 +7,7 @@ from pycommons.io.temp import temp_dir
 from tests.utils import assert_same
 from tests.warehouse.event.test_events import create_default_events
 from tests.warehouse.instance.test_bin_types import create_default_bin_types
-from tests.warehouse.instance.test_materials import create_default_materials
+from tests.warehouse.instance.test_parts import create_default_parts
 from warehouse.instance.element import context
 from warehouse.instance.instance import Instance
 
@@ -20,7 +20,7 @@ def create_default_instance() -> Instance:
     """
     with context():
         return Instance(create_default_bin_types(),
-                        create_default_materials(),
+                        create_default_parts(),
                         create_default_events())
 
 

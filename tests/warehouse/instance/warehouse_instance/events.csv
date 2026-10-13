@@ -1,4 +1,4 @@
-time;type;material;amount;bin_type
+time;type;part;amount;bin_type
 2026-01-02T19:09:22.5+08;start
 2026-01-04T05:18:45+08;warehouse_in;skirt;233
 2026-01-05T15:28:07.5+08;bin_in;skirt;233;random_small
@@ -18,21 +18,21 @@ time;type;material;amount;bin_type
 # The following columns exist in this file:
 # time: The time at which the event takes place, as an ISO timestamp with millisecond precision
 # type: The type of the event. Each event type has a specific meaning. See below for a list of event types.
-# material: the type of material associated with the event
-# amount: the amount of material stored or retrieved
-# bin_type: the type of bin into which is material stored in or taken out of
+# part: the type of part associated with the event
+# amount: the amount of part stored or retrieved
+# bin_type: the type of bin into which is part stored in or taken out of
 #
 # Event types (column type):
-# - bin_in: a certain amount of a material is stored in a certain type of bins; the amount of material and the amount of bins used are the same, as material always comes in units that are multiples of bin sizes.
-# - bin_out: a certain amount of a material is retrieved from a certain type of bins; the amount of material and the amount of bins used are the same, as material always comes in units that are multiples of bin sizes.
+# - bin_in: a certain amount of a part is stored in a certain type of bins; the amount of part and the amount of bins used are the same, as part always comes in units that are multiples of bin sizes.
+# - bin_out: a certain amount of a part is retrieved from a certain type of bins; the amount of part and the amount of bins used are the same, as part always comes in units that are multiples of bin sizes.
 # - end: the time when the simulation ends, or, alternatively, after which it should be aborted and all other events still in the queue are discarded
-# - insufficient: there was not enough material in the warehouse to satisfy a warehouse_out request.
-# - overstock_in: a certain amount of a material has arrived in the warehouse, but it could not be put into any bin, because all bins are full; the material was placed into the 'overstock', meaning that it is just lying around somewhere.
-# - overstock_out: a certain amount of a material was taken from the overstock: this material was not in any bin, because all bins were occupied; so it was just lying around.
+# - insufficient: there was not enough part in the warehouse to satisfy a warehouse_out request.
+# - overstock_in: a certain amount of a part has arrived in the warehouse, but it could not be put into any bin, because all bins are full; the part was placed into the 'overstock', meaning that it is just lying around somewhere.
+# - overstock_out: a certain amount of a part was taken from the overstock: this part was not in any bin, because all bins were occupied; so it was just lying around.
 # - start: the time when the simulation begins
-# - warehouse_delivered: a certain amount of a material is shipped by the warehouse
-# - warehouse_in: a certain amount of a material has arrived at the warehouse and needs to be stored; it then needs to be decided where to put it.
-# - warehouse_out: a certain amount of a material is requested from the warehouse and needs to be taken out of the stored amount of this material; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
+# - warehouse_delivered: a certain amount of a part is shipped by the warehouse
+# - warehouse_in: a certain amount of a part has arrived at the warehouse and needs to be stored; it then needs to be decided where to put it.
+# - warehouse_out: a certain amount of a part is requested from the warehouse and needs to be taken out of the stored amount of this part; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
 #
 # This CSV output has been created using the versatile CSV API of pycommons.io.csv, version 0.8.107.
 # You can find pycommons at https://thomasweise.github.io/pycommons.

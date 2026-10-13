@@ -12,11 +12,11 @@ def create_default_bin_types() -> tuple[BinType, ...]:
     :return: the sequence of default bin types
     """
     with context():
-        return (BinType(None, "random_small", 1024),
-                BinType(None, "random_large", 512),
-                BinType(None, "hat_bins", 256),
-                BinType(None, "shoe_bin", 128),
-                BinType(None, "sock_bin", 64))
+        return (BinType(None, "random_small", 1024, True),
+                BinType(None, "random_large", 512, True),
+                BinType(None, "hat_bins", 256, False),
+                BinType(None, "shoe_bin", 128, False),
+                BinType(None, "sock_bin", 64, False))
 
 
 def test_default_bin_types() -> None:

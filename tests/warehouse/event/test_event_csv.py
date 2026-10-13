@@ -4,7 +4,7 @@ from pycommons.io.path import Path
 
 from tests.utils import assert_same
 from tests.warehouse.instance.test_bin_types import create_default_bin_types
-from tests.warehouse.instance.test_materials import create_default_materials
+from tests.warehouse.instance.test_parts import create_default_parts
 from warehouse.instance.element import context
 from warehouse.instance.event import Event
 
@@ -14,7 +14,7 @@ def test_csv_loading() -> None:
     test_csv = Path(__file__).up().resolve_inside("events.csv")
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
         with test_csv.open_for_read() as stream:
             events_1 = tuple(Event.from_csv(stream))
 
@@ -25,7 +25,7 @@ def test_csv_loading() -> None:
 
     with context():
         create_default_bin_types()
-        create_default_materials()
+        create_default_parts()
         events_2 = create_default_events()
 
     assert_same(events_1, events_2)

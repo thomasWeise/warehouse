@@ -2,7 +2,7 @@
 A class for identifying an element.
 
 Element objects are the basis for our model.
-They are the base classes for bins and materials.
+They are the base classes for bins and parts.
 
 Note regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only* use
 the :attr:`~Element.key` attribute.

@@ -2,41 +2,41 @@
 A warehouse setup.
 
 >>> with context():
-...     b1 = BinType(None, "random_small", 50)
-...     b2 = BinType(1, "random_large", 100)
+...     b1 = BinType(None, "random_small", 50, True)
+...     b2 = BinType(1, "random_large", 100, True)
 ...     b3 = BinType(None, "wardrobe", 30)
 ...     b4 = BinType(None, "drawer", 55)
 ...     b5 = BinType(4, "shed", 76)
-...     m1 = Material(None, "Shoe", "random_small")
-...     m2 = Material(1, "Hat", "wardrobe")
-...     m3 = Material(2, "Skirt", "random_large")
-...     m4 = Material(None, "T-Shirt", "drawer")
+...     m1 = Part(None, "Shoe", "random_small")
+...     m2 = Part(1, "Hat", "wardrobe")
+...     m3 = Part(2, "Skirt", "random_large")
+...     m4 = Part(None, "T-Shirt", "drawer")
 ...     e1 = StartEvent(1005000000000)
 ...     e2 = EndEvent(1007000000000)
 ...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))
 
->>> instance.n_materials
+>>> instance.n_parts
 4
 
->>> instance.materials
-(Material(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50)), \
-Material(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30)), \
-Material(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100)), \
-Material(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55)))
+>>> instance.parts
+(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
+amount=50, is_random=True)), \
+Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
+amount=30, is_random=False)), \
+Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
+amount=100, is_random=True)), \
+Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
+amount=55, is_random=False)))
 
 >>> instance.n_bin_types
 5
 
 >>> instance.bin_types
-(BinType(key=0, name='random_small', amount=50), \
-BinType(key=1, name='random_large', amount=100), \
-BinType(key=2, name='wardrobe', amount=30), \
-BinType(key=3, name='drawer', amount=55), \
-BinType(key=4, name='shed', amount=76))
+(BinType(key=0, name='random_small', amount=50, is_random=True), \
+BinType(key=1, name='random_large', amount=100, is_random=True), \
+BinType(key=2, name='wardrobe', amount=30, is_random=False), \
+BinType(key=3, name='drawer', amount=55, is_random=False), \
+BinType(key=4, name='shed', amount=76, is_random=False))
 
 >>> instance.n_events
 2
@@ -49,28 +49,28 @@ BinType(key=4, name='shed', amount=76))
 ...     _ = instance.to_directory(td)
 ...     instance_2 = Instance.from_directory(td)
 
->>> instance_2.n_materials
+>>> instance_2.n_parts
 4
 
->>> instance_2.materials
-(Material(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50)), \
-Material(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30)), \
-Material(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100)), \
-Material(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55)))
+>>> instance_2.parts
+(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
+amount=50, is_random=True)), \
+Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
+amount=30, is_random=False)), \
+Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
+amount=100, is_random=True)), \
+Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
+amount=55, is_random=False)))
 
 >>> instance_2.n_bin_types
 5
 
 >>> instance_2.bin_types
-(BinType(key=0, name='random_small', amount=50), \
-BinType(key=1, name='random_large', amount=100), \
-BinType(key=2, name='wardrobe', amount=30), \
-BinType(key=3, name='drawer', amount=55), \
-BinType(key=4, name='shed', amount=76))
+(BinType(key=0, name='random_small', amount=50, is_random=True), \
+BinType(key=1, name='random_large', amount=100, is_random=True), \
+BinType(key=2, name='wardrobe', amount=30, is_random=False), \
+BinType(key=3, name='drawer', amount=55, is_random=False), \
+BinType(key=4, name='shed', amount=76, is_random=False))
 
 >>> instance_2.n_events
 2
@@ -95,7 +95,7 @@ from warehouse.instance.element import Element, ElementResolver, context
 from warehouse.instance.event import (
     Event,
 )
-from warehouse.instance.material import Material
+from warehouse.instance.part import Part
 from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
@@ -103,8 +103,8 @@ from warehouse.instance.time import (
 
 #: the bin types file
 FILE_BIN_TYPES: Final[str] = "bin_types.csv"
-#: the materials file
-FILE_MATERIALS: Final[str] = "materials.csv"
+#: the parts file
+FILE_PARTS: Final[str] = "parts.csv"
 #: the events file
 FILE_EVENTS: Final[str] = "events.csv"
 
@@ -116,36 +116,36 @@ T = TypeVar("T", bound=Element)
 class Instance(ElementResolver):
     """A warehousing instance."""
 
-    #: the number of materials
-    n_materials: int = field(hash=False, compare=False)
+    #: the number of parts
+    n_parts: int = field(hash=False, compare=False)
     #: the number of bin types
     n_bin_types: int = field(hash=False, compare=False)
     #: the number of events
     n_events: int = field(hash=False, compare=False)
     #: the bin configuration of the warehouse
     bin_types: tuple[BinType, ...] = field(hash=True, compare=True)
-    #: the material types available for the warehouse
-    materials: tuple[Material, ...] = field(hash=True, compare=True)
+    #: the part types available for the warehouse
+    parts: tuple[Part, ...] = field(hash=True, compare=True)
     #: the pre-defined events for the instance
     events: tuple[Event, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType],
-                 materials: Iterable[Material],
+                 parts: Iterable[Part],
                  events: Iterable[Event] | None = None) -> None:
         """
         Create an instance of the warehousing instance.
 
         :param bin_types: the bin types
-        :param materials: the materials
+        :param parts: the parts
         :param events: the events
         """
         if not isinstance(bin_types, Iterable):
             raise type_error(bin_types, "bin_types", Iterable)
-        if not isinstance(materials, Iterable):
-            raise type_error(materials, "materials", Iterable)
+        if not isinstance(parts, Iterable):
+            raise type_error(parts, "parts", Iterable)
 
-        material_lst: Final[list[Material]] = []
+        material_lst: Final[list[Part]] = []
         bin_type_lst: Final[list[BinType]] = []
         names: Final[dict[str, Element]] = {}
 
@@ -163,30 +163,30 @@ class Instance(ElementResolver):
         if n_bin_types <= 0:
             raise ValueError("No bin types specified!")
 
-        for i, material in enumerate(materials):
-            if not isinstance(material, Material):
-                raise type_error(material, f"materials[{i}]", Material)
-            name = material.name
+        for i, part in enumerate(parts):
+            if not isinstance(part, Part):
+                raise type_error(part, f"parts[{i}]", Part)
+            name = part.name
             if name in names:
                 raise ValueError(
-                    f"Name of {material!r} already in use for {names[name]}.")
-            mbt = material.bin_type
+                    f"Name of {part!r} already in use for {names[name]}.")
+            mbt = part.bin_type
             if mbt is not bin_type_lst[mbt.key]:
-                raise ValueError(f"Inconsistent bin type {mbt!r} of material "
-                                 f"{material!r}, because we already got "
+                raise ValueError(f"Inconsistent bin type {mbt!r} of part "
+                                 f"{part!r}, because we already got "
                                  f"{bin_type_lst[mbt.key]!r}.")
-            names[material.name] = material
-            material_lst.append(material)
+            names[part.name] = part
+            material_lst.append(part)
 
-        n_materials: Final[int] = list.__len__(material_lst)
-        if n_materials <= 0:
-            raise ValueError("No materials specified.")
+        n_parts: Final[int] = list.__len__(material_lst)
+        if n_parts <= 0:
+            raise ValueError("No parts specified.")
 
         material_lst.sort()
-        for i, material in enumerate(material_lst):
-            if i != material.key:
+        for i, part in enumerate(material_lst):
+            if i != part.key:
                 raise ValueError(
-                    f"Inconsistent key for {i}-th material {material!r}.")
+                    f"Inconsistent key for {i}-th part {part!r}.")
         bin_type_lst.sort()
         for i, bin_type in enumerate(bin_type_lst):
             if i != bin_type.key:
@@ -220,10 +220,10 @@ class Instance(ElementResolver):
                     events.insert(0, StartEvent(events[0].time))
                 events = tuple(events)
 
-        object.__setattr__(self, "n_materials", n_materials)
+        object.__setattr__(self, "n_parts", n_parts)
         object.__setattr__(self, "n_bin_types", n_bin_types)
         object.__setattr__(self, "n_events", tuple.__len__(events))
-        object.__setattr__(self, "materials", tuple(material_lst))
+        object.__setattr__(self, "parts", tuple(material_lst))
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)
         object.__setattr__(self, "_names", names)
@@ -240,8 +240,8 @@ class Instance(ElementResolver):
         if isinstance(name_or_key, int):
             if cls is BinType:
                 return self.bin_types[name_or_key]  # type: ignore
-            if cls is Material:
-                return self.materials[name_or_key]  # type: ignore
+            if cls is Part:
+                return self.parts[name_or_key]  # type: ignore
             raise TypeError(f"Unsupported type {cls} for {name_or_key!r}.")
         res = self._names[  # type: ignore  # noqa  # pylint: disable=E1101
             str.strip(name_or_key)]
@@ -274,17 +274,17 @@ class Instance(ElementResolver):
                     f"File {file!r} does not contain any bin types.")
             logger(f"Finished loading {got} bin types from {file!r}.")
 
-            file = source.resolve_inside(FILE_MATERIALS)
+            file = source.resolve_inside(FILE_PARTS)
             file.enforce_file()
-            logger(f"Now loading materials from {file!r}.")
-            materials: Final[list[Material]] = []
+            logger(f"Now loading parts from {file!r}.")
+            parts: Final[list[Part]] = []
             with file.open_for_read() as stream:
-                materials.extend(Material.from_csv(stream))  # type: ignore
-            got = list.__len__(materials)
+                parts.extend(Part.from_csv(stream))  # type: ignore
+            got = list.__len__(parts)
             if got <= 0:
                 raise ValueError(
-                    f"File {file!r} does not contain any materials.")
-            logger(f"Finished loading {got} materials from {file!r}.")
+                    f"File {file!r} does not contain any parts.")
+            logger(f"Finished loading {got} parts from {file!r}.")
 
             file = source.resolve_inside(FILE_EVENTS)
             events: list[Event] | None = None
@@ -303,7 +303,7 @@ class Instance(ElementResolver):
                 logger(f"{file!r} does not exist, so we cannot load events.")
 
         result = Instance(bin_types=bin_types,
-                          materials=materials,
+                          parts=parts,
                           events=events)
         logger(f"Finished loading instance/scenario from {source!r}.")
         return result
@@ -324,10 +324,10 @@ class Instance(ElementResolver):
         with file.open_for_write() as stream:
             write_lines(BinType.to_csv(self.bin_types), stream)
 
-        file = dest.resolve_inside(FILE_MATERIALS)
-        logger(f"Storing materials into {file!r}.")
+        file = dest.resolve_inside(FILE_PARTS)
+        logger(f"Storing parts into {file!r}.")
         with file.open_for_write() as stream:
-            write_lines(Material.to_csv(self.materials), stream)
+            write_lines(Part.to_csv(self.parts), stream)
 
         if tuple.__len__(self.events) > 0:
             file = dest.resolve_inside(FILE_EVENTS)

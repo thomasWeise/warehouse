@@ -1,39 +1,39 @@
 """
-A class for identifying a material.
+A class for identifying a part.
 
-Each Instance of :class:`~Material` corresponds to some material that we need
+Each Instance of :class:`~Part` corresponds to some part that we need
 for production and store in the warehouse.
-Each material has an associated bin type (:attr:`~Material.bin_type`) into
+Each part has an associated bin type (:attr:`~Part.bin_type`) into
 which it can be stored.
 
 >>> from warehouse.instance.element import context
 
 >>> with context():
-...     b1 = BinType(None, "random_small", 10)
-...     b2 = BinType(None, "random_large", 10)
+...     b1 = BinType(None, "random_small", 10, True)
+...     b2 = BinType(None, "random_large", 10, True)
 ...     b3 = BinType(None, "shoe_bin", 5)
-...     m1 = Material(None, "Shoe", b3)
-...     m2 = Material(1, "Hat", "random_small")
-...     m3 = Material(2, "Skirt", "random_large")
+...     m1 = Part(None, "Shoe", b3)
+...     m2 = Part(1, "Hat", "random_small")
+...     m3 = Part(2, "Skirt", "random_large")
 
 >>> str(m1)
-'M0'
+'P0'
 >>> str(m2)
-'M1'
+'P1'
 >>> str(m3)
-'M2'
+'P2'
 
 >>> repr(m1)
-"Material(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5))"
+"Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
+amount=5, is_random=False))"
 >>> repr(m2)
-"Material(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10))"
+"Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
+amount=10, is_random=True))"
 >>> repr(m3)
-"Material(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10))"
+"Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
+amount=10, is_random=True))"
 
->>> csv1 = list(Material.to_csv((m1, m2, m3)))
+>>> csv1 = list(Part.to_csv((m1, m2, m3)))
 >>> for row in csv1:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
@@ -43,17 +43,17 @@ key;name;bin_type
 2;Skirt;random_large
 
 >>> with context():
-...     _ = BinType(None, "random_small", 10)
-...     _ = BinType(None, "random_large", 10)
+...     _ = BinType(None, "random_small", 10, True)
+...     _ = BinType(None, "random_large", 10, True)
 ...     _ = BinType(None, "shoe_bin", 5)
-...     for mat in Material.from_csv(csv1):
+...     for mat in Part.from_csv(csv1):
 ...         print(repr(mat))
-Material(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5))
-Material(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10))
-Material(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10))
+Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
+amount=5, is_random=False))
+Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
+amount=10, is_random=True))
+Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
+amount=10, is_random=True))
 """
 
 from dataclasses import dataclass
@@ -70,13 +70,13 @@ from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import Element, context, prepare_to_csv
 
-#: the CSV material column
+#: the CSV part column
 COLUMN_BIN_TYPE: Final[str] = "bin_type"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
-class Material(Element):
-    """A class for identifying a material."""
+class Part(Element):
+    """A class for identifying a part."""
 
     #: the amount of bins of this type
     bin_type: BinType
@@ -97,7 +97,7 @@ class Material(Element):
 
     def __eq__(self, other) -> bool:
         """
-        Compare two materials for "equality".
+        Compare two parts for "equality".
 
         :param other: the other element
         :return: `True` if this element is equal, `False` otherwise
@@ -108,7 +108,7 @@ class Material(Element):
 
     def __ne__(self, other) -> bool:
         """
-        Compare two materials for "not equal".
+        Compare two parts for "not equal".
 
         :param other: the other element
         :return: `True` if this element is not equal, `False` otherwise
@@ -127,18 +127,18 @@ class Material(Element):
 
     @classmethod
     def to_csv(cls,  # type: ignore
-               data: Iterable["Material"]) -> Iterable[str]:  # type: ignore
+               data: Iterable["Part"]) -> Iterable[str]:  # type: ignore
         """
         Convert an iterable of the object to a CSV stream.
 
         :param data: the data
         :return: the stream
         """
-        return CsvWriter[Material].write(  # type: ignore
+        return CsvWriter[Part].write(  # type: ignore
             data=prepare_to_csv(data))  # type: ignore
 
     @classmethod
-    def from_csv(cls, rows: Iterable[str]) -> Iterable["Material"]:
+    def from_csv(cls, rows: Iterable[str]) -> Iterable["Part"]:
         """
         Get the data from CSV.
 
@@ -146,18 +146,18 @@ class Material(Element):
         :return: the sequence of objects
         """
         with context():
-            yield from CsvReader[Material].read(rows=rows, clazz=cls)
+            yield from CsvReader[Part].read(rows=rows, clazz=cls)
 
 
 #: the type variable for data to be written to CSV or to be read from CSV
-T = TypeVar("T", bound="Material")
+T = TypeVar("T", bound="Part")
 
 
 class CsvReader(CsvReaderBase[T]):
     """A CsvReader that reads named objects from a CSV file."""
 
     def __init__(self, columns: dict[str, int],
-                 clazz: type[T] = cast("type[T]", Material)):
+                 clazz: type[T] = cast("type[T]", Part)):
         """
         Initialize.
 
@@ -221,4 +221,4 @@ class CsvWriter(CsvWriterBase[T]):
         """
         yield from super().get_footer_comments()
         yield (f"{self.col_bin_type}: the type of bin into which this "
-               "material can be stored")
+               "part can be stored")

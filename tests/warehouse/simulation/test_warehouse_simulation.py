@@ -15,7 +15,7 @@ def test_warehouse_simulation() -> None:
     instance = create_default_instance()
     permitted = {StartEvent, EndEvent, WarehouseOut, WarehouseIn}
     instance = Instance(
-        instance.bin_types, instance.materials,
+        instance.bin_types, instance.parts,
         (e for e in instance.events if e.__class__ in permitted))
 
     simulation = Simulation(instance)
