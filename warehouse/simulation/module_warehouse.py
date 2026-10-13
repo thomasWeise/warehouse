@@ -45,6 +45,8 @@ class WarehouseModule:
 
         #: the amount of parts currently in overstock
         self.__in_overstock: Final[list[int]] = [0] * instance.n_parts
+        #: the amount of parts which were understocked
+        self.__in_understock: Final[list[int]] = [0] * instance.n_parts
         #: the empty bins of the given types
         self.__empty_bins: Final[list[int]] = [0] * instance.n_bin_types
         #: the amount of parts that are currently in the bins
@@ -57,11 +59,13 @@ class WarehouseModule:
     def _start(self) -> None:
         """Begin the simulation."""
         in_overstock: Final[list[int]] = self.__in_overstock
+        in_understock: Final[list[int]] = self.__in_understock
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_types: Final[tuple[BinType, ...]] = self.__bin_types
 
         for i in range(list.__len__(in_overstock)):
             in_overstock[i] = 0
+            in_understock[i] = 0
 
         for i, st in enumerate(self.__in_bin):
             for k in self.__mat_bin[i]:
@@ -85,7 +89,18 @@ class WarehouseModule:
         empty_bins: Final[list[int]] = self.__empty_bins
         time: Final[int] = event.time
 
-        use: int = min(empty_bins[bin_key], amount)
+        # First, we check if there is a prior pending request for the
+        # parts. If yes, we directly satisfy it without putting the
+        # material in any stock.
+        use: int = min(self.__in_understock[mat_key], amount)
+        if use > 0:
+            yield WarehouseDelivers(time, part, use)
+            amount -= use
+            if amount <= 0:
+                return
+
+        # Now we check whether we can put the parts into empty bins.
+        use = min(empty_bins[bin_key], amount)
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][mat_key] += use
@@ -94,6 +109,7 @@ class WarehouseModule:
             if amount <= 0:
                 return
 
+        # Finally, all remaining parts go into the overstock.
         self.__in_overstock[mat_key] += amount
         yield OverstockIn(time, part, amount)
 
@@ -117,9 +133,14 @@ class WarehouseModule:
         # Check how much part we can actually deliver.
         use: int = in_bin[mat_key] + in_overstock[mat_key]
         if use < amount:
-            # We cannot fulfill this request.
-            yield Understock(time, part, amount - use)
-
+            # We cannot fulfill this request, so we are in an understock
+            # situation.
+            # We remember the request, though, so as soon as parts come in,
+            # we can directly ship them to satisfy the understock requests
+            # first.
+            under: int = amount - use
+            self.__in_understock[mat_key] += under
+            yield Understock(time, part, under)
             if use <= 0:
                 return
 
