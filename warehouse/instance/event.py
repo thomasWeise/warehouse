@@ -21,6 +21,7 @@ from pycommons.io.csv import (
     csv_column,
     csv_column_or_none,
     csv_scope,
+    csv_str_or_none,
 )
 from pycommons.types import type_error
 
@@ -337,7 +338,8 @@ class CsvReader(CsvReaderBase[Event]):
             data[cols[COLUMN_TYPE]])
         col_names = cls.eventclass_get_csv_columns()
         ret = cls.create(time=str_to_time(data[cols[
-            COLUMN_TIME]]), **{c: data[cols[c]] for c in col_names})
+            COLUMN_TIME]]), **{c: csv_str_or_none(
+                data, cols[c]) for c in col_names})
         if not isinstance(ret, Event):
             raise type_error(ret, "parse_row result", Event)
         return ret

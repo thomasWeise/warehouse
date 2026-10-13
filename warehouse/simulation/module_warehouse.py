@@ -89,7 +89,7 @@ class WarehouseModule:
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][mat_key] += use
-            yield BinIn(time, part, use, bin_type)
+            yield BinIn(time, part, use)
             amount -= use
             if amount <= 0:
                 return
@@ -142,7 +142,7 @@ class WarehouseModule:
                 in_bin[mat_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
-                yield BinOut(time, part, use, bin_type)
+                yield BinOut(time, part, use)
                 continue
 
             # If we get here, we do not have our part in the bin.
@@ -166,7 +166,7 @@ class WarehouseModule:
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[mat_key] += use
-                yield BinIn(time, part, use, bin_type)
+                yield BinIn(time, part, use)
 
                 # In the next iteration, we can take the part out of
                 # the bin again.
@@ -197,7 +197,7 @@ class WarehouseModule:
             in_bin[other_mat] -= use
             bin_type_empty += use
             empty_bins[bin_key] = bin_type_empty
-            yield BinOut(time, use_part, use, bin_type)
+            yield BinOut(time, use_part, use)
 
             in_overstock[other_mat] += use
             yield OverstockIn(time, use_part, use)
@@ -218,7 +218,7 @@ class WarehouseModule:
                     empty_bins[bin_key] = bin_type_empty
                     in_bin[other_mat] += use
                     in_overstock[other_mat] -= use
-                    yield BinIn(time, use_part, use, bin_type)
+                    yield BinIn(time, use_part, use)
 
                     if bin_type_empty <= 0:
                         break

@@ -11,10 +11,10 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     Part(None, "trousers", "random_large")
 ...     ev01 = BinIn.create(1500000000000, "hat", 10, "hat_bins")
 ...     ev02 = BinIn.create(1700000000000, "shoe", 15, "random_small")
-...     ev03 = BinIn.create(1800000000000, "trousers", 7, "random_large")
+...     ev03 = BinIn.create(1800000000000, "trousers", 7)
 ...     ev04 = BinOut.create(1900000000000, "hat", 9, "hat_bins")
 ...     ev05 = BinOut.create(2000000000000, "shoe", 8, "random_small")
-...     ev06 = BinOut.create(2100000000000, "trousers", 3, "random_large")
+...     ev06 = BinOut.create(2100000000000, "trousers", 3)
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06)
 ...
@@ -48,28 +48,22 @@ Part(key=2, name='trousers', bin_type=BinType(key=1, \
 name='random_large', amount=500, is_random=True))
 BinIn(time=1500000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=10, bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False))
+amount=10)
 BinIn(time=1700000000000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=15, bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True))
+amount=15)
 BinIn(time=1800000000000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=7, \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True))
+amount=7)
 BinOut(time=1900000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=9, \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False))
+amount=9)
 BinOut(time=2000000000000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=8, \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True))
+amount=8)
 BinOut(time=2100000000000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=3, \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True))
+amount=3)
 <BLANKLINE>
 ===================
 <BLANKLINE>
@@ -85,35 +79,27 @@ time;type;part;amount;bin_type
 <BLANKLINE>
 BinIn(time=1500000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=10, bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False))
+amount=10)
 BinIn(time=1700000000000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=15, bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True))
+amount=15)
 BinIn(time=1800000000000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=7, \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True))
+amount=7)
 BinOut(time=1900000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=9, \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False))
+amount=9)
 BinOut(time=2000000000000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=8, \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True))
+amount=8)
 BinOut(time=2100000000000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=3, \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True))
+amount=3)
 
 >>> hash(ev06)
--6371751855485235984
+7866305953747425974
 """
 
-
-from dataclasses import dataclass, field
 
 from warehouse.event.storage import (
     COLUMN_AMOUNT,
@@ -126,11 +112,8 @@ from warehouse.instance.element import context
 from warehouse.instance.part import COLUMN_BIN_TYPE, Part
 
 
-@dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
 class BinEvent(StorageEvent):  # noqa: PLW1641
     """An amount of part has changed places."""
-
-    bin_type: BinType = field(hash=True)
 
     @classmethod
     def eventclass_needs_register(cls) -> bool:
@@ -143,34 +126,6 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
         """
         return super().eventclass_needs_register() and (
             cls.__name__ != "BinEvent")
-
-    def __eq__(self, other) -> bool:
-        """
-        Compare this event with another event object for "equality".
-
-        :param other: the other event
-        :return: `True` if this event is equal to the other event,
-            `False` otherwise
-        """
-        return (self.__class__ is other.__class__) and (
-            self.time == other.time) and (
-            self.part == other.part) and (
-            self.amount == other.amount) and (
-            self.bin_type == other.bin_type)
-
-    def __ne__(self, other) -> bool:
-        """
-        Compare this event with another event object for "inequality".
-
-        :param other: the other event
-        :return: `True` if this event is not equal than the other event,
-            `False` otherwise
-        """
-        return (self.__class__ is not other.__class__) or (
-            self.time != other.time) or (
-            self.part != other.part) or (
-            self.amount != other.amount) or (
-            self.bin_type != other.bin_type)
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -193,7 +148,7 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
         :return: the value
         """
         if column == COLUMN_BIN_TYPE:
-            return self.bin_type.name
+            return self.part.bin_type.name
         return super().event_get_csv_value(column)
 
     @classmethod
@@ -209,16 +164,18 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, part: int | str | Part,
             amount: int | str,
-            bin_type: int | str | BinType) -> "BinEvent":  # type: ignore
+            bin_type: int | str | BinType | None = None) -> "BinEvent":
         """
         Create the storage event.
 
         :param time: the time
         :param part: the part to use
         :param amount: the amount of the part to use
+        :param bin_type: the optional bin type
         :return: the bin event
         """
-        need_bin: bool = bin_type.__class__ is not BinType
+        need_bin: bool = (bin_type is not None) and (
+            bin_type.__class__ is not BinType)
         need_part: bool = part.__class__ is not Part
         if need_part or need_bin:
             with context() as ctx:
@@ -226,8 +183,11 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
                     part = ctx.resolve(Part, part)  # type: ignore
                 if need_bin:
                     bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
-        return cls(
-            time, part, check_to_amount(amount), bin_type)  # type: ignore
+
+        rv = cls(time, part, check_to_amount(amount))  # type: ignore
+        if (bin_type is not None) and (rv.part.bin_type is not bin_type):
+            raise ValueError(f"Expected bin type {bin_type!r} for {rv!r}.")
+        return rv
 
 
 class BinIn(BinEvent):
