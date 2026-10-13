@@ -166,12 +166,12 @@ class WarehouseModule:
                 yield BinOut(time, part, use)
                 continue
 
-            # If we get here, we do not have our part in the bin.
+            # If we get here, we do not have our parts in the bin.
             # It holds that mat_in_bin == 0
-            # Since we know that we have enough part, it must be in the
+            # Since we know that we have enough parts, they must be in the
             # overstock.
             if bin_type_empty > 0:
-                use = min(bin_type_empty, in_overstock[mat_key])
+                use = min(bin_type_empty, amount, in_overstock[mat_key])
                 if use <= 0:
                     raise ValueError(
                         f"Illegal state: We definitely got {amount} units of "
@@ -189,11 +189,11 @@ class WarehouseModule:
                 in_bin[mat_key] += use
                 yield BinIn(time, part, use)
 
-                # In the next iteration, we can take the part out of
-                # the bin again.
+                # In the next iteration, we can take the parts out of the bin
+                # again.
                 continue
 
-            # Here we face a strange situation: We do have more part to
+            # Here we face a strange situation: We do have more parts to
             # ship.
             # This part is in the overstock.
             # In order to ship it, we need to move it into the bins.
