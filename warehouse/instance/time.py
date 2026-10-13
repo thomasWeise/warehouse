@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Final
+from zoneinfo import ZoneInfo
 
 from pycommons.types import check_int_range
 
@@ -9,6 +10,9 @@ from pycommons.types import check_int_range
 EARLIEST_START: Final[int] = 1000000000000
 #: the latest end time for an event
 LATEST_END: Final[int] = 3500000000000
+
+#: the internal time zone information record
+__TZ: Final[ZoneInfo] = ZoneInfo("Asia/Shanghai")
 
 
 def check_time(time: int) -> int:
@@ -94,8 +98,9 @@ def time_to_str(time: int) -> str:
     >>> time_to_str(LATEST_END)
     '2080-11-28 14:13:20'
     """
-    tpart = datetime.isoformat(datetime.fromtimestamp(  # noqa: DTZ006
-        check_time(time) / 1000), sep=" ", timespec="milliseconds")
+    tpart = datetime.isoformat(datetime.fromtimestamp(check_time(
+        time) / 1000, tz=__TZ).replace(tzinfo=None),
+        sep=" ", timespec="milliseconds")
     if "." in tpart:
         tpart = str.rstrip(str.rstrip(tpart, "0"), ".")
     while tpart.endswith(":00"):
@@ -150,5 +155,7 @@ def str_to_time(string: str) -> int:
     >>> str_to_time(time_to_str(LATEST_END)) == LATEST_END
     True
     """
-    return check_time(round(
-        1000 * datetime.fromisoformat(str.strip(string)).timestamp()))
+    stamp: datetime = datetime.fromisoformat(str.strip(string))
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=__TZ)
+    return check_time(round(1000 * stamp.timestamp()))
