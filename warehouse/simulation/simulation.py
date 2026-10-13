@@ -7,10 +7,10 @@ from pycommons.types import type_error
 
 from warehouse.event.bins import BinEvent, BinIn, BinOut
 from warehouse.event.storage import (
-    InsufficientMaterial,
     OverstockIn,
     OverstockOut,
     StorageEvent,
+    Understock,
     WarehouseIn,
     WarehouseOut,
 )
@@ -141,7 +141,7 @@ _EVENT_ROUTER: Final[Callable[[int], Callable[[
     id(BinEvent): Simulation._error,  # type: ignore
     id(BinIn): Simulation._error,  # type: ignore
     id(BinOut): Simulation._error,  # type: ignore
-    id(InsufficientMaterial): Simulation._error,  # type: ignore
+    id(Understock): Simulation._error,  # type: ignore
     id(OverstockIn): Simulation._error,  # type: ignore
     id(OverstockOut): Simulation._error,  # type: ignore
     id(WarehouseIn): Simulation._warehouse_in,  # type: ignore

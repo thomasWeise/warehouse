@@ -394,7 +394,7 @@ class OverstockOut(StorageEvent):
                 "occupied; so it was just lying around.")
 
 
-class InsufficientMaterial(StorageEvent):
+class Understock(StorageEvent):
     """Not enough part was available to satisfy a request."""
 
     @classmethod
@@ -404,7 +404,7 @@ class InsufficientMaterial(StorageEvent):
 
         :return: the csv type
         """
-        return "insufficient"
+        return "understock"
 
     @classmethod
     def eventclass_get_event_desc(cls) -> str | None:

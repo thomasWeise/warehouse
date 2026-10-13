@@ -14,9 +14,9 @@ from typing import Final, Generator
 
 from warehouse.event.bins import BinIn, BinOut
 from warehouse.event.storage import (
-    InsufficientMaterial,
     OverstockIn,
     OverstockOut,
+    Understock,
     WarehouseDelivers,
     WarehouseIn,
     WarehouseOut,
@@ -118,7 +118,7 @@ class WarehouseModule:
         use: int = in_bin[mat_key] + in_overstock[mat_key]
         if use < amount:
             # We cannot fulfill this request.
-            yield InsufficientMaterial(time, part, amount - use)
+            yield Understock(time, part, amount - use)
 
             if use <= 0:
                 return
