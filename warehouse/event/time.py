@@ -13,8 +13,8 @@ EndEvent(time=1750000000000)
 >>> for row in csv[1:]:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
-2017-07-14T10:40+08;start
-2025-06-15T23:06:40+08;end
+2017-07-14 10:40;start
+2025-06-15 23:06:40;end
 
 >>> ev3, ev4 = list(Event.from_csv(csv))
 >>> print(ev3)

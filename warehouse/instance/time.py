@@ -2,12 +2,8 @@
 
 from datetime import datetime
 from typing import Final
-from zoneinfo import ZoneInfo
 
 from pycommons.types import check_int_range
-
-#: the standard time zone to use to write dates and times
-TIME_ZONE: Final[ZoneInfo] = ZoneInfo("Asia/Shanghai")
 
 #: the earliest start time for an event
 EARLIEST_START: Final[int] = 1000000000000
@@ -76,37 +72,35 @@ def time_to_str(time: int) -> str:
     :return: the string
 
     >>> time_to_str(1789361695615)
-    '2026-09-14T12:54:55.615+08'
+    '2026-09-14 12:54:55.615'
     >>> time_to_str(1789361695616)
-    '2026-09-14T12:54:55.616+08'
+    '2026-09-14 12:54:55.616'
     >>> time_to_str(1789361695614)
-    '2026-09-14T12:54:55.614+08'
+    '2026-09-14 12:54:55.614'
     >>> time_to_str(1789361695610)
-    '2026-09-14T12:54:55.61+08'
+    '2026-09-14 12:54:55.61'
     >>> time_to_str(1789361695600)
-    '2026-09-14T12:54:55.6+08'
+    '2026-09-14 12:54:55.6'
     >>> time_to_str(1789361695000)
-    '2026-09-14T12:54:55+08'
+    '2026-09-14 12:54:55'
     >>> time_to_str(1789361640000)
-    '2026-09-14T12:54+08'
+    '2026-09-14 12:54'
     >>> time_to_str(1789358400000)
-    '2026-09-14T12+08'
+    '2026-09-14 12'
     >>> time_to_str(1789315200000)
-    '2026-09-14T00+08'
+    '2026-09-14 00'
     >>> time_to_str(EARLIEST_START)
-    '2001-09-09T09:46:40+08'
+    '2001-09-09 09:46:40'
     >>> time_to_str(LATEST_END)
-    '2080-11-28T14:13:20+08'
+    '2080-11-28 14:13:20'
     """
-    tpart, tz = str.split(datetime.isoformat(datetime.fromtimestamp(
-        check_time(time) / 1000, tz=TIME_ZONE)),
-        "+")  # must be "+" because of Shanghai
+    tpart = datetime.isoformat(datetime.fromtimestamp(  # noqa: DTZ006
+        check_time(time) / 1000), sep=" ", timespec="milliseconds")
     if "." in tpart:
         tpart = str.rstrip(str.rstrip(tpart, "0"), ".")
     while tpart.endswith(":00"):
         tpart = tpart[:-3]
-    tz = str.removesuffix(tz, ":00")
-    return f"{tpart}+{tz}"
+    return tpart
 
 
 def str_to_time(string: str) -> int:
@@ -116,6 +110,8 @@ def str_to_time(string: str) -> int:
     :param string: the time string
     :return: the event time value.
 
+    >>> str_to_time('2026-09-14T12:54:55.615')
+    1789361695615
     >>> str_to_time('2026-09-14T12:54:55.615+08')
     1789361695615
     >>> str_to_time('2026-09-14T12:54:55.616+08')
@@ -123,6 +119,10 @@ def str_to_time(string: str) -> int:
     >>> str_to_time('2026-09-14T12:54:55.614+08')
     1789361695614
     >>> str_to_time('2026-09-14T12:54:55.61+08')
+    1789361695610
+    >>> str_to_time('2026-09-14 12:54:55.61+08')
+    1789361695610
+    >>> str_to_time('2026-09-14 12:54:55.61')
     1789361695610
     >>> str_to_time('2026-09-14T12:54:55.6+08')
     1789361695600
@@ -133,6 +133,10 @@ def str_to_time(string: str) -> int:
     >>> str_to_time('2026-09-14T12+08')
     1789358400000
     >>> str_to_time('2026-09-14T00+08')
+    1789315200000
+    >>> str_to_time('2026-09-14 00+08')
+    1789315200000
+    >>> str_to_time('2026-09-14 00')
     1789315200000
 
     >>> str_to_time('2026-09-14T12:54:55.615+08:00')

@@ -1,20 +1,20 @@
 time;type;part;amount;bin_type
-2026-01-02T19:09:22.5+08;start
-2026-01-04T05:18:45+08;warehouse_in;skirt;233
-2026-01-05T15:28:07.5+08;bin_in;skirt;233;random_small
-2026-01-07T01:37:30+08;warehouse_in;trousers;1500
-2026-01-08T11:46:52.5+08;bin_in;trousers;709;random_small
-2026-01-09T21:56:15+08;overstock_in;trousers;791
-2026-01-11T08:05:37.5+08;bin_out;trousers;709;random_small
-2026-01-12T18:15+08;bin_in;trousers;709;random_small
-2026-01-14T04:24:22.5+08;bin_out;trousers;709;random_small
-2026-01-15T14:33:45+08;warehouse_out;trousers;1418
-2026-01-17T00:43:07.5+08;bin_in;trousers;82;random_small
-2026-01-18T10:52:30+08;bin_out;skirt;200;random_small
-2026-01-19T21:01:52.5+08;warehouse_out;skirt;200
-2026-01-21T07:11:15+08;bin_out;skirt;33;random_small
-2026-01-22T17:20:37.5+08;warehouse_out;skirt;33
-2026-01-24T03:30+08;end
+2026-01-02 19:09:22.5;start
+2026-01-04 05:18:45;warehouse_in;skirt;233
+2026-01-05 15:28:07.5;bin_in;skirt;233;random_small
+2026-01-07 01:37:30;warehouse_in;trousers;1500
+2026-01-08 11:46:52.5;bin_in;trousers;709;random_small
+2026-01-09 21:56:15;overstock_in;trousers;791
+2026-01-11 08:05:37.5;bin_out;trousers;709;random_small
+2026-01-12 18:15;bin_in;trousers;709;random_small
+2026-01-14 04:24:22.5;bin_out;trousers;709;random_small
+2026-01-15 14:33:45;warehouse_out;trousers;1418
+2026-01-17 00:43:07.5;bin_in;trousers;82;random_small
+2026-01-18 10:52:30;bin_out;skirt;200;random_small
+2026-01-19 21:01:52.5;warehouse_out;skirt;200
+2026-01-21 07:11:15;bin_out;skirt;33;random_small
+2026-01-22 17:20:37.5;warehouse_out;skirt;33
+2026-01-24 03:30;end
 # The following columns exist in this file:
 # time: The time at which the event takes place, as an ISO timestamp with millisecond precision
 # type: The type of the event. Each event type has a specific meaning. See below for a list of event types.

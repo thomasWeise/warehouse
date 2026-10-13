@@ -1,5 +1,5 @@
 """
-Events regarding the storage of part.
+Events regarding the storage of parts.
 
 >>> from warehouse.instance.bin_type import BinType
 >>> with context():
@@ -92,18 +92,18 @@ is_random=True)), amount=750)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-2017-07-14T10:40+08;warehouse_in;hat;1200
-2017-07-14T10:40:20+08;warehouse_in;shoe;40
-2017-07-14T12:37+08;warehouse_in;trousers;750
-2017-07-14T13:10+08;overstock_in;hat;200
-2017-07-14T13:18:20+08;overstock_in;shoe;10
-2017-07-14T18:51:40+08;overstock_in;trousers;250
-2017-07-14T21:30+08;overstock_out;hat;200
-2017-07-15T00:25+08;overstock_out;shoe;10
-2017-07-15T00:58:20+08;overstock_out;trousers;250
-2017-07-14T10:40+08;warehouse_out;hat;1200
-2017-07-14T10:40:20+08;warehouse_out;shoe;40
-2017-07-14T12:37+08;warehouse_out;trousers;750
+2017-07-14 10:40;warehouse_in;hat;1200
+2017-07-14 10:40:20;warehouse_in;shoe;40
+2017-07-14 12:37;warehouse_in;trousers;750
+2017-07-14 13:10;overstock_in;hat;200
+2017-07-14 13:18:20;overstock_in;shoe;10
+2017-07-14 18:51:40;overstock_in;trousers;250
+2017-07-14 21:30;overstock_out;hat;200
+2017-07-15 00:25;overstock_out;shoe;10
+2017-07-15 00:58:20;overstock_out;trousers;250
+2017-07-14 10:40;warehouse_out;hat;1200
+2017-07-14 10:40:20;warehouse_out;shoe;40
+2017-07-14 12:37;warehouse_out;trousers;750
 <BLANKLINE>
 ===================
 <BLANKLINE>
