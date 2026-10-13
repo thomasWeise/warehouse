@@ -38,21 +38,21 @@ def create_default_events() -> tuple[Event, ...]:
 
     with context():
         return (StartEvent(__next()),
-                WarehouseIn(__next(), "skirt", 233),
-                BinIn(__next(), "skirt", 233, "random_small"),
-                WarehouseIn(__next(), "trousers", 1500),
-                BinIn(__next(), "trousers", 709, "random_small"),
-                OverstockIn(__next(), "trousers", 791),
-                BinOut(__next(), "trousers", 709, "random_small"),
-                BinIn(__next(), "trousers", 709, "random_small"),
-                BinOut(__next(), "trousers", 709, "random_small"),
-                WarehouseOut(__next(), "trousers", 1418),
-                BinIn(__next(), "trousers", 82, "random_small"),
-                BinOut(__next(), "skirt", 200, "random_small"),
-                WarehouseOut(__next(), "skirt", 200),
-                BinOut(__next(), "skirt", 33, "random_small"),
-                WarehouseOut(__next(), "skirt", 33),
-                EndEvent(__next()))
+                WarehouseIn.create(__next(), "skirt", 233),
+                BinIn.create(__next(), "skirt", 233, "random_small"),
+                WarehouseIn.create(__next(), "trousers", 1500),
+                BinIn.create(__next(), "trousers", 709, "random_small"),
+                OverstockIn.create(__next(), "trousers", 791),
+                BinOut.create(__next(), "trousers", 709, "random_small"),
+                BinIn.create(__next(), "trousers", 709, "random_small"),
+                BinOut.create(__next(), "trousers", 709, "random_small"),
+                WarehouseOut.create(__next(), "trousers", 1418),
+                BinIn.create(__next(), "trousers", 82, "random_small"),
+                BinOut.create(__next(), "skirt", 200, "random_small"),
+                WarehouseOut.create(__next(), "skirt", 200),
+                BinOut.create(__next(), "skirt", 33, "random_small"),
+                WarehouseOut.create(__next(), "skirt", 33),
+                EndEvent.create(__next()))
 
 
 def test_default_events() -> None:
@@ -63,11 +63,6 @@ def test_default_events() -> None:
         events_1 = create_default_events()
     for event in events_1:
         assert isinstance(event, Event)
-        event_2 = event.copy()
-        assert event_2 is not event
-        assert_same(event_2, event)
-        assert event_2 == event
-        assert not (event_2 != event)  # noqa
 
     with context():
         create_default_bin_types()
@@ -75,11 +70,6 @@ def test_default_events() -> None:
         events_2 = create_default_events()
     for event in events_2:
         assert isinstance(event, Event)
-        event_2 = event.copy()
-        assert event_2 is not event
-        assert_same(event_2, event)
-        assert event_2 == event
-        assert not (event_2 != event)  # noqa
 
     assert tuple.__len__(events_2) == tuple.__len__(events_1)
 

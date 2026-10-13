@@ -25,7 +25,6 @@ from warehouse.instance.bin_type import BinType
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
 from warehouse.instance.material import Material
-from warehouse.instance.time import EARLIEST_START
 
 
 class WarehouseModule:
@@ -51,29 +50,6 @@ class WarehouseModule:
         #: the amount of materials that are currently in the bins
         self.__in_bin: Final[tuple[Counter[int], ...]] = tuple(
             Counter(dict.fromkeys(mb, 0)) for mb in self.__mat_bin)
-
-        # create the cached events
-        use_material: Final[Material] = instance.materials[0]
-        use_bin_type: Final[BinType] = instance.bin_types[0]
-
-        #: the shared BinIn event
-        self.__e_bin_in: Final[BinIn] = BinIn(
-            EARLIEST_START, use_material, 1, use_bin_type)
-        #: the shared BinOut event
-        self.__e_bin_out: Final[BinOut] = BinOut(
-            EARLIEST_START, use_material, 1, use_bin_type)
-        #: the shared overstock in event
-        self.__e_overstock_in: Final[OverstockIn] = OverstockIn(
-            EARLIEST_START, use_material, 1)
-        #: the shared overstock out event
-        self.__e_overstock_out: Final[OverstockOut] = OverstockOut(
-            EARLIEST_START, use_material, 1)
-        #: the shared insufficient event
-        self.__e_insufficient: Final[InsufficientMaterial] = \
-            InsufficientMaterial(EARLIEST_START, use_material, 1)
-        #: the shared delivery event
-        self.__e_deliver: Final[WarehouseDelivers] = \
-            WarehouseDelivers(EARLIEST_START, use_material, 1)
 
         #: the bin types
         self.__bin_types: Final[tuple[BinType, ...]] = instance.bin_types
@@ -111,24 +87,15 @@ class WarehouseModule:
 
         use: int = min(empty_bins[bin_key], amount)
         if use > 0:
-            e_bin_in: Final[BinIn] = self.__e_bin_in
-            e_bin_in.material = material
-            e_bin_in.bin_type = bin_type
-            e_bin_in.time = time
-            e_bin_in.amount = use
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][mat_key] += use
-            yield e_bin_in
+            yield BinIn(time, material, use, bin_type)
             amount -= use
             if amount <= 0:
                 return
 
         self.__in_overstock[mat_key] += amount
-        e_over_in: Final[OverstockIn] = self.__e_overstock_in
-        e_over_in.material = material
-        e_over_in.amount = amount
-        e_over_in.time = time
-        yield e_over_in
+        yield OverstockIn(time, material, amount)
 
     def _warehouse_out(self, event: WarehouseOut) -> Generator[
             Event, None, None]:
@@ -151,11 +118,7 @@ class WarehouseModule:
         use: int = in_bin[mat_key] + in_overstock[mat_key]
         if use < amount:
             # We cannot fulfill this request.
-            e_insuf_mat: InsufficientMaterial = self.__e_insufficient
-            e_insuf_mat.material = material
-            e_insuf_mat.amount = amount - use
-            e_insuf_mat.time = time
-            yield e_insuf_mat
+            yield InsufficientMaterial(time, material, amount - use)
 
             if use <= 0:
                 return
@@ -163,13 +126,10 @@ class WarehouseModule:
             # Make a modified copy of the original event
             amount = use
 
-        e_deliver: Final[WarehouseDelivers] = self.__e_deliver
-        e_deliver.material = material
-        e_deliver.amount = amount
-        e_deliver.time = time
+        e_deliver: Final[WarehouseDelivers] = WarehouseDelivers(
+            time, material, amount)
 
         empty_bins: Final[list[int]] = self.__empty_bins
-        e_bin_out: Final[BinOut] = self.__e_bin_out
         bin_type_empty = empty_bins[bin_key]
 
         while amount > 0:
@@ -182,11 +142,7 @@ class WarehouseModule:
                 in_bin[mat_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
-                e_bin_out.material = material
-                e_bin_out.bin_type = bin_type
-                e_bin_out.amount = use
-                e_bin_out.time = time
-                yield e_bin_out
+                yield BinOut(time, material, use, bin_type)
                 continue
 
             # If we get here, we do not have our material in the bin.
@@ -205,22 +161,12 @@ class WarehouseModule:
                         f"{bin_type!r}.")
 
                 in_overstock[mat_key] -= use
-                e_over_out = self.__e_overstock_out
-                e_over_out.material = material
-                e_over_out.amount = use
-                e_over_out.time = time
-                yield e_over_out
+                yield OverstockOut(time, material, use)
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[mat_key] += use
-
-                e_bin_in = self.__e_bin_in
-                e_bin_in.material = material
-                e_bin_in.bin_type = bin_type
-                e_bin_in.amount = use
-                e_bin_in.time = time
-                yield e_bin_in
+                yield BinIn(time, material, use, bin_type)
 
                 # In the next iteration, we can take the material out of
                 # the bin again.
@@ -248,21 +194,13 @@ class WarehouseModule:
                     "So how can the bins be full?")
 
             use_material = self.__materials[other_mat]
-            e_bin_out.material = use_material
-            e_bin_out.bin_type = bin_type
-            e_bin_out.amount = use
             in_bin[other_mat] -= use
             bin_type_empty += use
             empty_bins[bin_key] = bin_type_empty
-            e_bin_out.time = time
-            yield e_bin_out
+            yield BinOut(time, use_material, use, bin_type)
 
-            e_over_in: OverstockIn = self.__e_overstock_in
-            e_over_in.material = use_material
-            e_over_in.amount = use
             in_overstock[other_mat] += use
-            e_over_in.time = time
-            yield e_over_in
+            yield OverstockIn(time, use_material, use)
 
         # When we get here, we have extracted all the required material and
         # can now ship it out of the warehouse.
@@ -273,24 +211,14 @@ class WarehouseModule:
             for other_mat in self.__mat_bin[bin_key]:
                 use = min(bin_type_empty, in_overstock[other_mat])
                 if use > 0:
-                    e_over_out = self.__e_overstock_out
                     use_material = self.__materials[other_mat]
-                    e_over_out.material = use_material
-                    e_over_out.amount = use
-                    e_over_out.time = time
-                    yield e_over_out
+                    yield OverstockOut(time, use_material, use)
 
                     bin_type_empty -= use
                     empty_bins[bin_key] = bin_type_empty
                     in_bin[other_mat] += use
                     in_overstock[other_mat] -= use
-
-                    e_bin_in = self.__e_bin_in
-                    e_bin_in.material = use_material
-                    e_bin_in.bin_type = bin_type
-                    e_bin_in.amount = use
-                    e_bin_in.time = time
-                    yield e_bin_in
+                    yield BinIn(time, use_material, use, bin_type)
 
                     if bin_type_empty <= 0:
                         break

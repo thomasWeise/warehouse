@@ -9,18 +9,18 @@ Events regarding the storage of material.
 ...     Material(None, "hat", "hat_bins")
 ...     Material(None, "shoe", "random_small")
 ...     Material(None, "trousers", "random_large")
-...     ev01 = WarehouseIn(1500000000000, "hat", 1200)
-...     ev02 = WarehouseIn(1500000020000, "shoe", 40)
-...     ev03 = WarehouseIn(1500007020000, "trousers", 750)
-...     ev04 = OverstockIn(1500009000000, "hat", 200)
-...     ev05 = OverstockIn(1500009500000, "shoe", 10)
-...     ev06 = OverstockIn(1500029500000, "trousers", 250)
-...     ev07 = OverstockOut(1500039000000, "hat", 200)
-...     ev08 = OverstockOut(1500049500000, "shoe", 10)
-...     ev09 = OverstockOut(1500051500000, "trousers", 250)
-...     ev10 = WarehouseOut(1500000000000, "hat", 1200)
-...     ev11 = WarehouseOut(1500000020000, "shoe", 40)
-...     ev12 = WarehouseOut(1500007020000, "trousers", 750)
+...     ev01 = WarehouseIn.create(1500000000000, "hat", 1200)
+...     ev02 = WarehouseIn.create(1500000020000, "shoe", 40)
+...     ev03 = WarehouseIn.create(1500007020000, "trousers", 750)
+...     ev04 = OverstockIn.create(1500009000000, "hat", 200)
+...     ev05 = OverstockIn.create(1500009500000, "shoe", 10)
+...     ev06 = OverstockIn.create(1500029500000, "trousers", 250)
+...     ev07 = OverstockOut.create(1500039000000, "hat", 200)
+...     ev08 = OverstockOut.create(1500049500000, "shoe", 10)
+...     ev09 = OverstockOut.create(1500051500000, "trousers", 250)
+...     ev10 = WarehouseOut.create(1500000000000, "hat", 1200)
+...     ev11 = WarehouseOut.create(1500000020000, "shoe", 40)
+...     ev12 = WarehouseOut.create(1500007020000, "trousers", "750")
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06, ev07,
 ...                 ev08, ev09, ev10, ev11, ev12)
@@ -33,7 +33,7 @@ Events regarding the storage of material.
 ...     print()
 ...
 ...     csv = list(Event.to_csv(events_1))
-...     for row in csv:
+...     for row in csv[1:]:
 ...         if not str.startswith(row, "#"):
 ...             print(row)
 ...
@@ -53,34 +53,33 @@ Material(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000))
 Material(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
 amount=500))
-WarehouseIn(amount=1200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500000000000)
-WarehouseIn(amount=40, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500000020000)
-WarehouseIn(amount=750, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500007020000)
-OverstockIn(amount=200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500009000000)
-OverstockIn(amount=10, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500009500000)
-OverstockIn(amount=250, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500029500000)
-OverstockOut(amount=200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500039000000)
-OverstockOut(amount=10, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500049500000)
-OverstockOut(amount=250, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500051500000)
-WarehouseOut(amount=1200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500000000000)
-WarehouseOut(amount=40, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500000020000)
-WarehouseOut(amount=750, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500007020000)
+WarehouseIn(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=1200)
+WarehouseIn(time=1500000020000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=40)
+WarehouseIn(time=1500007020000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=750)
+OverstockIn(time=1500009000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=200)
+OverstockIn(time=1500009500000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=10)
+OverstockIn(time=1500029500000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=250)
+OverstockOut(time=1500039000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=200)
+OverstockOut(time=1500049500000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=10)
+OverstockOut(time=1500051500000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=250)
+WarehouseOut(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=1200)
+WarehouseOut(time=1500000020000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=40)
+WarehouseOut(time=1500007020000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=750)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-time;type;material;amount;binType
 2017-07-14T10:40+08;warehouse_in;hat;1200
 2017-07-14T10:40:20+08;warehouse_in;shoe;40
 2017-07-14T12:37+08;warehouse_in;trousers;750
@@ -96,34 +95,38 @@ time;type;material;amount;binType
 <BLANKLINE>
 ===================
 <BLANKLINE>
-WarehouseIn(amount=1200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500000000000)
-WarehouseIn(amount=40, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500000020000)
-WarehouseIn(amount=750, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500007020000)
-OverstockIn(amount=200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500009000000)
-OverstockIn(amount=10, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500009500000)
-OverstockIn(amount=250, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500029500000)
-OverstockOut(amount=200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500039000000)
-OverstockOut(amount=10, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500049500000)
-OverstockOut(amount=250, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500051500000)
-WarehouseOut(amount=1200, material=Material(key=0, name='hat', bin_type=\
-BinType(key=2, name='hat_bins', amount=30)), time=1500000000000)
-WarehouseOut(amount=40, material=Material(key=1, name='shoe', bin_type=\
-BinType(key=0, name='random_small', amount=1000)), time=1500000020000)
-WarehouseOut(amount=750, material=Material(key=2, name='trousers', bin_type=\
-BinType(key=1, name='random_large', amount=500)), time=1500007020000)
-"""
-from typing import Final, Self
+WarehouseIn(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=1200)
+WarehouseIn(time=1500000020000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=40)
+WarehouseIn(time=1500007020000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=750)
+OverstockIn(time=1500009000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=200)
+OverstockIn(time=1500009500000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=10)
+OverstockIn(time=1500029500000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=250)
+OverstockOut(time=1500039000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=200)
+OverstockOut(time=1500049500000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=10)
+OverstockOut(time=1500051500000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=250)
+WarehouseOut(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=1200)
+WarehouseOut(time=1500000020000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=40)
+WarehouseOut(time=1500007020000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=750)
 
-from pycommons.types import check_int_range
+>>> hash(ev02)
+5442331417107505762
+"""
+from dataclasses import dataclass, field
+from typing import Final
+
+from pycommons.types import check_to_int_range
 
 from warehouse.instance.element import context
 from warehouse.instance.event import Event
@@ -135,8 +138,24 @@ COLUMN_MATERIAL: Final[str] = "material"
 COLUMN_AMOUNT: Final[str] = "amount"
 
 
-class StorageEvent(Event):
+def check_to_amount(amount: int | str) -> int:
+    """
+    Check an amount for validity.
+
+    :param amount: the amount integer or string
+    :return: the amount integer
+    """
+    return check_to_int_range(amount, "amount", 1, 1_000_000)
+
+
+@dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
+class StorageEvent(Event):  # noqa: PLW1641
     """An amount of material has changed places."""
+
+    #: the material
+    material: Material = field(hash=True)
+    #: the amount to store/retrieve
+    amount: int = field(hash=True)
 
     @classmethod
     def eventclass_needs_register(cls) -> bool:
@@ -149,35 +168,6 @@ class StorageEvent(Event):
         """
         return super().eventclass_needs_register() and (
             cls.__name__ != "StorageEvent")
-
-    def __init__(self, time: int, material: Material | int | str,
-                 amount: int) -> None:
-        """
-        Create the storage event.
-
-        :param time: the time when we want to store material in the warehouse
-        :param material: the material that we want to store/retrieve
-        :param amount: the amount of material to store/retrieve
-        """
-        super().__init__(time)
-        if material.__class__ is not Material:
-            with context() as ctx:
-                material = ctx.resolve(Material, material)  # type: ignore
-
-        #: the material being transferred
-        self.material: Material = material
-
-        #: the amount of material being transfered
-        self.amount: int = check_int_range(
-            amount, "amount", 1, 1_000_000)
-
-    def copy(self) -> Self:
-        """
-        Create a copy of this event.
-
-        :return: an independent copy of this event
-        """
-        return self.__class__(self.time, self.material, self.amount)
 
     def __eq__(self, other) -> bool:
         """
@@ -204,14 +194,6 @@ class StorageEvent(Event):
             self.time != other.time) or (
             self.material != other.material) or (
             self.amount != other.amount)
-
-    def __hash__(self) -> int:
-        """
-        You cannot hash events, because they are mutable.
-
-        :raises TypeError: always
-        """
-        raise TypeError
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -250,18 +232,21 @@ class StorageEvent(Event):
         return COLUMN_MATERIAL, COLUMN_AMOUNT
 
     @classmethod
-    def eventclass_create_event(cls, time: int, cols: dict[
-            str, int | None], data: list[str]) -> Event:
+    def create(  # type: ignore  # pylint: disable=W0221
+            cls, time: int, material: int | str | Material,
+            amount: int | str, **_) -> "StorageEvent":  # type: ignore
         """
         Create the storage event.
 
         :param time: the time
-        :param cols: the csv columns
-        :param data: the csv data
-        :return: the event
+        :param material: the material to use
+        :param amount: the amount of the material to use
+        :return: the storage event
         """
-        return cls(time, data[cols[COLUMN_MATERIAL]], int(
-            data[cols[COLUMN_AMOUNT]]))
+        if not isinstance(material, Material):
+            with context() as ctx:
+                material = ctx.resolve(Material, material)
+        return cls(time, material, check_to_amount(amount))  # type: ignore
 
 
 class WarehouseIn(StorageEvent):

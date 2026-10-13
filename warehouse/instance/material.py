@@ -37,7 +37,7 @@ amount=10))"
 >>> for row in csv1:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
-key;name;binType
+key;name;bin_type
 0;Shoe;shoe_bin
 1;Hat;random_small
 2;Skirt;random_large
@@ -71,7 +71,7 @@ from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import Element, context, prepare_to_csv
 
 #: the CSV material column
-COLUMN_BIN_TYPE: Final[str] = "binType"
+COLUMN_BIN_TYPE: Final[str] = "bin_type"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)

@@ -9,12 +9,12 @@ Events regarding the storage and retrieval of material to and from bins.
 ...     Material(None, "hat", "hat_bins")
 ...     Material(None, "shoe", "random_small")
 ...     Material(None, "trousers", "random_large")
-...     ev01 = BinIn(1500000000000, "hat", 10, "hat_bins")
-...     ev02 = BinIn(1700000000000, "shoe", 15, "random_small")
-...     ev03 = BinIn(1800000000000, "trousers", 7, "random_large")
-...     ev04 = BinOut(1900000000000, "hat", 9, "hat_bins")
-...     ev05 = BinOut(2000000000000, "shoe", 8, "random_small")
-...     ev06 = BinOut(2100000000000, "trousers", 3, "random_large")
+...     ev01 = BinIn.create(1500000000000, "hat", 10, "hat_bins")
+...     ev02 = BinIn.create(1700000000000, "shoe", 15, "random_small")
+...     ev03 = BinIn.create(1800000000000, "trousers", 7, "random_large")
+...     ev04 = BinOut.create(1900000000000, "hat", 9, "hat_bins")
+...     ev05 = BinOut.create(2000000000000, "shoe", 8, "random_small")
+...     ev06 = BinOut.create(2100000000000, "trousers", 3, "random_large")
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06)
 ...
@@ -25,7 +25,7 @@ Events regarding the storage and retrieval of material to and from bins.
 ...     print("===================")
 ...     print()
 ...
-...     csv = list(Event.to_csv(events_1))
+...     csv = list(BinEvent.to_csv(events_1))
 ...     for row in csv:
 ...         if not str.startswith(row, "#"):
 ...             print(row)
@@ -34,7 +34,7 @@ Events regarding the storage and retrieval of material to and from bins.
 ...     print("===================")
 ...     print()
 ...
-...     events_2 = tuple(Event.from_csv(csv))
+...     events_2 = tuple(BinEvent.from_csv(csv))
 ...     for ev in events_2:
 ...         print(ev)
 BinType(key=0, name='random_small', amount=1000)
@@ -46,28 +46,28 @@ Material(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000))
 Material(key=2, name='trousers', bin_type=BinType(key=1, \
 name='random_large', amount=500))
-BinIn(amount=10, bin_type=BinType(key=2, name='hat_bins', amount=30), \
-material=Material(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30)), time=1500000000000)
-BinIn(amount=15, bin_type=BinType(key=0, name='random_small', amount=1000), \
-material=Material(key=1, name='shoe', bin_type=BinType(key=0, \
-name='random_small', amount=1000)), time=1700000000000)
-BinIn(amount=7, bin_type=BinType(key=1, name='random_large', amount=500), \
-material=Material(key=2, name='trousers', bin_type=BinType(key=1, \
-name='random_large', amount=500)), time=1800000000000)
-BinOut(amount=9, bin_type=BinType(key=2, name='hat_bins', amount=30), \
-material=Material(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30)), time=1900000000000)
-BinOut(amount=8, bin_type=BinType(key=0, name='random_small', \
-amount=1000), material=Material(key=1, name='shoe', bin_type=BinType(key=0, \
-name='random_small', amount=1000)), time=2000000000000)
-BinOut(amount=3, bin_type=BinType(key=1, name='random_large', amount=500), \
-material=Material(key=2, name='trousers', bin_type=BinType(key=1, \
-name='random_large', amount=500)), time=2100000000000)
+BinIn(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=10, \
+bin_type=BinType(key=2, name='hat_bins', amount=30))
+BinIn(time=1700000000000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), \
+amount=15, bin_type=BinType(key=0, name='random_small', amount=1000))
+BinIn(time=1800000000000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=7, \
+bin_type=BinType(key=1, name='random_large', amount=500))
+BinOut(time=1900000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=9, \
+bin_type=BinType(key=2, name='hat_bins', amount=30))
+BinOut(time=2000000000000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=8, \
+bin_type=BinType(key=0, name='random_small', amount=1000))
+BinOut(time=2100000000000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=3, \
+bin_type=BinType(key=1, name='random_large', amount=500))
 <BLANKLINE>
 ===================
 <BLANKLINE>
-time;type;material;amount;binType
+time;type;material;amount;bin_type
 2017-07-14T10:40+08;bin_in;hat;10;hat_bins
 2023-11-15T06:13:20+08;bin_in;shoe;15;random_small
 2027-01-15T16+08;bin_in;trousers;7;random_large
@@ -77,41 +77,48 @@ time;type;material;amount;binType
 <BLANKLINE>
 ===================
 <BLANKLINE>
-BinIn(amount=10, bin_type=BinType(key=2, name='hat_bins', amount=30), \
-material=Material(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30)), time=1500000000000)
-BinIn(amount=15, bin_type=BinType(key=0, name='random_small', amount=1000), \
-material=Material(key=1, name='shoe', bin_type=BinType(key=0, \
-name='random_small', amount=1000)), time=1700000000000)
-BinIn(amount=7, bin_type=BinType(key=1, name='random_large', amount=500), \
-material=Material(key=2, name='trousers', bin_type=BinType(key=1, \
-name='random_large', amount=500)), time=1800000000000)
-BinOut(amount=9, bin_type=BinType(key=2, name='hat_bins', amount=30), \
-material=Material(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30)), time=1900000000000)
-BinOut(amount=8, bin_type=BinType(key=0, name='random_small', \
-amount=1000), material=Material(key=1, name='shoe', bin_type=BinType(key=0, \
-name='random_small', amount=1000)), time=2000000000000)
-BinOut(amount=3, bin_type=BinType(key=1, name='random_large', amount=500), \
-material=Material(key=2, name='trousers', bin_type=BinType(key=1, \
-name='random_large', amount=500)), time=2100000000000)
+BinIn(time=1500000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=10, \
+bin_type=BinType(key=2, name='hat_bins', amount=30))
+BinIn(time=1700000000000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), \
+amount=15, bin_type=BinType(key=0, name='random_small', amount=1000))
+BinIn(time=1800000000000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=7, \
+bin_type=BinType(key=1, name='random_large', amount=500))
+BinOut(time=1900000000000, material=Material(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30)), amount=9, \
+bin_type=BinType(key=2, name='hat_bins', amount=30))
+BinOut(time=2000000000000, material=Material(key=1, name='shoe', \
+bin_type=BinType(key=0, name='random_small', amount=1000)), amount=8, \
+bin_type=BinType(key=0, name='random_small', amount=1000))
+BinOut(time=2100000000000, material=Material(key=2, name='trousers', \
+bin_type=BinType(key=1, name='random_large', amount=500)), amount=3, \
+bin_type=BinType(key=1, name='random_large', amount=500))
+
+>>> hash(ev06)
+-6371751855485235984
 """
 
-from typing import Self
+
+from dataclasses import dataclass, field
 
 from warehouse.event.storage import (
     COLUMN_AMOUNT,
     COLUMN_MATERIAL,
     StorageEvent,
+    check_to_amount,
 )
 from warehouse.instance.bin_type import BinType
 from warehouse.instance.element import context
-from warehouse.instance.event import Event
 from warehouse.instance.material import COLUMN_BIN_TYPE, Material
 
 
-class BinEvent(StorageEvent):
+@dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
+class BinEvent(StorageEvent):  # noqa: PLW1641
     """An amount of material has changed places."""
+
+    bin_type: BinType = field(hash=True)
 
     @classmethod
     def eventclass_needs_register(cls) -> bool:
@@ -124,36 +131,6 @@ class BinEvent(StorageEvent):
         """
         return super().eventclass_needs_register() and (
             cls.__name__ != "BinEvent")
-
-    def __init__(self, time: int, material: Material | int | str,
-                 amount: int, bin_type: BinType | int | str) -> None:
-        """
-        Create the bin event.
-
-        :param time: the time when we want to store material in the warehouse
-        :param material: the material that we want to store/retrieve
-        :param amount: the amount of material to store/retrieve
-        """
-        need_bin: bool = bin_type.__class__ is not BinType
-        if (material.__class__ is not Material) or need_bin:
-            with context() as ctx:
-                super().__init__(time, material, amount)
-                if need_bin:
-                    bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
-        else:
-            super().__init__(time, material, amount)
-
-        #: the bin type into or out of which the material is being transferred
-        self.bin_type: BinType = bin_type  # type: ignore
-
-    def copy(self) -> Self:
-        """
-        Create a copy of this event.
-
-        :return: an independent copy of this event
-        """
-        return self.__class__(
-            self.time, self.material, self.amount, self.bin_type)
 
     def __eq__(self, other) -> bool:
         """
@@ -182,14 +159,6 @@ class BinEvent(StorageEvent):
             self.material != other.material) or (
             self.amount != other.amount) or (
             self.bin_type != other.bin_type)
-
-    def __hash__(self) -> int:
-        """
-        You cannot hash events, because they are mutable.
-
-        :raises TypeError: always
-        """
-        raise TypeError
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -222,22 +191,31 @@ class BinEvent(StorageEvent):
 
         :return: the csv columns
         """
-        return (*super().eventclass_get_csv_columns(),
-                COLUMN_BIN_TYPE)
+        return COLUMN_MATERIAL, COLUMN_AMOUNT, COLUMN_BIN_TYPE
 
     @classmethod
-    def eventclass_create_event(cls, time: int, cols: dict[
-            str, int | None], data: list[str]) -> Event:
+    def create(  # type: ignore  # pylint: disable=W0221
+            cls, time: int, material: int | str | Material,
+            amount: int | str,
+            bin_type: int | str | BinType) -> "BinEvent":  # type: ignore
         """
         Create the storage event.
 
         :param time: the time
-        :param cols: the csv columns
-        :param data: the csv data
-        :return: the event
+        :param material: the material to use
+        :param amount: the amount of the material to use
+        :return: the bin event
         """
-        return cls(time, data[cols[COLUMN_MATERIAL]], int(
-            data[cols[COLUMN_AMOUNT]]), data[cols[COLUMN_BIN_TYPE]])
+        need_bin: bool = bin_type.__class__ is not BinType
+        need_material: bool = material.__class__ is not Material
+        if need_material or need_bin:
+            with context() as ctx:
+                if need_material:
+                    material = ctx.resolve(Material, material)  # type: ignore
+                if need_bin:
+                    bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
+        return cls(
+            time, material, check_to_amount(amount), bin_type)  # type: ignore
 
 
 class BinIn(BinEvent):

@@ -11,8 +11,9 @@ However, `==` and `!=` may *also* use other attributes.
 This may be useful for comparing data across instances.
 """
 
+from dataclasses import dataclass, field
 from operator import itemgetter
-from typing import Final, Iterable, Self
+from typing import ClassVar, Final, Iterable
 
 from pycommons.io.csv import CsvReader as CsvReaderBase
 from pycommons.io.csv import CsvWriter as CsvWriterBase
@@ -32,17 +33,22 @@ COLUMN_TIME: Final[str] = "time"
 COLUMN_TYPE: Final[str] = "type"
 
 
-class Event:
+@dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
+class Event:  # noqa: PLW1641
     """The base class for events."""
 
     #: the internal subclasses
-    __subclasses: Final[dict[str, type["Event"]]] = {}
+    __subclasses: ClassVar[dict[str, type["Event"]]] = {}
 
     #: the subclass items
-    __subclasses_items: tuple[tuple[str, type["Event"]], ...] | None = None
+    __subclasses_items: ClassVar[tuple[tuple[
+        str, type["Event"]], ...] | None] = None
 
     #: the subclasses
-    __subclasses_classes: tuple[type["Event"], ...] | None = None
+    __subclasses_classes: ClassVar[tuple[type["Event"], ...] | None] = None
+
+    #: the time when the event takes place
+    time: int = field(hash=True)
 
     def __init_subclass__(cls, **kwargs) -> None:
         """
@@ -61,24 +67,6 @@ class Event:
             sc[key] = cls
             Event.__subclasses_items = None
             Event.__subclasses_classes = None
-
-    def __repr__(self) -> str:
-        """
-        Get a representation of this event.
-
-        :return: the representation
-
-        >>> Event(1500000000000)
-        Event(time=1500000000000)
-        """
-        cn = self.__class__.__name__
-        values: list[tuple[str, object]] = []
-        for attr in dir(self):
-            if not str.startswith(attr, "_"):
-                val = getattr(self, attr)
-                if not callable(val):
-                    values.append((attr, val))
-        return f"{cn}({', '.join(f'{k}={v!r}' for k, v in values)})"
 
     @classmethod
     def eventclass_from_name(cls, name: str) -> type["Event"]:
@@ -166,44 +154,14 @@ class Event:
         return None
 
     @classmethod
-    def eventclass_create_event(
-            cls, time: int, cols: dict[  # noqa  # pylint: disable=W0613
-                str, int | None],
-            data: list[str]) -> "Event":  # noqa  # pylint: disable=W0613
+    def create(cls, time: int, **_) -> "Event":  # noqa  # pylint: disable=W0613
         """
         Create the event from the columns.
 
         :param time: the event time
-        :param cols: the columns
-        :param data: the data
         :return: the event
         """
-        return cls(time)
-
-    def __init__(self, time: int) -> None:
-        """
-        Create an event object.
-
-        :param time: the event time
-        """
-        #: the time at which the event takes place
-        self.time = check_time(time)
-
-    def copy(self) -> Self:
-        """
-        Create a copy of this event.
-
-        :return: an independent copy of this event
-        """
-        return self.__class__(self.time)
-
-    def __hash__(self) -> int:
-        """
-        You cannot hash events, because they are mutable.
-
-        :raises TypeError: always
-        """
-        raise TypeError
+        return cls(check_time(time))
 
     def event_get_csv_value(
             self, column: str) -> str:  # noqa  # pylint: disable=W0613
@@ -377,8 +335,9 @@ class CsvReader(CsvReaderBase[Event]):
         cols: Final[dict[str, int | None]] = self.__cols
         cls: Final[type[Event]] = Event.eventclass_from_name(
             data[cols[COLUMN_TYPE]])
-        ret = cls.eventclass_create_event(str_to_time(data[cols[
-            COLUMN_TIME]]), cols, data)
+        col_names = cls.eventclass_get_csv_columns()
+        ret = cls.create(time=str_to_time(data[cols[
+            COLUMN_TIME]]), **{c: data[cols[c]] for c in col_names})
         if not isinstance(ret, Event):
             raise type_error(ret, "parse_row result", Event)
         return ret

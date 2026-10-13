@@ -79,7 +79,7 @@ BinType(key=4, name='shed', amount=76))
 (StartEvent(time=1005000000000), EndEvent(time=1007000000000))
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Final, Iterable, TypeVar
 
 from pycommons.io.console import logger
@@ -112,22 +112,22 @@ FILE_EVENTS: Final[str] = "events.csv"
 T = TypeVar("T", bound=Element)
 
 
-@dataclass(frozen=True, init=False, order=False, eq=False)
+@dataclass(frozen=True, init=False, order=True, eq=True)
 class Instance(ElementResolver):
     """A warehousing instance."""
 
     #: the number of materials
-    n_materials: int
+    n_materials: int = field(hash=False, compare=False)
     #: the number of bin types
-    n_bin_types: int
+    n_bin_types: int = field(hash=False, compare=False)
     #: the number of events
-    n_events: int
+    n_events: int = field(hash=False, compare=False)
     #: the bin configuration of the warehouse
-    bin_types: tuple[BinType, ...]
+    bin_types: tuple[BinType, ...] = field(hash=True, compare=True)
     #: the material types available for the warehouse
-    materials: tuple[Material, ...]
+    materials: tuple[Material, ...] = field(hash=True, compare=True)
     #: the pre-defined events for the instance
-    events: tuple[Event, ...]
+    events: tuple[Event, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType],
@@ -227,35 +227,6 @@ class Instance(ElementResolver):
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)
         object.__setattr__(self, "_names", names)
-
-    def __eq__(self, other) -> bool:
-        """
-        Compare for equality with another instance.
-
-        :param other: the other instance
-        :return: `True` if they are equal, `False` otherwise
-        """
-        if other is self:
-            return True
-        if not isinstance(other, Instance):
-            return NotImplemented
-
-        if (other.n_bin_types != self.n_bin_types) or (
-                other.n_events != self.n_events) or (
-                other.n_materials != self.n_materials):
-            return False
-
-        return (self.bin_types == other.bin_types) and (
-            self.materials == other.materials) and (
-            self.events == other.events)
-
-    def __hash__(self) -> int:
-        """
-        Instances cannot be hashed currently.
-
-        :raises NotImplementedError: always
-        """
-        return hash((self.bin_types, self.materials, self.events))
 
     def resolve(self, cls: type[T], name_or_key: str | int) -> T:
         """

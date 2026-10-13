@@ -1,4 +1,4 @@
-time;type;material;amount;binType
+time;type;material;amount;bin_type
 2026-01-02T09:00+08;start
 2026-01-02T09:05+08;warehouse_in;skirt;500
 2026-01-02T09:10+08;warehouse_out;skirt;250

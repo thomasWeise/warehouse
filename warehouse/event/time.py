@@ -1,19 +1,18 @@
 """
 The start and end events of the simulation.
 
->>> ev1 = StartEvent(1500000000000)
+>>> ev1 = StartEvent(time=1500000000000)
 >>> ev1
 StartEvent(time=1500000000000)
 
->>> ev2 = EndEvent(1750000000000)
+>>> ev2 = EndEvent(time=1750000000000)
 >>> ev2
 EndEvent(time=1750000000000)
 
 >>> csv = list(Event.to_csv((ev1, ev2)))
->>> for row in csv:
+>>> for row in csv[1:]:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
-time;type;material;amount;binType
 2017-07-14T10:40+08;start
 2025-06-15T23:06:40+08;end
 
@@ -22,6 +21,9 @@ time;type;material;amount;binType
 StartEvent(time=1500000000000)
 >>> print(ev4)
 EndEvent(time=1750000000000)
+
+>>> hash(ev3)
+-4526921868353943795
 """
 
 from warehouse.instance.event import Event
