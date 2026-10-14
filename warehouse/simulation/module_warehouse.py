@@ -45,6 +45,9 @@ class WarehouseModule:
 
         #: the amount of parts currently in overstock
         self.__in_overstock: Final[list[int]] = [0] * instance.n_parts
+        #: the overstock queue
+        self.__overstock_queue: Final[list[list[list[int]]]] = [
+            [] for _ in range(instance.n_bin_types)]
         #: the amount of parts which were understocked
         self.__in_understock: Final[list[int]] = [0] * instance.n_parts
         #: the empty bins of the given types
@@ -62,6 +65,7 @@ class WarehouseModule:
         in_understock: Final[list[int]] = self.__in_understock
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_types: Final[tuple[BinType, ...]] = self.__bin_types
+        over_queue: Final[list[list[list[int]]]] = self.__overstock_queue
 
         for i in range(list.__len__(in_overstock)):
             in_overstock[i] = 0
@@ -71,6 +75,7 @@ class WarehouseModule:
             for k in self.__mat_bin[i]:
                 st[k] = 0
             empty_bins[i] = bin_types[i].amount
+            over_queue[i].clear()
 
     def _warehouse_in(self, event: WarehouseIn) -> Generator[
             Event, None, None]:
@@ -111,6 +116,7 @@ class WarehouseModule:
 
         # Finally, all remaining parts go into the overstock.
         self.__in_overstock[mat_key] += amount
+        self.__overstock_queue[bin_key].append([mat_key, amount])
         yield OverstockIn(time, part, amount)
 
     def _warehouse_demand(self, event: WarehouseDemand) -> Generator[
@@ -182,6 +188,7 @@ class WarehouseModule:
                         f"{bin_type!r}.")
 
                 in_overstock[mat_key] -= use
+                _over_unqueue(self.__overstock_queue[bin_key], mat_key, use)
                 yield OverstockOut(time, part, use)
 
                 bin_type_empty -= use
@@ -221,6 +228,7 @@ class WarehouseModule:
             yield BinOut(time, use_part, use)
 
             in_overstock[other_mat] += use
+            self.__overstock_queue[bin_key].append([other_mat, use])
             yield OverstockIn(time, use_part, use)
 
         # When we get here, we have extracted all the required part and
@@ -229,17 +237,49 @@ class WarehouseModule:
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
-            for other_mat in self.__mat_bin[bin_key]:
-                use = min(bin_type_empty, in_overstock[other_mat])
-                if use > 0:
-                    use_part = self.__parts[other_mat]
-                    yield OverstockOut(time, use_part, use)
+            over_queue: list[list[int]] = self.__overstock_queue[bin_key]
+            while over_queue:
+                other_mat, other_amount = over_queue[0]
+                use = min(bin_type_empty, other_amount)
+                use_part = self.__parts[other_mat]
+                _over_unqueue(over_queue, other_mat, use)
+                yield OverstockOut(time, use_part, use)
 
-                    bin_type_empty -= use
-                    empty_bins[bin_key] = bin_type_empty
-                    in_bin[other_mat] += use
-                    in_overstock[other_mat] -= use
-                    yield BinIn(time, use_part, use)
+                bin_type_empty -= use
+                empty_bins[bin_key] = bin_type_empty
+                in_bin[other_mat] += use
+                in_overstock[other_mat] -= use
+                yield BinIn(time, use_part, use)
 
-                    if bin_type_empty <= 0:
-                        break
+                if bin_type_empty <= 0:
+                    break
+
+
+def _over_unqueue(over_lst: list[list[int]],
+                  mat_key: int, amount: int) -> None:
+    """
+    Remove the given amount of material from the overstock queue.
+
+    :param over_lst: the overstock queue
+    :param mat_key: the material key
+    :param amount: the amount of material to remove
+    """
+    total: int = list.__len__(over_lst)
+    i: int = 0
+    while (i < total) and (amount > 0):
+        current: list[int] = over_lst[i]
+        if current[0] != mat_key:
+            i += 1
+            continue
+        got: int = current[1]
+        remove: int = min(got, amount)
+        got -= remove
+        if got <= 0:
+            del over_lst[i]
+            total -= 1
+        else:
+            current[1] = got
+        amount -= remove
+    if amount > 0:
+        raise ValueError(f"There are {amount} units of part"
+                         f" {mat_key} unaccounted for in overstock.")

@@ -32,10 +32,10 @@ time;type;part;amount;bin_type
 2026-01-02 10:45;bin_in;trousers;400;random_small
 2026-01-02 10:45;bin_out;trousers;400;random_small
 2026-01-02 10:45;warehouse_delivered;trousers;1150
-2026-01-02 10:45;overstock_out;hat;10
-2026-01-02 10:45;bin_in;hat;10;random_small
 2026-01-02 10:45;overstock_out;tie;250
 2026-01-02 10:45;bin_in;tie;250;random_small
+2026-01-02 10:45;overstock_out;hat;10
+2026-01-02 10:45;bin_in;hat;10;random_small
 2026-01-02 11:25;warehouse_demand;hat;33
 2026-01-02 11:25;understock;hat;23
 2026-01-02 11:25;bin_out;hat;10;random_small

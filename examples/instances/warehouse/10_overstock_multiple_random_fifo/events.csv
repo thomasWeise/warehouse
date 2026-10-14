@@ -1,0 +1,10 @@
+time;             type;             part;  amount
+2026-10-14 08:00; start
+2026-10-15 08:15; warehouse_in;     A;     40
+2026-10-15 08:35; warehouse_in;     B;     70
+2026-10-15 08:50; warehouse_in;     C;     30
+2026-10-15 09:05; warehouse_in;     D;     80
+2026-10-15 09:25; warehouse_demand; A;     20
+2026-10-15 10:12; warehouse_demand; B;     50
+2026-10-15 10:32; warehouse_demand; D;     50
+2026-10-15 10:44; warehouse_demand; C;     20
