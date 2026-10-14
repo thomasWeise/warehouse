@@ -18,8 +18,8 @@ from warehouse.event.storage import (
     OverstockOut,
     Understock,
     WarehouseDelivers,
+    WarehouseDemand,
     WarehouseIn,
-    WarehouseOut,
 )
 from warehouse.instance.bin_type import BinType
 from warehouse.instance.event import Event
@@ -113,7 +113,7 @@ class WarehouseModule:
         self.__in_overstock[mat_key] += amount
         yield OverstockIn(time, part, amount)
 
-    def _warehouse_out(self, event: WarehouseOut) -> Generator[
+    def _warehouse_demand(self, event: WarehouseDemand) -> Generator[
             Event, None, None]:
         """
         Remove part from the warehouse.

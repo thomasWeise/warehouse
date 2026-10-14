@@ -1,12 +1,12 @@
 time;type;part;amount;bin_type
 2026-01-02 09:00;start
 2026-01-02 09:05;warehouse_in;skirt;500
-2026-01-02 09:10;warehouse_out;skirt;250
+2026-01-02 09:10;warehouse_demand;skirt;250
 2026-01-02 09:20;warehouse_in;trousers;750
-2026-01-02 09:30;warehouse_out;trousers;600
+2026-01-02 09:30;warehouse_demand;trousers;600
 2026-01-02 09:50;warehouse_in;trousers;1000
 2026-01-02 10:05;warehouse_in;tie;300
-2026-01-02 10:15;warehouse_out;tie;50
+2026-01-02 10:15;warehouse_demand;tie;50
 2026-01-02 10:25;warehouse_in;hat;10
-2026-01-02 10:45;warehouse_out;trousers;1150
-2026-01-02 11:25;warehouse_out;hat;33
+2026-01-02 10:45;warehouse_demand;trousers;1150
+2026-01-02 11:25;warehouse_demand;hat;33

@@ -8,12 +8,12 @@ time;type;part;amount;bin_type
 2026-01-11 08:05:37.5;bin_out;trousers;709;random_small
 2026-01-12 18:15;bin_in;trousers;709;random_small
 2026-01-14 04:24:22.5;bin_out;trousers;709;random_small
-2026-01-15 14:33:45;warehouse_out;trousers;1418
+2026-01-15 14:33:45;warehouse_demand;trousers;1418
 2026-01-17 00:43:07.5;bin_in;trousers;82;random_small
 2026-01-18 10:52:30;bin_out;skirt;200;random_small
-2026-01-19 21:01:52.5;warehouse_out;skirt;200
+2026-01-19 21:01:52.5;warehouse_demand;skirt;200
 2026-01-21 07:11:15;bin_out;skirt;33;random_small
-2026-01-22 17:20:37.5;warehouse_out;skirt;33
+2026-01-22 17:20:37.5;warehouse_demand;skirt;33
 2026-01-24 03:30;end
 # The following columns exist in this file:
 # time: The time at which the event takes place, as an ISO timestamp with millisecond precision
@@ -29,10 +29,10 @@ time;type;part;amount;bin_type
 # - overstock_in: a certain amount of a part has arrived in the warehouse, but it could not be put into any bin, because all bins are full; the part was placed into the 'overstock', meaning that it is just lying around somewhere.
 # - overstock_out: a certain amount of a part was taken from the overstock: this part was not in any bin, because all bins were occupied; so it was just lying around.
 # - start: the time when the simulation begins
-# - understock: there was not enough part in the warehouse to satisfy a warehouse_out request.
+# - understock: there was not enough part in the warehouse to satisfy a warehouse_demand request.
 # - warehouse_delivered: a certain amount of a part is shipped by the warehouse
+# - warehouse_demand: a certain amount of a part is requested from the warehouse and needs to be taken out of the stored amount of this part; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
 # - warehouse_in: a certain amount of a part has arrived at the warehouse and needs to be stored; it then needs to be decided where to put it.
-# - warehouse_out: a certain amount of a part is requested from the warehouse and needs to be taken out of the stored amount of this part; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
 #
 # This CSV output has been created using the versatile CSV API of pycommons.io.csv, version 0.8.107.
 # You can find pycommons at https://thomasweise.github.io/pycommons.

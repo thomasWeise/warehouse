@@ -1,6 +1,6 @@
 """The warehouse simulation."""
 
-from heapq import heapify, heappop, heappush
+from heapq import heappop, heappush
 from typing import Callable, Final, Generator, Iterable
 
 from pycommons.types import type_error
@@ -11,8 +11,8 @@ from warehouse.event.storage import (
     OverstockOut,
     StorageEvent,
     Understock,
+    WarehouseDemand,
     WarehouseIn,
-    WarehouseOut,
 )
 from warehouse.event.time import (
     EndEvent,
@@ -51,9 +51,10 @@ class Simulation(WarehouseModule):
         super()._start()
 
         queue: Final[list[Event]] = self.__queue
+        # After this, the queue will definitely be a heap, because a list
+        # sorted in ascending order is always a min-heap.
         queue.clear()
         queue.extend(self.instance.events)
-        heapify(queue)
         self.time = EARLIEST_START
 
     def simulate(self) -> Generator[Event, None, None]:
@@ -145,5 +146,5 @@ _EVENT_ROUTER: Final[Callable[[int], Callable[[
     id(OverstockIn): Simulation._error,  # type: ignore
     id(OverstockOut): Simulation._error,  # type: ignore
     id(WarehouseIn): Simulation._warehouse_in,  # type: ignore
-    id(WarehouseOut): Simulation._warehouse_out,  # type: ignore
+    id(WarehouseDemand): Simulation._warehouse_demand,  # type: ignore
 }.__getitem__

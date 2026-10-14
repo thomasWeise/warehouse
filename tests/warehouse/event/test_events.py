@@ -10,8 +10,8 @@ from tests.warehouse.instance.test_parts import create_default_parts
 from warehouse.event.bins import BinIn, BinOut
 from warehouse.event.storage import (
     OverstockIn,
+    WarehouseDemand,
     WarehouseIn,
-    WarehouseOut,
 )
 from warehouse.event.time import EndEvent, StartEvent
 from warehouse.instance.element import context
@@ -46,12 +46,12 @@ def create_default_events() -> tuple[Event, ...]:
                 BinOut.create(__next(), "trousers", 709),
                 BinIn.create(__next(), "trousers", 709, "random_small"),
                 BinOut.create(__next(), "trousers", 709, "random_small"),
-                WarehouseOut.create(__next(), "trousers", 1418),
+                WarehouseDemand.create(__next(), "trousers", 1418),
                 BinIn.create(__next(), "trousers", 82, "random_small"),
                 BinOut.create(__next(), "skirt", 200),
-                WarehouseOut.create(__next(), "skirt", 200),
+                WarehouseDemand.create(__next(), "skirt", 200),
                 BinOut.create(__next(), "skirt", 33, "random_small"),
-                WarehouseOut.create(__next(), "skirt", 33),
+                WarehouseDemand.create(__next(), "skirt", 33),
                 EndEvent.create(__next()))
 
 

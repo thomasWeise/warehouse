@@ -18,9 +18,9 @@ Events regarding the storage of parts.
 ...     ev07 = OverstockOut.create(1500039000000, "hat", 200)
 ...     ev08 = OverstockOut.create(1500049500000, "shoe", 10)
 ...     ev09 = OverstockOut.create(1500051500000, "trousers", 250)
-...     ev10 = WarehouseOut.create(1500000000000, "hat", 1200)
-...     ev11 = WarehouseOut.create(1500000020000, "shoe", 40)
-...     ev12 = WarehouseOut.create(1500007020000, "trousers", "750")
+...     ev10 = WarehouseDemand.create(1500000000000, "hat", 1200)
+...     ev11 = WarehouseDemand.create(1500000020000, "shoe", 40)
+...     ev12 = WarehouseDemand.create(1500007020000, "trousers", "750")
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06, ev07,
 ...                 ev08, ev09, ev10, ev11, ev12)
@@ -80,13 +80,13 @@ is_random=True)), amount=10)
 OverstockOut(time=1500051500000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=250)
-WarehouseOut(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseDemand(time=1500000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=1200)
-WarehouseOut(time=1500000020000, part=Part(key=1, name='shoe', \
+WarehouseDemand(time=1500000020000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseOut(time=1500007020000, part=Part(key=2, name='trousers', \
+WarehouseDemand(time=1500007020000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
 <BLANKLINE>
@@ -101,9 +101,9 @@ is_random=True)), amount=750)
 2017-07-14 21:30;overstock_out;hat;200
 2017-07-15 00:25;overstock_out;shoe;10
 2017-07-15 00:58:20;overstock_out;trousers;250
-2017-07-14 10:40;warehouse_out;hat;1200
-2017-07-14 10:40:20;warehouse_out;shoe;40
-2017-07-14 12:37;warehouse_out;trousers;750
+2017-07-14 10:40;warehouse_demand;hat;1200
+2017-07-14 10:40:20;warehouse_demand;shoe;40
+2017-07-14 12:37;warehouse_demand;trousers;750
 <BLANKLINE>
 ===================
 <BLANKLINE>
@@ -134,13 +134,13 @@ is_random=True)), amount=10)
 OverstockOut(time=1500051500000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=250)
-WarehouseOut(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseDemand(time=1500000000000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=1200)
-WarehouseOut(time=1500000020000, part=Part(key=1, name='shoe', \
+WarehouseDemand(time=1500000020000, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseOut(time=1500007020000, part=Part(key=2, name='trousers', \
+WarehouseDemand(time=1500007020000, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
 
@@ -297,8 +297,8 @@ class WarehouseIn(StorageEvent):
                 " put it.")
 
 
-class WarehouseOut(StorageEvent):
-    """Retrieve part from the warehouse."""
+class WarehouseDemand(StorageEvent):
+    """Retrieve parts from the warehouse."""
 
     @classmethod
     def eventclass_get_csv_type(cls) -> str:
@@ -307,7 +307,7 @@ class WarehouseOut(StorageEvent):
 
         :return: the csv type
         """
-        return "warehouse_out"
+        return "warehouse_demand"
 
     @classmethod
     def eventclass_get_event_desc(cls) -> str | None:
@@ -414,4 +414,4 @@ class Understock(StorageEvent):
         :return: the event description, if any
         """
         return ("there was not enough part in the "
-                "warehouse to satisfy a warehouse_out request.")
+                "warehouse to satisfy a warehouse_demand request.")
