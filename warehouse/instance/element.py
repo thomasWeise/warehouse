@@ -1,11 +1,16 @@
 """
-A class for identifying an element.
+A class for identifying an element of our simulations.
 
 Element objects are the basis for our model.
-They are the base classes for bins and parts.
+They are the base classes for bin types and parts as well as events.
+All elements, i.e., subclasses of this class, such as instances of
+:class:`~warehouse.instance.event.Event`,
+:class:`~warehouse.instance.bin_type.BinType`, and
+:class:`~warehouse.instance.part.Part`,
+are immutable and hashable, too.
 
-Note regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only* use
-the :attr:`~Element.key` attribute.
+**Note** regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only*
+use the :attr:`~Element.key` attribute.
 The same holds for the hash code returned by :func:`hash`.
 This if for performance reasons, as sorting and priority-queueing usually only
 use `<` comparisons and each element with a different key must also have a

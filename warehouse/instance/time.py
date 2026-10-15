@@ -1,4 +1,17 @@
-"""Time utilities."""
+"""
+Time utilities.
+
+In our simulation, the time is represented as integer values `int`
+representing dates and times in millisecond resolution, i.e., a time
+unit of `1` corresponds to one millisecond.
+However, we store and retrieve times as ISO timestamps, where we clamp
+off zero components that are not used.
+Furthermore, as time zone, we by default use `Asia/Shanghai` time.
+This means that a date/time without UTC offset, i.e., without something
+like `"+08:00"` or `"-10:00"`, is treated as Shanghai time.
+Of course, you still provide time stamps in UTC time by using suffix
+`"+00:00"`.
+"""
 
 from datetime import datetime
 from typing import Final
@@ -90,9 +103,9 @@ def time_to_str(time: int) -> str:
     >>> time_to_str(1789361640000)
     '2026-09-14 12:54'
     >>> time_to_str(1789358400000)
-    '2026-09-14 12'
+    '2026-09-14 12:00'
     >>> time_to_str(1789315200000)
-    '2026-09-14 00'
+    '2026-09-14 00:00'
     >>> time_to_str(EARLIEST_START)
     '2001-09-09 09:46:40'
     >>> time_to_str(LATEST_END)
@@ -101,11 +114,8 @@ def time_to_str(time: int) -> str:
     tpart = datetime.isoformat(datetime.fromtimestamp(check_time(
         time) / 1000, tz=__TZ).replace(tzinfo=None),
         sep=" ", timespec="milliseconds")
-    if "." in tpart:
-        tpart = str.rstrip(str.rstrip(tpart, "0"), ".")
-    while tpart.endswith(":00"):
-        tpart = tpart[:-3]
-    return tpart
+    return str.removesuffix(str.rstrip(str.rstrip(
+        tpart, "0"), ".") if "." in tpart else tpart, ":00")
 
 
 def str_to_time(string: str) -> int:

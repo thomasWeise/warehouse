@@ -70,7 +70,7 @@ amount=3)
 time;type;part;amount;bin_type
 2017-07-14 10:40;bin_in;hat;10;hat_bins
 2023-11-15 06:13:20;bin_in;shoe;15;random_small
-2027-01-15 16;bin_in;trousers;7;random_large
+2027-01-15 16:00;bin_in;trousers;7;random_large
 2030-03-18 01:46:40;bin_out;hat;9;hat_bins
 2033-05-18 11:33:20;bin_out;shoe;8;random_small
 2036-07-18 21:20;bin_out;trousers;3;random_large

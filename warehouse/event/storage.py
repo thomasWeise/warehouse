@@ -1,5 +1,5 @@
 """
-Events regarding the storage of parts.
+Events regarding the storage and retrieval of parts in/from the warehouse.
 
 >>> from warehouse.instance.bin_type import BinType
 >>> with context():

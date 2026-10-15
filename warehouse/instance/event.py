@@ -8,6 +8,7 @@ In this function, they tell the simulation what outside events happen, e.g.,
 that some parts have arrived and should be stored in the warehouse.
 As the output of the :meth:`~warehouse.simulation.simulation.Simulation.run`
 method, they tell us what happened and when it happened.
+The concrete event classes are implemented in package :mod:`~warehouse.event`.
 
 **Note** regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only*
 use the :attr:`~Event.time` attribute.
