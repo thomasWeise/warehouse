@@ -62,6 +62,8 @@ class Event:  # noqa: PLW1641
 
     #: the time when the event takes place
     time: int = field(hash=True)
+    #: the priority
+    priority: int = field(hash=True)
 
     def __init_subclass__(cls, **kwargs) -> None:
         """
@@ -167,14 +169,15 @@ class Event:  # noqa: PLW1641
         return None
 
     @classmethod
-    def create(cls, time: int, **_) -> "Event":  # noqa  # pylint: disable=W0613
+    def create(cls, time: int, priority: int, **_) -> "Event":  # noqa  # pylint: disable=W0613
         """
         Create the event from the columns.
 
         :param time: the event time
+        :param prioritiy: the priority
         :return: the event
         """
-        return cls(check_time(time))
+        return cls(check_time(time), priority)
 
     def event_get_csv_value(
             self, column: str) -> str:  # noqa  # pylint: disable=W0613
@@ -194,14 +197,21 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is less than the other event,
             `False` otherwise
 
-        >>> Event(10 ** 12) < Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) < Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) < Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) < Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) < Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) < Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 0) < Event(10 ** 12, 1)
+        True
+        >>> Event(10 ** 12, 0) < Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 1) < Event(10 ** 12, 0)
         False
         """
-        return self.time < other.time
+        return (self.time <= other.time) and ((self.time < other.time) or (
+            self.priority < other.priority))
 
     def __le__(self, other) -> bool:
         """
@@ -211,14 +221,21 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is less or equal than the other event,
             `False` otherwise
 
-        >>> Event(10 ** 12) <= Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) <= Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) <= Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) <= Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) <= Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) <= Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 0) <= Event(10 ** 12, 1)
+        True
+        >>> Event(10 ** 12, 1) <= Event(10 ** 12, 1)
+        True
+        >>> Event(10 ** 12, 1) <= Event(10 ** 12, 0)
         False
         """
-        return self.time <= other.time
+        return (self.priority <= other.priority) if (
+            self.time <= other.time) else (self.time < other.time)
 
     def __eq__(self, other) -> bool:
         """
@@ -228,15 +245,21 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is equal to the other event,
             `False` otherwise
 
-        >>> Event(10 ** 12) == Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) == Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) == Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) == Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) == Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) == Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 0) == Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 1) == Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 0) == Event(10 ** 12, 1)
         False
         """
         return (self.__class__ is other.__class__) and (
-            self.time == other.time)
+            self.time == other.time) and (self.priority == other.priority)
 
     def __ge__(self, other) -> bool:
         """
@@ -246,14 +269,21 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is greater or equal than the other
             event, `False` otherwise
 
-        >>> Event(10 ** 12) >= Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) >= Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) >= Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) >= Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) >= Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) >= Event(10 ** 12, 0)
         True
+        >>> Event(10 ** 12, 0) >= Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 1) >= Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 0) >= Event(10 ** 12, 1)
+        False
         """
-        return self.time >= other.time
+        return (self.priority >= other.priority) if (
+            self.time >= other.time) else (self.time > other.time)
 
     def __gt__(self, other) -> bool:
         """
@@ -263,14 +293,23 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is greater than the other event,
             `False` otherwise
 
-        >>> Event(10 ** 12) > Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) > Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) > Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) > Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) > Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) > Event(10 ** 12, 0)
         True
+        >>> Event(10 ** 12, 0) > Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 1) > Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 0) > Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 0) > Event(10 ** 12, 1)
+        False
         """
-        return self.time > other.time
+        return (self.time >= other.time) and ((self.time > other.time) or (
+            self.priority > other.priority))
 
     def __ne__(self, other) -> bool:
         """
@@ -280,15 +319,21 @@ class Event:  # noqa: PLW1641
         :return: `True` if this event is not equal than the other event,
             `False` otherwise
 
-        >>> Event(10 ** 12) != Event(2 * (10 ** 12))
+        >>> Event(10 ** 12, 0) != Event(2 * (10 ** 12), 0)
         True
-        >>> Event(2 * (10 ** 12)) != Event(2 * (10 ** 12))
+        >>> Event(2 * (10 ** 12), 0) != Event(2 * (10 ** 12), 0)
         False
-        >>> Event(2 * (10 ** 12)) != Event(10 ** 12)
+        >>> Event(2 * (10 ** 12), 0) != Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 0) != Event(10 ** 12, 0)
+        False
+        >>> Event(10 ** 12, 1) != Event(10 ** 12, 0)
+        True
+        >>> Event(10 ** 12, 0) != Event(10 ** 12, 1)
         True
         """
         return (self.__class__ is not other.__class__) or (
-            self.time != other.time)
+            self.time != other.time) or (self.priority != other.priority)
 
     @classmethod
     def to_csv(cls, data: Iterable["Event"]) -> Iterable[str]:
@@ -337,6 +382,10 @@ class CsvReader(CsvReaderBase[Event]):
 
         #: the internal column list
         self.__cols: Final[dict[str, int | None]] = cols
+        #: the internal priority counter
+        self.__priority: int = 0
+        #: the last time
+        self.__last_time: int = -1
 
     def parse_row(self, data: list[str]) -> Event:
         """
@@ -348,12 +397,20 @@ class CsvReader(CsvReaderBase[Event]):
         cols: Final[dict[str, int | None]] = self.__cols
         cls: Final[type[Event]] = Event.eventclass_from_name(
             data[cols[COLUMN_TYPE]])
-        col_names = cls.eventclass_get_csv_columns()
-        ret = cls.create(time=str_to_time(data[cols[
-            COLUMN_TIME]]), **{c: csv_str_or_none(
-                data, cols[c]) for c in col_names})
+        col_names: Final[Iterable[str]] = cls.eventclass_get_csv_columns()
+
+        time: Final[int] = str_to_time(data[cols[COLUMN_TIME]])
+        priority: Final[int] = self.__priority if (
+            time <= self.__last_time) else 0
+
+        ret = cls.create(time=time, priority=priority, **{c: csv_str_or_none(
+            data, cols[c]) for c in col_names})
+
         if not isinstance(ret, Event):
             raise type_error(ret, "parse_row result", Event)
+
+        self.__priority = priority + 1_000_000_000
+        self.__last_time = time
         return ret
 
 

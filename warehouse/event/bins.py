@@ -9,12 +9,12 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     Part(None, "hat", "hat_bins")
 ...     Part(None, "shoe", "random_small")
 ...     Part(None, "trousers", "random_large")
-...     ev01 = BinIn.create(1500000000000, "hat", 10, "hat_bins")
-...     ev02 = BinIn.create(1700000000000, "shoe", 15, "random_small")
-...     ev03 = BinIn.create(1800000000000, "trousers", 7)
-...     ev04 = BinOut.create(1900000000000, "hat", 9, "hat_bins")
-...     ev05 = BinOut.create(2000000000000, "shoe", 8, "random_small")
-...     ev06 = BinOut.create(2100000000000, "trousers", 3)
+...     ev01 = BinIn.create(1500000000000, 0, "hat", 10, "hat_bins")
+...     ev02 = BinIn.create(1700000000000, 0, "shoe", 15, "random_small")
+...     ev03 = BinIn.create(1800000000000, 0, "trousers", 7)
+...     ev04 = BinOut.create(1900000000000, 0, "hat", 9, "hat_bins")
+...     ev05 = BinOut.create(2000000000000, 0, "shoe", 8, "random_small")
+...     ev06 = BinOut.create(2100000000000, 0, "trousers", 3)
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06)
 ...
@@ -46,22 +46,22 @@ Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000, is_random=True))
 Part(key=2, name='trousers', bin_type=BinType(key=1, \
 name='random_large', amount=500, is_random=True))
-BinIn(time=1500000000000, part=Part(key=0, name='hat', \
+BinIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=10)
-BinIn(time=1700000000000, part=Part(key=1, name='shoe', \
+BinIn(time=1700000000000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
 amount=15)
-BinIn(time=1800000000000, part=Part(key=2, name='trousers', \
+BinIn(time=1800000000000, priority=0, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
 amount=7)
-BinOut(time=1900000000000, part=Part(key=0, name='hat', \
+BinOut(time=1900000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=9)
-BinOut(time=2000000000000, part=Part(key=1, name='shoe', \
+BinOut(time=2000000000000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
 amount=8)
-BinOut(time=2100000000000, part=Part(key=2, name='trousers', \
+BinOut(time=2100000000000, priority=0, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
 amount=3)
 <BLANKLINE>
@@ -77,27 +77,27 @@ time;type;part;amount;bin_type
 <BLANKLINE>
 ===================
 <BLANKLINE>
-BinIn(time=1500000000000, part=Part(key=0, name='hat', \
+BinIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=10)
-BinIn(time=1700000000000, part=Part(key=1, name='shoe', \
+BinIn(time=1700000000000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
 amount=15)
-BinIn(time=1800000000000, part=Part(key=2, name='trousers', \
+BinIn(time=1800000000000, priority=0, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
 amount=7)
-BinOut(time=1900000000000, part=Part(key=0, name='hat', \
+BinOut(time=1900000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=9)
-BinOut(time=2000000000000, part=Part(key=1, name='shoe', \
+BinOut(time=2000000000000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
 amount=8)
-BinOut(time=2100000000000, part=Part(key=2, name='trousers', \
+BinOut(time=2100000000000, priority=0, part=Part(key=2, name='trousers', \
 bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
 amount=3)
 
 >>> hash(ev06)
-7866305953747425974
+-2497297457874468673
 """
 
 
@@ -162,13 +162,14 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
-            cls, time: int, part: int | str | Part,
-            amount: int | str,
+            cls, time: int, priority: int,
+            part: int | str | Part, amount: int | str,
             bin_type: int | str | BinType | None = None) -> "BinEvent":
         """
         Create the storage event.
 
         :param time: the time
+        :param priority: the priority
         :param part: the part to use
         :param amount: the amount of the part to use
         :param bin_type: the optional bin type
@@ -184,7 +185,8 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
                 if need_bin:
                     bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
 
-        rv = cls(time, part, check_to_amount(amount))  # type: ignore
+        rv = cls(time, priority, part,  # type: ignore
+                 check_to_amount(amount))  # type: ignore
         if (bin_type is not None) and (rv.part.bin_type is not bin_type):
             raise ValueError(f"Expected bin type {bin_type!r} for {rv!r}.")
         return rv

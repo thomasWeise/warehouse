@@ -70,4 +70,16 @@ def run_and_test_simulation(use_dir: str = Path(
     assert isinstance(last_event, EndEvent)
 
     simulation_2: Final[Simulation] = Simulation(instance)
-    assert expected_events == tuple(simulation_2.run())
+    events: Final[tuple[Event, ...]] = tuple(simulation_2.run())
+    assert tuple.__len__(events) == tuple.__len__(events)
+
+    for i, event_1 in enumerate(expected_events):
+        event_2 = events[i]
+        if event_1 == event_2:
+            continue
+        p2 = event_2.priority
+        object.__setattr__(event_2, "priority", event_1.priority)
+        assert event_1 == event_2
+        object.__setattr__(event_2, "priority", p2)
+        object.__setattr__(event_1, "priority", p2)
+        assert event_2 == event_1

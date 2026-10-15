@@ -9,18 +9,18 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 ...     Part(None, "hat", "hat_bins")
 ...     Part(None, "shoe", "random_small")
 ...     Part(None, "trousers", "random_large")
-...     ev01 = WarehouseIn.create(1500000000000, "hat", 1200)
-...     ev02 = WarehouseIn.create(1500000020000, "shoe", 40)
-...     ev03 = WarehouseIn.create(1500007020000, "trousers", 750)
-...     ev04 = OverstockIn.create(1500009000000, "hat", 200)
-...     ev05 = OverstockIn.create(1500009500000, "shoe", 10)
-...     ev06 = OverstockIn.create(1500029500000, "trousers", 250)
-...     ev07 = OverstockOut.create(1500039000000, "hat", 200)
-...     ev08 = OverstockOut.create(1500049500000, "shoe", 10)
-...     ev09 = OverstockOut.create(1500051500000, "trousers", 250)
-...     ev10 = WarehouseDemand.create(1500000000000, "hat", 1200)
-...     ev11 = WarehouseDemand.create(1500000020000, "shoe", 40)
-...     ev12 = WarehouseDemand.create(1500007020000, "trousers", "750")
+...     ev01 = WarehouseIn.create(1500000000000, 0, "hat", 1200)
+...     ev02 = WarehouseIn.create(1500000020000, 0, "shoe", 40)
+...     ev03 = WarehouseIn.create(1500007020000, 0, "trousers", 750)
+...     ev04 = OverstockIn.create(1500009000000, 0, "hat", 200)
+...     ev05 = OverstockIn.create(1500009500000, 0, "shoe", 10)
+...     ev06 = OverstockIn.create(1500029500000, 0, "trousers", 250)
+...     ev07 = OverstockOut.create(1500039000000, 0, "hat", 200)
+...     ev08 = OverstockOut.create(1500049500000, 0, "shoe", 10)
+...     ev09 = OverstockOut.create(1500051500000, 0, "trousers", 250)
+...     ev10 = WarehouseDemand.create(1600000000000, 0, "hat", 1200)
+...     ev11 = WarehouseDemand.create(1600000020000, 0, "shoe", 40)
+...     ev12 = WarehouseDemand.create(1600007020000, 0, "trousers", "750")
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06, ev07,
 ...                 ev08, ev09, ev10, ev11, ev12)
@@ -53,41 +53,41 @@ Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000, is_random=True))
 Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
 amount=500, is_random=True))
-WarehouseIn(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=1200)
-WarehouseIn(time=1500000020000, part=Part(key=1, name='shoe', \
+WarehouseIn(time=1500000020000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseIn(time=1500007020000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+WarehouseIn(time=1500007020000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
-OverstockIn(time=1500009000000, part=Part(key=0, name='hat', \
+OverstockIn(time=1500009000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=200)
-OverstockIn(time=1500009500000, part=Part(key=1, name='shoe', \
+OverstockIn(time=1500009500000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=10)
-OverstockIn(time=1500029500000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=250)
-OverstockOut(time=1500039000000, part=Part(key=0, name='hat', \
+OverstockIn(time=1500029500000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', \
+amount=500, is_random=True)), amount=250)
+OverstockOut(time=1500039000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=200)
-OverstockOut(time=1500049500000, part=Part(key=1, name='shoe', \
+OverstockOut(time=1500049500000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=10)
-OverstockOut(time=1500051500000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+OverstockOut(time=1500051500000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=250)
-WarehouseDemand(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseDemand(time=1600000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=1200)
-WarehouseDemand(time=1500000020000, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
+WarehouseDemand(time=1600000020000, priority=0, part=Part(key=1, \
+name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseDemand(time=1500007020000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+WarehouseDemand(time=1600007020000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
 <BLANKLINE>
 ===================
@@ -101,51 +101,51 @@ is_random=True)), amount=750)
 2017-07-14 21:30;overstock_out;hat;200
 2017-07-15 00:25;overstock_out;shoe;10
 2017-07-15 00:58:20;overstock_out;trousers;250
-2017-07-14 10:40;warehouse_demand;hat;1200
-2017-07-14 10:40:20;warehouse_demand;shoe;40
-2017-07-14 12:37;warehouse_demand;trousers;750
+2020-09-13 20:26:40;warehouse_demand;hat;1200
+2020-09-13 20:27;warehouse_demand;shoe;40
+2020-09-13 22:23:40;warehouse_demand;trousers;750
 <BLANKLINE>
 ===================
 <BLANKLINE>
-WarehouseIn(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 amount=1200)
-WarehouseIn(time=1500000020000, part=Part(key=1, name='shoe', \
+WarehouseIn(time=1500000020000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseIn(time=1500007020000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+WarehouseIn(time=1500007020000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
-OverstockIn(time=1500009000000, part=Part(key=0, name='hat', \
+OverstockIn(time=1500009000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=200)
-OverstockIn(time=1500009500000, part=Part(key=1, name='shoe', \
+OverstockIn(time=1500009500000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=10)
-OverstockIn(time=1500029500000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=250)
-OverstockOut(time=1500039000000, part=Part(key=0, name='hat', \
+OverstockIn(time=1500029500000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', \
+amount=500, is_random=True)), amount=250)
+OverstockOut(time=1500039000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=200)
-OverstockOut(time=1500049500000, part=Part(key=1, name='shoe', \
+OverstockOut(time=1500049500000, priority=0, part=Part(key=1, name='shoe', \
 bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=10)
-OverstockOut(time=1500051500000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+OverstockOut(time=1500051500000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=250)
-WarehouseDemand(time=1500000000000, part=Part(key=0, name='hat', \
+WarehouseDemand(time=1600000000000, priority=0, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), amount=1200)
-WarehouseDemand(time=1500000020000, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
+WarehouseDemand(time=1600000020000, priority=0, part=Part(key=1, \
+name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \
 is_random=True)), amount=40)
-WarehouseDemand(time=1500007020000, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, \
+WarehouseDemand(time=1600007020000, priority=0, part=Part(key=2, \
+name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
 is_random=True)), amount=750)
 
 >>> hash(ev02)
-5442331417107505762
+7497175492123864008
 """
 from dataclasses import dataclass, field
 from typing import Final
@@ -203,6 +203,7 @@ class StorageEvent(Event):  # noqa: PLW1641
         """
         return (self.__class__ is other.__class__) and (
             self.time == other.time) and (
+            self.priority == other.priority) and (
             self.part == other.part) and (
             self.amount == other.amount)
 
@@ -216,6 +217,7 @@ class StorageEvent(Event):  # noqa: PLW1641
         """
         return (self.__class__ is not other.__class__) or (
             self.time != other.time) or (
+            self.priority != other.priority) or (
             self.part != other.part) or (
             self.amount != other.amount)
 
@@ -257,12 +259,13 @@ class StorageEvent(Event):  # noqa: PLW1641
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
-            cls, time: int, part: int | str | Part,
+            cls, time: int, priority: int, part: int | str | Part,
             amount: int | str, **_) -> "StorageEvent":  # type: ignore
         """
         Create the storage event.
 
         :param time: the time
+        :param priority: the event priority
         :param part: the part to use
         :param amount: the amount of the part to use
         :return: the storage event
@@ -270,7 +273,8 @@ class StorageEvent(Event):  # noqa: PLW1641
         if not isinstance(part, Part):
             with context() as ctx:
                 part = ctx.resolve(Part, part)
-        return cls(time, part, check_to_amount(amount))  # type: ignore
+        return cls(time, priority, part,  # type: ignore
+                   check_to_amount(amount))  # type: ignore
 
 
 class WarehouseIn(StorageEvent):

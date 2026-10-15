@@ -1,13 +1,13 @@
 """
 The start and end events of the simulation.
 
->>> ev1 = StartEvent(time=1500000000000)
+>>> ev1 = StartEvent(time=1500000000000, priority=0)
 >>> ev1
-StartEvent(time=1500000000000)
+StartEvent(time=1500000000000, priority=0)
 
->>> ev2 = EndEvent(time=1750000000000)
+>>> ev2 = EndEvent(time=1750000000000, priority=1)
 >>> ev2
-EndEvent(time=1750000000000)
+EndEvent(time=1750000000000, priority=1)
 
 >>> csv = list(Event.to_csv((ev1, ev2)))
 >>> for row in csv[1:]:
@@ -18,12 +18,12 @@ EndEvent(time=1750000000000)
 
 >>> ev3, ev4 = list(Event.from_csv(csv))
 >>> print(ev3)
-StartEvent(time=1500000000000)
+StartEvent(time=1500000000000, priority=0)
 >>> print(ev4)
-EndEvent(time=1750000000000)
+EndEvent(time=1750000000000, priority=0)
 
 >>> hash(ev3)
--4526921868353943795
+8959993608719704182
 """
 
 from warehouse.instance.event import Event

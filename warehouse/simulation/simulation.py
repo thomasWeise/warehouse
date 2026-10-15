@@ -67,12 +67,12 @@ class Simulation(StorageModule):
 
         queue: Final[list[Event]] = self.__queue
         if list.__len__(queue) <= 0:
-            yield StartEvent(self.time)
+            yield StartEvent(self.time, 0)
             return
 
         if queue[0].__class__ is not StartEvent:
             self.time = queue[0].time
-            yield StartEvent(queue[0].time)
+            yield StartEvent(queue[0].time, 0)
 
         router: Final = _EVENT_ROUTER
         quitter = _QUIT
@@ -101,7 +101,7 @@ class Simulation(StorageModule):
                 yield from events
 
         queue.clear()
-        yield end_event if end_event is not None else EndEvent(self.time)
+        yield end_event if end_event is not None else EndEvent(self.time, 0)
 
     def enqueue(self, event: Event) -> None:
         """

@@ -93,13 +93,15 @@ class StorageModule:
         amount: int = event.amount
         empty_bins: Final[list[int]] = self.__empty_bins
         time: Final[int] = event.time
+        priority: int = event.priority
 
         # First, we check if there is a prior pending request for the
         # parts. If yes, we directly satisfy it without putting the
         # material in any stock.
         use: int = min(self.__in_understock[part_key], amount)
         if use > 0:
-            yield WarehouseDelivers(time, part, use)
+            priority += 1
+            yield WarehouseDelivers(time, priority, part, use)
             amount -= use
             if amount <= 0:
                 return
@@ -109,7 +111,8 @@ class StorageModule:
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][part_key] += use
-            yield BinIn(time, part, use)
+            priority += 1
+            yield BinIn(time, priority, part, use)
             amount -= use
             if amount <= 0:
                 return
@@ -117,7 +120,8 @@ class StorageModule:
         # Finally, all remaining parts go into the overstock.
         self.__in_overstock[part_key] += amount
         self.__overstock_queue[bin_key].append([part_key, amount])
-        yield OverstockIn(time, part, amount)
+        priority += 1
+        yield OverstockIn(time, priority, part, amount)
 
     def _warehouse_demand(self, event: WarehouseDemand) -> Generator[
             Event, None, None]:
@@ -132,6 +136,7 @@ class StorageModule:
         bin_key: Final[int] = bin_type.key
         amount: int = event.amount
         time: Final[int] = event.time
+        priority: int = event.priority
 
         in_bin: Final[Counter[int]] = self.__in_bin[bin_key]
         in_overstock: Final[list[int]] = self.__in_overstock
@@ -146,16 +151,15 @@ class StorageModule:
             # first.
             under: int = amount - use
             self.__in_understock[part_key] += under
-            yield Understock(time, part, under)
+            priority += 1
+            yield Understock(time, priority, part, under)
             if use <= 0:
                 return
 
             # Make a modified copy of the original event
             amount = use
 
-        e_deliver: Final[WarehouseDelivers] = WarehouseDelivers(
-            time, part, amount)
-
+        deliver_amount: Final[int] = amount
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_type_empty = empty_bins[bin_key]
 
@@ -169,7 +173,8 @@ class StorageModule:
                 in_bin[part_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
-                yield BinOut(time, part, use)
+                priority += 1
+                yield BinOut(time, priority, part, use)
                 continue
 
             # If we get here, we do not have our parts in the bin.
@@ -189,12 +194,14 @@ class StorageModule:
 
                 in_overstock[part_key] -= use
                 _over_unqueue(self.__overstock_queue[bin_key], part_key, use)
-                yield OverstockOut(time, part, use)
+                priority += 1
+                yield OverstockOut(time, priority, part, use)
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[part_key] += use
-                yield BinIn(time, part, use)
+                priority += 1
+                yield BinIn(time, priority, part, use)
 
                 # In the next iteration, we can take the parts out of the bin
                 # again.
@@ -225,15 +232,18 @@ class StorageModule:
             in_bin[other_part] -= use
             bin_type_empty += use
             empty_bins[bin_key] = bin_type_empty
-            yield BinOut(time, use_part, use)
+            priority += 1
+            yield BinOut(time, priority, use_part, use)
 
             in_overstock[other_part] += use
             self.__overstock_queue[bin_key].append([other_part, use])
-            yield OverstockIn(time, use_part, use)
+            priority += 1
+            yield OverstockIn(time, priority, use_part, use)
 
         # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
-        yield e_deliver
+        priority += 1
+        yield WarehouseDelivers(time, priority, part, deliver_amount)
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
@@ -243,13 +253,14 @@ class StorageModule:
                 use = min(bin_type_empty, other_amount)
                 use_part = self.__parts[other_part]
                 _over_unqueue(over_queue, other_part, use)
-                yield OverstockOut(time, use_part, use)
+                yield OverstockOut(time, priority, use_part, use)
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[other_part] += use
                 in_overstock[other_part] -= use
-                yield BinIn(time, use_part, use)
+                priority += 1
+                yield BinIn(time, priority, use_part, use)
 
                 if bin_type_empty <= 0:
                     break

@@ -11,8 +11,8 @@ A warehouse setup.
 ...     m2 = Part(1, "Hat", "wardrobe")
 ...     m3 = Part(2, "Skirt", "random_large")
 ...     m4 = Part(None, "T-Shirt", "drawer")
-...     e1 = StartEvent(1005000000000)
-...     e2 = EndEvent(1007000000000)
+...     e1 = StartEvent(1005000000000, 0)
+...     e2 = EndEvent(1007000000000, 0)
 ...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))
 
 >>> instance.n_parts
@@ -42,7 +42,8 @@ BinType(key=4, name='shed', amount=76, is_random=False))
 2
 
 >>> instance.events
-(StartEvent(time=1005000000000), EndEvent(time=1007000000000))
+(StartEvent(time=1005000000000, priority=0), \
+EndEvent(time=1007000000000, priority=0))
 
 >>> from pycommons.io.temp import temp_dir
 >>> with temp_dir() as td:
@@ -76,7 +77,8 @@ BinType(key=4, name='shed', amount=76, is_random=False))
 2
 
 >>> instance_2.events
-(StartEvent(time=1005000000000), EndEvent(time=1007000000000))
+(StartEvent(time=1005000000000, priority=0), \
+EndEvent(time=1007000000000, priority=0))
 """
 
 from dataclasses import dataclass, field
@@ -225,7 +227,7 @@ class Instance(ElementResolver):
                 events = ()
             else:
                 if not isinstance(events[0], StartEvent):
-                    events.insert(0, StartEvent(events[0].time))
+                    events.insert(0, StartEvent(events[0].time, 0))
                 events = tuple(events)
 
         object.__setattr__(self, "n_parts", n_parts)

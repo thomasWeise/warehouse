@@ -37,22 +37,22 @@ def create_default_events() -> tuple[Event, ...]:
         return ret
 
     with context():
-        return (StartEvent(__next()),
-                WarehouseIn.create(__next(), "skirt", 233),
-                BinIn.create(__next(), "skirt", 233, "random_small"),
-                WarehouseIn.create(__next(), "trousers", 1500),
-                BinIn.create(__next(), "trousers", 709, "random_small"),
-                OverstockIn.create(__next(), "trousers", 791),
-                BinOut.create(__next(), "trousers", 709),
-                BinIn.create(__next(), "trousers", 709, "random_small"),
-                BinOut.create(__next(), "trousers", 709, "random_small"),
-                WarehouseDemand.create(__next(), "trousers", 1418),
-                BinIn.create(__next(), "trousers", 82, "random_small"),
-                BinOut.create(__next(), "skirt", 200),
-                WarehouseDemand.create(__next(), "skirt", 200),
-                BinOut.create(__next(), "skirt", 33, "random_small"),
-                WarehouseDemand.create(__next(), "skirt", 33),
-                EndEvent.create(__next()))
+        return (StartEvent(__next(), 0),
+                WarehouseIn.create(__next(), 0, "skirt", 233),
+                BinIn.create(__next(), 0, "skirt", 233, "random_small"),
+                WarehouseIn.create(__next(), 0, "trousers", 1500),
+                BinIn.create(__next(), 0, "trousers", 709, "random_small"),
+                OverstockIn.create(__next(), 0, "trousers", 791),
+                BinOut.create(__next(), 0, "trousers", 709),
+                BinIn.create(__next(), 0, "trousers", 709, "random_small"),
+                BinOut.create(__next(), 0, "trousers", 709, "random_small"),
+                WarehouseDemand.create(__next(), 0, "trousers", 1418),
+                BinIn.create(__next(), 0, "trousers", 82, "random_small"),
+                BinOut.create(__next(), 0, "skirt", 200),
+                WarehouseDemand.create(__next(), 0, "skirt", 200),
+                BinOut.create(__next(), 0, "skirt", 33, "random_small"),
+                WarehouseDemand.create(__next(), 0, "skirt", 33),
+                EndEvent.create(__next(), 0))
 
 
 def test_default_events() -> None:
