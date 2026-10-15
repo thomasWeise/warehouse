@@ -28,7 +28,7 @@ def run_and_test_simulation(use_dir: str = Path(
 
     simulation_1: Final[Simulation] = Simulation(instance)
     csv_result_1: Final[tuple[str, ...]] = tuple(Event.to_csv(
-        simulation_1.simulate()))
+        simulation_1.run()))
     assert isinstance(csv_result_1, tuple)
     for line in csv_result_1:
         assert isinstance(line, str)
@@ -70,4 +70,4 @@ def run_and_test_simulation(use_dir: str = Path(
     assert isinstance(last_event, EndEvent)
 
     simulation_2: Final[Simulation] = Simulation(instance)
-    assert expected_events == tuple(simulation_2.simulate())
+    assert expected_events == tuple(simulation_2.run())

@@ -22,7 +22,7 @@ def test_warehouse_simulation() -> None:
     e = None
     first = True
     last = False
-    for e in simulation.simulate():
+    for e in simulation.run():
         assert not last
         if first:
             assert isinstance(e, StartEvent)

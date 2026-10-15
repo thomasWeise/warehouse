@@ -21,10 +21,10 @@ from warehouse.event.time import (
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
 from warehouse.instance.time import EARLIEST_START, LATEST_END
-from warehouse.simulation.module_warehouse import WarehouseModule
+from warehouse.simulation.module_storage import StorageModule
 
 
-class Simulation(WarehouseModule):
+class Simulation(StorageModule):
     """A warehouse simulation."""
 
     def __init__(self, instance: Instance) -> None:
@@ -57,7 +57,7 @@ class Simulation(WarehouseModule):
         queue.extend(self.instance.events)
         self.time = EARLIEST_START
 
-    def simulate(self) -> Generator[Event, None, None]:
+    def run(self) -> Generator[Event, None, None]:
         """
         Run the simulation.
 

@@ -1,11 +1,22 @@
 """
-Events are mutable containers for things that can happen in a simulation.
+Events provide information about things that happen in a simulation.
 
-Note regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only* use
-the :attr:`~Event.time` attribute.
-This if for performance reasons, as sorting and priority-queueing usually only
-use `<` comparisons and each element with a different key must also have a
-different name anyway.
+They both drive the simulation *and* are its output.
+They are a part of a simulation scenario
+(:mod:`~warehouse.instance.instance`).
+In this function, they tell the simulation what outside events happen, e.g.,
+that some parts have arrived and should be stored in the warehouse.
+As the output of the :meth:`~warehouse.simulation.simulation.Simulation.run`
+method, they tell us what happened and when it happened.
+
+**Note** regarding the comparison functions: `<`, `<=`, `>`, and `>=` *only*
+use the :attr:`~Event.time` attribute.
+This if for performance *and* consistency reasons.
+Inside the simulation, events enter a priority queue.
+There, only the original sequence of events as well as their time stamps
+should matter.
+Sorting and priority-queueing usually only use `<` comparisons and each
+element with a different key must also have a different name anyway.
 
 However, `==` and `!=` may *also* use other attributes.
 This may be useful for comparing data across instances.

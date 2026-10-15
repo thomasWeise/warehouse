@@ -23,6 +23,6 @@ logger(f"Now we begin the simulation, writing its output to {out_file!r}.")
 
 simulation = Simulation(instance)
 with out_file.open_for_write() as stream:
-    write_lines(Event.to_csv(simulation.simulate()), stream)
+    write_lines(Event.to_csv(simulation.run()), stream)
 
 logger("The simulation is completed.")
