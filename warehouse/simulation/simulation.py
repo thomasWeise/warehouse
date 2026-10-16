@@ -4,10 +4,10 @@
 from pycommons.types import type_error
 
 from warehouse.instance.instance import Instance
-from warehouse.simulation.module_storage import StorageModule
+from warehouse.simulation.module_minmax import MinMaxModule
 
 
-class Simulation(StorageModule):
+class Simulation(MinMaxModule):
     """A warehouse simulation."""
 
     def __init__(self, instance: Instance) -> None:

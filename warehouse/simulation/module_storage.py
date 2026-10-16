@@ -107,6 +107,7 @@ class StorageModule(BaseModule):
         if use > 0:
             priority += 1
             self.enqueue(WarehouseDelivers(time, priority, part, use))
+            self.__in_understock[part_key] -= use
             amount -= use
             if amount <= 0:
                 return
@@ -227,7 +228,8 @@ class StorageModule(BaseModule):
         """
         part_key: Final[int] = part.key
         return (self.__in_bin[part.bin_type.key][part_key]
-                + self.__in_overstock[part_key])
+                + self.__in_overstock[part_key]
+                - self.__in_understock[part_key])
 
 
 def _over_unqueue(over_lst: list[list[int]],

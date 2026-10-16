@@ -4,6 +4,7 @@ from heapq import heappop, heappush
 from typing import Callable, Final, Generator
 
 from warehouse.event.bins import BinEvent, BinIn, BinOut
+from warehouse.event.rules import RuleTriggeredEvent
 from warehouse.event.storage import (
     OverstockIn,
     OverstockOut,
@@ -123,6 +124,13 @@ class BaseModule:
         :param event: the understock event.
         """
 
+    def _handle_rule_triggered(self, event: RuleTriggeredEvent) -> None:
+        """
+        Handle that a rule was triggered.
+
+        :param event: the rule trigger event
+        """
+
     def available_units(self, part: Part) -> int:
         """
         Get the available units of the given part.
@@ -215,6 +223,8 @@ class BaseModule:
             self._handle_warehouse_demand,  # type: ignore
             id(WarehouseDelivers):  # type: ignore
             self._handle_warehouse_delivers,  # type: ignore
+            id(RuleTriggeredEvent):  # type: ignore
+            self._handle_rule_triggered,  # type: ignore
         }.__getitem__
 
 

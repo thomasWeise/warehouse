@@ -142,7 +142,7 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         if column == COLUMN_RULE:
             return self.rule.name
         if column == COLUMN_AMOUNT:
-            return str(self.amount)
+            return "" if self.amount is None else str(self.amount)
         return ""
 
     @classmethod
