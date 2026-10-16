@@ -103,13 +103,12 @@ amount=3)
 
 from warehouse.event.storage import (
     COLUMN_AMOUNT,
-    COLUMN_PART,
     StorageEvent,
     check_to_amount,
 )
-from warehouse.instance.bin_type import BinType
+from warehouse.instance.bin_type import COLUMN_BIN_TYPE, BinType
 from warehouse.instance.element import context
-from warehouse.instance.part import COLUMN_BIN_TYPE, Part
+from warehouse.instance.part import COLUMN_PART, Part
 
 
 class BinEvent(StorageEvent):  # noqa: PLW1641

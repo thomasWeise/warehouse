@@ -54,15 +54,20 @@ from pycommons.io.csv import csv_column, csv_scope, csv_val_or_none
 from pycommons.strings.string_conv import bool_to_str, str_to_bool
 from pycommons.types import check_int_range, type_error
 
+from warehouse.instance.element import (
+    COLUMN_AMOUNT,
+    Element,
+    context,
+    prepare_to_csv,
+)
 from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
-from warehouse.instance.element import Element, context, prepare_to_csv
 
-#: the CSV amount column, which stores the :attr:`~BinType.amount` values.
-COLUMN_AMOUNT: Final[str] = "amount"
-
-#: the CSV amount column, which stores the :attr:`~BinType.is_random` values.
+#: the CSV column for whether bin types are random or not.
 COLUMN_IS_RANDOM: Final[str] = "is_random"
+
+#: the CSV columns for things using bin types
+COLUMN_BIN_TYPE: Final[str] = "bin_type"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -78,7 +83,7 @@ class BinType(Element):  # noqa: PLW1641
                  amount: int = 1,
                  is_random: bool = False) -> None:
         """
-        Create a new bin.
+        Create a new bin type.
 
         :param key: the bin key
         :param name: the bin name
@@ -162,10 +167,10 @@ class CsvReader(CsvReaderBase[T]):
         """
         super().__init__(columns, clazz)
         #: the amount key
-        self.col_amount_key: Final[int] = csv_column(
+        self.col_amount: Final[int] = csv_column(
             columns, COLUMN_AMOUNT, True)
         #: the is-random column
-        self.col_is_random_key: Final[int] = csv_column(
+        self.col_is_random: Final[int] = csv_column(
             columns, COLUMN_IS_RANDOM, True)
 
     def parse_row(self, data: list[str]) -> T:
@@ -177,8 +182,8 @@ class CsvReader(CsvReaderBase[T]):
         """
         return self.clazz(key=csv_val_or_none(
             data, self.col_key, int), name=data[self.col_name],
-            amount=int(data[self.col_amount_key]),
-            is_random=str_to_bool(data[self.col_is_random_key]))
+            amount=int(data[self.col_amount]),
+            is_random=str_to_bool(data[self.col_is_random]))
 
 
 class CsvWriter(CsvWriterBase[T]):

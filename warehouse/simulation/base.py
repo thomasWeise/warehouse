@@ -19,6 +19,7 @@ from warehouse.event.time import (
 )
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
+from warehouse.instance.part import Part
 from warehouse.instance.time import EARLIEST_START, LATEST_END
 
 
@@ -121,6 +122,18 @@ class BaseModule:
 
         :param event: the understock event.
         """
+
+    def available_units(self, part: Part) -> int:
+        """
+        Get the available units of the given part.
+
+        These are units either currently in bins or in overstock, i.e., the
+        number of units that we can ship immediately.
+
+        :param part: the part
+        :return: the number of units available
+        """
+        raise NotImplementedError
 
     def run(self) -> Generator[Event, None, None]:
         """

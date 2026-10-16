@@ -65,35 +65,36 @@ from pycommons.io.csv import (
     csv_val_or_none,
 )
 
-from warehouse.instance.bin_type import BinType
+from warehouse.instance.bin_type import COLUMN_BIN_TYPE, BinType
 from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import Element, context, prepare_to_csv
 
-#: the CSV part column
-COLUMN_BIN_TYPE: Final[str] = "bin_type"
+#: the CSV column for parts
+COLUMN_PART: Final[str] = "part"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
 class Part(Element):
-    """A class for identifying a part."""
+    """A class for identifying a part type."""
 
-    #: the amount of bins of this type
+    #: the bin type into which this part is stored
     bin_type: BinType
 
     def __init__(self, key: int | None, name: str,
                  bin_type: BinType | int | str) -> None:
         """
-        Create a new bin.
+        Create a new part type.
 
-        :param key: the bin key
-        :param name: the bin name
-        :param bin-tyoe: the bin type to use
+        :param key: the part key
+        :param name: the part name
+        :param bin_type: the bin type to use
         """
         super().__init__(key, name)
-        with context() as ctx:
-            object.__setattr__(self, "bin_type", bin_type if isinstance(
-                bin_type, BinType) else ctx.resolve(BinType, bin_type))
+        if not isinstance(bin_type, BinType):
+            with context() as ctx:
+                bin_type = ctx.resolve(BinType, bin_type)
+        object.__setattr__(self, "bin_type", bin_type)
 
     def __eq__(self, other) -> bool:
         """
@@ -119,7 +120,7 @@ class Part(Element):
 
     def __hash__(self) -> int:
         """
-        Get the hash code of the bin type.
+        Get the hash code of the part.
 
         :return: the hash code
         """
@@ -165,7 +166,7 @@ class CsvReader(CsvReaderBase[T]):
         """
         super().__init__(columns, clazz)
         #: the bin type key
-        self.col_bin_type_key: Final[int] = csv_column(
+        self.col_bin_type: Final[int] = csv_column(
             columns, COLUMN_BIN_TYPE, True)
 
     def parse_row(self, data: list[str]) -> T:
@@ -177,7 +178,7 @@ class CsvReader(CsvReaderBase[T]):
         """
         return self.clazz(key=csv_val_or_none(
             data, self.col_key, int), name=data[self.col_name],
-            bin_type=data[self.col_bin_type_key])
+            bin_type=data[self.col_bin_type])
 
 
 class CsvWriter(CsvWriterBase[T]):

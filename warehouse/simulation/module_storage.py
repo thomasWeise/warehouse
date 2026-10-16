@@ -44,15 +44,18 @@ class StorageModule(BaseModule):
         #: the parts
         self.__parts: Final[tuple[Part, ...]] = instance.parts
 
+        n_parts: Final[int] = tuple.__len__(instance.parts)
+        n_bin_types: Final[int] = tuple.__len__(instance.bin_types)
+
         #: the amount of parts currently in overstock
-        self.__in_overstock: Final[list[int]] = [0] * instance.n_parts
+        self.__in_overstock: Final[list[int]] = [0] * n_parts
         #: the overstock queue
         self.__overstock_queue: Final[list[list[list[int]]]] = [
-            [] for _ in range(instance.n_bin_types)]
+            [] for _ in range(n_bin_types)]
         #: the amount of parts which were understocked
-        self.__in_understock: Final[list[int]] = [0] * instance.n_parts
+        self.__in_understock: Final[list[int]] = [0] * n_parts
         #: the empty bins of the given types
-        self.__empty_bins: Final[list[int]] = [0] * instance.n_bin_types
+        self.__empty_bins: Final[list[int]] = [0] * n_bin_types
         #: the amount of parts that are currently in the bins
         self.__in_bin: Final[tuple[Counter[int], ...]] = tuple(
             Counter(dict.fromkeys(mb, 0)) for mb in self.__mat_bin)
@@ -213,6 +216,17 @@ class StorageModule(BaseModule):
 
                 if bin_type_empty <= 0:
                     break
+
+    def available_units(self, part: Part) -> int:
+        """
+        Get the amount of units currently available in the warehouse.
+
+        :param part: the part
+        :return: the units
+        """
+        part_key: Final[int] = part.key
+        return (self.__in_bin[part.bin_type.key][part_key]
+                + self.__in_overstock[part_key])
 
 
 def _over_unqueue(over_lst: list[list[int]],

@@ -13,7 +13,8 @@ Of course, you still provide time stamps in UTC time by using suffix
 `"+00:00"`.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from math import floor
 from typing import Final
 from zoneinfo import ZoneInfo
 
@@ -81,6 +82,17 @@ def check_time(time: int) -> int:
     return check_int_range(time, "time", EARLIEST_START, LATEST_END)
 
 
+def __trim(text: str) -> str:
+    """
+    Trim a time or time delta string.
+
+    :param text: the text
+    :return: the trimmed text
+    """
+    return str.removesuffix(str.rstrip(str.rstrip(
+        text, "0"), ".") if "." in text else text, ":00")
+
+
 def time_to_str(time: int) -> str:
     """
     Convert an event time to a string.
@@ -111,11 +123,9 @@ def time_to_str(time: int) -> str:
     >>> time_to_str(LATEST_END)
     '2080-11-28 14:13:20'
     """
-    tpart = datetime.isoformat(datetime.fromtimestamp(check_time(
+    return __trim(datetime.isoformat(datetime.fromtimestamp(check_time(
         time) / 1000, tz=__TZ).replace(tzinfo=None),
-        sep=" ", timespec="milliseconds")
-    return str.removesuffix(str.rstrip(str.rstrip(
-        tpart, "0"), ".") if "." in tpart else tpart, ":00")
+        sep=" ", timespec="milliseconds"))
 
 
 def str_to_time(string: str) -> int:
@@ -169,3 +179,164 @@ def str_to_time(string: str) -> int:
     if stamp.tzinfo is None:
         stamp = stamp.replace(tzinfo=__TZ)
     return check_time(round(1000 * stamp.timestamp()))
+
+
+#: the maximum permitted time delta
+MAX_TIME_DELTA: Final[int] = min(LATEST_END - EARLIEST_START,
+                                 floor(timedelta.max.total_seconds() * 1000))
+
+
+def check_timedelta(delta: int) -> int:
+    """
+    Check a time delta.
+
+    :param delta: the timte delta.
+    :return: the `delta`, if it is O
+    :raises ValueError: for invalid time deltas
+
+    >>> check_timedelta(0)
+    0
+
+    >>> try:
+    ...     check_timedelta(-1)
+    ... except ValueError as ve:
+    ...     print(ve)
+    delta=-1 is invalid, must be in 0..2500000000000.
+    """
+    return check_int_range(delta, "delta", 0, MAX_TIME_DELTA)
+
+
+def timedelta_to_str(delta: int) -> str:
+    """
+    Convert a time delta to a string.
+
+    :param delta: the delta
+    :return: the string representation of the delta
+
+    >>> timedelta_to_str(0)
+    '0:00'
+
+    >>> timedelta_to_str(1)
+    '0:00:00.001'
+
+    >>> timedelta_to_str(70)
+    '0:00:00.07'
+
+    >>> timedelta_to_str(71)
+    '0:00:00.071'
+
+    >>> timedelta_to_str(1000)
+    '0:00:01'
+
+    >>> timedelta_to_str(10 * 1000)
+    '0:00:10'
+
+    >>> timedelta_to_str(60 * 1000)
+    '0:01'
+
+    >>> timedelta_to_str(10 * 60 * 1000)
+    '0:10'
+
+    >>> timedelta_to_str(60 * 60 * 1000)
+    '1:00'
+
+    >>> timedelta_to_str(10 * 60 * 60 * 1000)
+    '10:00'
+
+    >>> timedelta_to_str(24 * 60 * 60 * 1000)
+    '1 day'
+
+    >>> timedelta_to_str(10 * 24 * 60 * 60 * 1000)
+    '10 days'
+
+    >>> timedelta_to_str(10 * 24 * 60 * 60 * 1000 + 1)
+    '10 days, 0:00:00.001'
+    """
+    return str.removesuffix(__trim(str(timedelta(
+        milliseconds=check_timedelta(delta)))), ", 0:00")
+
+
+def str_to_timedelta(text: str) -> int:
+    """
+    Convert a time delta string to a time delta value.
+
+    :param text: the string
+    :return: the time delta
+
+    >>> str_to_timedelta('0:00')
+    0
+
+    >>> str_to_timedelta('0')
+    0
+
+    >>> str_to_timedelta('0:00:00.001')
+    1
+
+    >>> str_to_timedelta('0:00:00.07')
+    70
+
+    >>> str_to_timedelta('0:00:00.071')
+    71
+
+    >>> str_to_timedelta('0:00:01')
+    1000
+
+    >>> str_to_timedelta('0:00:10')
+    10000
+
+    >>> str_to_timedelta('0:01')
+    60000
+
+    >>> str_to_timedelta('0:10')
+    600000
+
+    >>> str_to_timedelta('1:00')
+    3600000
+
+    >>> str_to_timedelta('10:00')
+    36000000
+
+    >>> str_to_timedelta('1 day')
+    86400000
+
+    >>> str_to_timedelta('10 days')
+    864000000
+
+    >>> str_to_timedelta('10 days, 0:00:00.001')
+    864000001
+    """
+    text = str.lower(str.strip(text))
+    slen: Final[int] = str.__len__(text)
+    i: int = str.find(text, "day")
+    if i <= 0:
+        i = days = 0
+    else:
+        days = int(text[:i])
+        i += 3
+        while (i < slen) and (text[i] in "days,"):
+            i += 1
+
+    h = m = s = ms = 0
+    if slen > i:
+        j = str.find(text, ":", i)
+        if j <= i:
+            h = int(text[i:])
+        else:
+            h = int(text[i:j])
+            i = j + 1
+            j = str.find(text, ":", i)
+            if j <= i:
+                m = int(text[i:])
+            else:
+                m = int(text[i:j])
+                i = j + 1
+                j = str.find(text, ".", i)
+                if j <= i:
+                    s = int(text[i:])
+                else:
+                    s = int(text[i:j])
+                    ms = round(1_000_000 * float(text[j:]))
+
+    return check_timedelta(round(1000 * timedelta(
+        days=days, hours=h, minutes=m, seconds=s,
+        microseconds=ms).total_seconds()))

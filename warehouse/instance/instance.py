@@ -15,9 +15,6 @@ A warehouse setup.
 ...     e2 = EndEvent(1007000000000, 0)
 ...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))
 
->>> instance.n_parts
-4
-
 >>> instance.parts
 (Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
 amount=50, is_random=True)), \
@@ -28,18 +25,12 @@ amount=100, is_random=True)), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
 amount=55, is_random=False)))
 
->>> instance.n_bin_types
-5
-
 >>> instance.bin_types
 (BinType(key=0, name='random_small', amount=50, is_random=True), \
 BinType(key=1, name='random_large', amount=100, is_random=True), \
 BinType(key=2, name='wardrobe', amount=30, is_random=False), \
 BinType(key=3, name='drawer', amount=55, is_random=False), \
 BinType(key=4, name='shed', amount=76, is_random=False))
-
->>> instance.n_events
-2
 
 >>> instance.events
 (StartEvent(time=1005000000000, priority=0), \
@@ -49,9 +40,6 @@ EndEvent(time=1007000000000, priority=0))
 >>> with temp_dir() as td:
 ...     _ = instance.to_directory(td)
 ...     instance_2 = Instance.from_directory(td)
-
->>> instance_2.n_parts
-4
 
 >>> instance_2.parts
 (Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
@@ -63,18 +51,12 @@ amount=100, is_random=True)), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
 amount=55, is_random=False)))
 
->>> instance_2.n_bin_types
-5
-
 >>> instance_2.bin_types
 (BinType(key=0, name='random_small', amount=50, is_random=True), \
 BinType(key=1, name='random_large', amount=100, is_random=True), \
 BinType(key=2, name='wardrobe', amount=30, is_random=False), \
 BinType(key=3, name='drawer', amount=55, is_random=False), \
 BinType(key=4, name='shed', amount=76, is_random=False))
-
->>> instance_2.n_events
-2
 
 >>> instance_2.events
 (StartEvent(time=1005000000000, priority=0), \
@@ -118,12 +100,6 @@ T = TypeVar("T", bound=Element)
 class Instance(ElementResolver):
     """A warehousing instance."""
 
-    #: the number of parts
-    n_parts: int = field(hash=False, compare=False)
-    #: the number of bin types
-    n_bin_types: int = field(hash=False, compare=False)
-    #: the number of events
-    n_events: int = field(hash=False, compare=False)
     #: the bin configuration of the warehouse
     bin_types: tuple[BinType, ...] = field(hash=True, compare=True)
     #: the part types available for the warehouse
@@ -230,9 +206,6 @@ class Instance(ElementResolver):
                     events.insert(0, StartEvent(events[0].time, 0))
                 events = tuple(events)
 
-        object.__setattr__(self, "n_parts", n_parts)
-        object.__setattr__(self, "n_bin_types", n_bin_types)
-        object.__setattr__(self, "n_events", tuple.__len__(events))
         object.__setattr__(self, "parts", tuple(part_lst))
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)

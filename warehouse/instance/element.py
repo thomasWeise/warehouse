@@ -82,6 +82,10 @@ from pycommons.types import check_int_range
 COLUMN_KEY: Final[str] = "key"
 #: the CSV name column
 COLUMN_NAME: Final[str] = "name"
+#: the CSV column for everything concerning amounts
+COLUMN_AMOUNT: Final[str] = "amount"
+#: the CSV column for everything concerning delays
+COLUMN_DELAY: Final[str] = "delay"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)

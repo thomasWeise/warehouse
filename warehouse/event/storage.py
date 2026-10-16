@@ -148,18 +148,12 @@ is_random=True)), amount=750)
 7497175492123864008
 """
 from dataclasses import dataclass, field
-from typing import Final
 
 from pycommons.types import check_to_int_range
 
-from warehouse.instance.element import context
+from warehouse.instance.element import COLUMN_AMOUNT, context
 from warehouse.instance.event import Event
-from warehouse.instance.part import Part
-
-#: the part column
-COLUMN_PART: Final[str] = "part"
-#: the amount column
-COLUMN_AMOUNT: Final[str] = "amount"
+from warehouse.instance.part import COLUMN_PART, Part
 
 
 def check_to_amount(amount: int | str) -> int:

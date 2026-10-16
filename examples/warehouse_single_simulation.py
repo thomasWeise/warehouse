@@ -14,8 +14,8 @@ logger(f"All data comes from and goes into directory {use_dir!r}.")
 logger("First loading the scenario.")
 instance = Instance.from_directory(use_dir)
 
-logger(f"We got a scenario with {instance.n_parts} parts, "
-       f"{instance.n_bin_types} bin types, and {instance.n_events} "
+logger(f"We got a scenario with {len(instance.parts)} parts, "
+       f"{len(instance.bin_types)} bin types, and {len(instance.events)} "
        f"predefined events.")
 
 out_file = use_dir.resolve_inside("output.csv")
