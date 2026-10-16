@@ -13,7 +13,5 @@ time;type;part;amount;bin_type
 2026-10-15 09:05;warehouse_demand;A;40
 2026-10-15 09:05;bin_out;A;30;rack_1
 2026-10-15 09:05;overstock_out;A;10
-2026-10-15 09:05;bin_in;A;10;rack_1
-2026-10-15 09:05;bin_out;A;10;rack_1
 2026-10-15 09:05;warehouse_delivered;A;40
 2026-10-15 09:05;end

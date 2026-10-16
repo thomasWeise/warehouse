@@ -163,7 +163,7 @@ class StorageModule(BaseModule):
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_type_empty = empty_bins[bin_key]
 
-        while amount > 0:
+        if amount > 0:
             use = min(in_bin[part_key], amount)
             if use > 0:
                 # We have part in the bin and can ship it.
@@ -175,70 +175,18 @@ class StorageModule(BaseModule):
                 empty_bins[bin_key] = bin_type_empty
                 priority += 1
                 self.enqueue(BinOut(time, priority, part, use))
-                continue
 
-            # If we get here, we do not have our parts in the bin.
-            # It holds that mat_in_bin == 0
-            # Since we know that we have enough parts, they must be in the
-            # overstock.
-            if bin_type_empty > 0:
-                use = min(bin_type_empty, amount, in_overstock[part_key])
-                if use <= 0:
-                    raise ValueError(
-                        f"Illegal state: We definitely got {amount} units of "
-                        f"part {part!r} in the combined stock of bins "
-                        "and overstock, but the bins are empty and overstock "
-                        f"has only {in_overstock[part_key]} items left, while"
-                        f" there now are {bin_type_empty} empty bins of type "
-                        f"{bin_type!r}.")
-
+            use = min(in_overstock[part_key], amount)
+            if use > 0:
+                # Now take from overstock
+                amount -= use
                 in_overstock[part_key] -= use
                 _over_unqueue(self.__overstock_queue[bin_key], part_key, use)
                 priority += 1
                 self.enqueue(OverstockOut(time, priority, part, use))
 
-                bin_type_empty -= use
-                empty_bins[bin_key] = bin_type_empty
-                in_bin[part_key] += use
-                priority += 1
-                self.enqueue(BinIn(time, priority, part, use))
-
-                # In the next iteration, we can take the parts out of the bin
-                # again.
-                continue
-
-            # Here we face a strange situation: We do have more parts to
-            # ship.
-            # This part is in the overstock.
-            # In order to ship it, we need to move it into the bins.
-            # However, we cannot do that, because all bins are full.
-            # This must mean that some *other* part occupies the bins.
-            # So we first must transfer this part to the overstock.
-            # Then we can move our part from the overstock into the bin,
-            # just to take it out again right away...
-            other_part, other_amount = in_bin.most_common(1)[0]
-            use = min(amount, other_amount)
-            if use <= 0:
-                raise ValueError(
-                    f"Illegal state: We definitely got {amount} units of "
-                    f"part {part!r} left in the combined "
-                    "stock of bins and overstock, there are no empty bins, "
-                    "there are no units of the part in the bins, but "
-                    f"there are also at most no={other_amount} units of "
-                    f"other part in the bins of type {bin_type!r}. "
-                    "So how can the bins be full?")
-
-            use_part = self.__parts[other_part]
-            in_bin[other_part] -= use
-            bin_type_empty += use
-            empty_bins[bin_key] = bin_type_empty
-            priority += 1
-            self.enqueue(BinOut(time, priority, use_part, use))
-
-            in_overstock[other_part] += use
-            self.__overstock_queue[bin_key].append([other_part, use])
-            priority += 1
-            self.enqueue(OverstockIn(time, priority, use_part, use))
+        if amount > 0:
+            raise ValueError("Huh?")
 
         # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
