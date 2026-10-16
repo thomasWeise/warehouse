@@ -10,7 +10,7 @@ part, the consumption of part at the assembly line, or anything else.
 """
 
 from collections import Counter
-from typing import Final, Generator
+from typing import Final
 
 from warehouse.event.bins import BinIn, BinOut
 from warehouse.event.storage import (
@@ -22,12 +22,12 @@ from warehouse.event.storage import (
     WarehouseIn,
 )
 from warehouse.instance.bin_type import BinType
-from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
 from warehouse.instance.part import Part
+from warehouse.simulation.base import BaseModule
 
 
-class StorageModule:
+class StorageModule(BaseModule):
     """The storage part of the simulation."""
 
     def __init__(self, instance: Instance) -> None:
@@ -36,6 +36,7 @@ class StorageModule:
 
         :param instance: the scenario/instance to simulate
         """
+        super().__init__(instance)
         #: the parts per bin type.
         self.__mat_bin: Final[tuple[tuple[int, ...], ...]] = tuple(
             tuple(part.key for part in instance.parts if
@@ -61,6 +62,7 @@ class StorageModule:
 
     def _start(self) -> None:
         """Begin the simulation."""
+        super()._start()
         in_overstock: Final[list[int]] = self.__in_overstock
         in_understock: Final[list[int]] = self.__in_understock
         empty_bins: Final[list[int]] = self.__empty_bins
@@ -77,8 +79,7 @@ class StorageModule:
             empty_bins[i] = bin_types[i].amount
             over_queue[i].clear()
 
-    def _warehouse_in(self, event: WarehouseIn) -> Generator[
-            Event, None, None]:
+    def _handle_warehouse_in(self, event: WarehouseIn) -> None:
         """
         Store part into the warehouse.
 
@@ -101,7 +102,7 @@ class StorageModule:
         use: int = min(self.__in_understock[part_key], amount)
         if use > 0:
             priority += 1
-            yield WarehouseDelivers(time, priority, part, use)
+            self.enqueue(WarehouseDelivers(time, priority, part, use))
             amount -= use
             if amount <= 0:
                 return
@@ -112,7 +113,7 @@ class StorageModule:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][part_key] += use
             priority += 1
-            yield BinIn(time, priority, part, use)
+            self.enqueue(BinIn(time, priority, part, use))
             amount -= use
             if amount <= 0:
                 return
@@ -121,10 +122,9 @@ class StorageModule:
         self.__in_overstock[part_key] += amount
         self.__overstock_queue[bin_key].append([part_key, amount])
         priority += 1
-        yield OverstockIn(time, priority, part, amount)
+        self.enqueue(OverstockIn(time, priority, part, amount))
 
-    def _warehouse_demand(self, event: WarehouseDemand) -> Generator[
-            Event, None, None]:
+    def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
         Remove part from the warehouse.
 
@@ -152,7 +152,7 @@ class StorageModule:
             under: int = amount - use
             self.__in_understock[part_key] += under
             priority += 1
-            yield Understock(time, priority, part, under)
+            self.enqueue(Understock(time, priority, part, under))
             if use <= 0:
                 return
 
@@ -174,7 +174,7 @@ class StorageModule:
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
                 priority += 1
-                yield BinOut(time, priority, part, use)
+                self.enqueue(BinOut(time, priority, part, use))
                 continue
 
             # If we get here, we do not have our parts in the bin.
@@ -195,13 +195,13 @@ class StorageModule:
                 in_overstock[part_key] -= use
                 _over_unqueue(self.__overstock_queue[bin_key], part_key, use)
                 priority += 1
-                yield OverstockOut(time, priority, part, use)
+                self.enqueue(OverstockOut(time, priority, part, use))
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[part_key] += use
                 priority += 1
-                yield BinIn(time, priority, part, use)
+                self.enqueue(BinIn(time, priority, part, use))
 
                 # In the next iteration, we can take the parts out of the bin
                 # again.
@@ -233,17 +233,17 @@ class StorageModule:
             bin_type_empty += use
             empty_bins[bin_key] = bin_type_empty
             priority += 1
-            yield BinOut(time, priority, use_part, use)
+            self.enqueue(BinOut(time, priority, use_part, use))
 
             in_overstock[other_part] += use
             self.__overstock_queue[bin_key].append([other_part, use])
             priority += 1
-            yield OverstockIn(time, priority, use_part, use)
+            self.enqueue(OverstockIn(time, priority, use_part, use))
 
         # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
         priority += 1
-        yield WarehouseDelivers(time, priority, part, deliver_amount)
+        self.enqueue(WarehouseDelivers(time, priority, part, deliver_amount))
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
@@ -253,14 +253,15 @@ class StorageModule:
                 use = min(bin_type_empty, other_amount)
                 use_part = self.__parts[other_part]
                 _over_unqueue(over_queue, other_part, use)
-                yield OverstockOut(time, priority, use_part, use)
+                priority += 1
+                self.enqueue(OverstockOut(time, priority, use_part, use))
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[other_part] += use
                 in_overstock[other_part] -= use
                 priority += 1
-                yield BinIn(time, priority, use_part, use)
+                self.enqueue(BinIn(time, priority, use_part, use))
 
                 if bin_type_empty <= 0:
                     break

@@ -1,5 +1,5 @@
 time;type;part;amount;bin_type
-2026-10-14 08:00;start
+2026-10-15 08:00;start
 2026-10-15 08:15;warehouse_in;A;40
 2026-10-15 08:15;bin_in;A;40;rack_1
 2026-10-15 08:20;warehouse_demand;A;30
