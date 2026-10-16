@@ -110,7 +110,7 @@ class Instance(ElementResolver):
     #: the pre-defined events for the instance
     events: tuple[Event, ...] = field(hash=True, compare=True)
     #: the min rules holding for this warehouse
-    min_rules: tuple[Event, ...] = field(hash=True, compare=True)
+    min_rules: tuple[MinRule, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType],
@@ -368,8 +368,8 @@ class Instance(ElementResolver):
         with file.open_for_write() as stream:
             write_lines(Part.to_csv(self.parts), stream)
 
+        file = dest.resolve_inside(FILE_EVENTS)
         if tuple.__len__(self.events) > 0:
-            file = dest.resolve_inside(FILE_EVENTS)
             logger(f"Storing events into {file!r}.")
             with file.open_for_write() as stream:
                 write_lines(Event.to_csv(self.events), stream)
@@ -380,8 +380,8 @@ class Instance(ElementResolver):
             logger("Instance does not have events, so we don't need to store"
                    f" them and thus won't create file {file!r}.")
 
+        file = dest.resolve_inside(FILE_MIN_RULES)
         if tuple.__len__(self.min_rules) > 0:
-            file = dest.resolve_inside(FILE_MIN_RULES)
             logger(f"Storing minimum rules into {file!r}.")
             with file.open_for_write() as stream:
                 write_lines(MinRule.to_csv(self.min_rules), stream)
