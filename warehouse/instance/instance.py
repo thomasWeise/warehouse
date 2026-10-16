@@ -84,6 +84,7 @@ from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
 )
+from warehouse.rule.min_rule import MinRule
 
 #: the bin types file
 FILE_BIN_TYPES: Final[str] = "bin_types.csv"
@@ -91,6 +92,8 @@ FILE_BIN_TYPES: Final[str] = "bin_types.csv"
 FILE_PARTS: Final[str] = "parts.csv"
 #: the events file
 FILE_EVENTS: Final[str] = "events.csv"
+#: the minimum rules file
+FILE_MIN_RULES: Final[str] = "min_rules.csv"
 
 #: the type variable for data to be written to CSV or to be read from CSV
 T = TypeVar("T", bound=Element)
@@ -106,11 +109,14 @@ class Instance(ElementResolver):
     parts: tuple[Part, ...] = field(hash=True, compare=True)
     #: the pre-defined events for the instance
     events: tuple[Event, ...] = field(hash=True, compare=True)
+    #: the min rules holding for this warehouse
+    min_rules: tuple[Event, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType],
                  parts: Iterable[Part],
-                 events: Iterable[Event] | None = None) -> None:
+                 events: Iterable[Event] | None = None,
+                 min_rules: Iterable[MinRule] | None = None) -> None:
         """
         Create an instance of the warehousing instance.
 
@@ -131,6 +137,8 @@ class Instance(ElementResolver):
         for i, bin_type in enumerate(bin_types):
             if not isinstance(bin_type, BinType):
                 raise type_error(bin_type, f"bin_types[{i}]", BinType)
+            if i != list.__len__(bin_type_lst):
+                raise ValueError(f"{bin_type!r} cannot be at index {i}.")
             name = bin_type.name
             if name in names:
                 raise ValueError(
@@ -146,6 +154,8 @@ class Instance(ElementResolver):
         for i, part in enumerate(parts):
             if not isinstance(part, Part):
                 raise type_error(part, f"parts[{i}]", Part)
+            if i != list.__len__(part_lst):
+                raise ValueError(f"{part!r} cannot be at index {i}.")
             name = part.name
             if name in names:
                 raise ValueError(
@@ -206,9 +216,35 @@ class Instance(ElementResolver):
                     events.insert(0, StartEvent(events[0].time, 0))
                 events = tuple(events)
 
+        min_rule_lst: Final[list[MinRule]] = []
+        min_rule_dct: Final[dict[int, MinRule]] = {}
+        if min_rules is not None:
+            for i, min_rule in enumerate(min_rules):
+                if not isinstance(min_rule, MinRule):
+                    raise type_error(min_rule, f"min_rules[{i}]", MinRule)
+                if i != list.__len__(min_rule_lst):
+                    raise ValueError(f"{min_rule!r} cannot be a index {i}.")
+                name = min_rule.name
+                if name in names:
+                    raise ValueError(f"Name of {min_rule!r} already in use"
+                                     f" for {names[name]}.")
+                names[name] = min_rule
+                mrpk: int = min_rule.part.key
+                if min_rule.part is not part_lst[mrpk]:
+                    raise ValueError(
+                        "Inconsistent parts of minimum rule "
+                        f"{min_rule!r} and {part_lst[mrpk]!r}.")
+                if mrpk in min_rule_dct:
+                    raise ValueError(
+                        "Two minimum rules for same part:"
+                        f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
+                min_rule_dct[mrpk] = min_rule
+                min_rule_lst.append(min_rule)
+
         object.__setattr__(self, "parts", tuple(part_lst))
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)
+        object.__setattr__(self, "min_rules", tuple(min_rule_lst))
         object.__setattr__(self, "_names", names)
 
     def resolve(self, cls: type[T], name_or_key: str | int) -> T:
@@ -225,6 +261,8 @@ class Instance(ElementResolver):
                 return self.bin_types[name_or_key]  # type: ignore
             if cls is Part:
                 return self.parts[name_or_key]  # type: ignore
+            if cls is MinRule:
+                return self.min_rules[name_or_key]  # type: ignore
             raise TypeError(f"Unsupported type {cls} for {name_or_key!r}.")
         res = self._names[  # type: ignore  # noqa  # pylint: disable=E1101
             str.strip(name_or_key)]
@@ -285,9 +323,27 @@ class Instance(ElementResolver):
             else:
                 logger(f"{file!r} does not exist, so we cannot load events.")
 
+            file = source.resolve_inside(FILE_MIN_RULES)
+            min_rules: list[MinRule] | None = None
+            if file.exists():
+                file.enforce_file()
+                logger(f"Now loading events from {file!r}.")
+                min_rules = []
+                with file.open_for_read() as stream:
+                    min_rules.extend(MinRule.from_csv(stream))
+                got = list.__len__(min_rules)
+                if got <= 0:
+                    raise ValueError(
+                        f"File {file!r} does not contain any minimum rules.")
+                logger(f"Finished loading {got} minimum rules from {file!r}.")
+            else:
+                logger(f"{file!r} does not exist, so we cannot "
+                       "load minimum rules.")
+
         result = Instance(bin_types=bin_types,
                           parts=parts,
-                          events=events)
+                          events=events,
+                          min_rules=min_rules)
         logger(f"Finished loading instance/scenario from {source!r}.")
         return result
 
@@ -323,6 +379,18 @@ class Instance(ElementResolver):
                                  "not have events to store.")
             logger("Instance does not have events, so we don't need to store"
                    f" them and thus won't create file {file!r}.")
+
+        if tuple.__len__(self.min_rules) > 0:
+            file = dest.resolve_inside(FILE_MIN_RULES)
+            logger(f"Storing minimum rules into {file!r}.")
+            with file.open_for_write() as stream:
+                write_lines(MinRule.to_csv(self.min_rules), stream)
+        else:
+            if file.exists():
+                raise ValueError(f"File {file!r} exists, but we do "
+                                 "not have minimum rules to store.")
+            logger("Instance does not have minimum rules, so we don't need to"
+                   f" store them and thus won't create file {file!r}.")
 
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest
