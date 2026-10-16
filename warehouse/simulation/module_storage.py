@@ -1,5 +1,5 @@
 """
-The warehouse simulation.
+The warehouse storage simulation.
 
 In this class, we implement the functionality needed by the local warehouse.
 This only concerns the movement of part units inside the warehouse, the

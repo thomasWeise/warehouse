@@ -76,7 +76,7 @@ from pycommons.io.csv import (
 )
 from pycommons.io.csv import CsvReader as CsvReaderBase
 from pycommons.io.csv import CsvWriter as CsvWriterBase
-from pycommons.types import check_int_range
+from pycommons.types import check_int_range, check_to_int_range
 
 #: the CSV key column
 COLUMN_KEY: Final[str] = "key"
@@ -84,8 +84,16 @@ COLUMN_KEY: Final[str] = "key"
 COLUMN_NAME: Final[str] = "name"
 #: the CSV column for everything concerning amounts
 COLUMN_AMOUNT: Final[str] = "amount"
-#: the CSV column for everything concerning delays
-COLUMN_DELAY: Final[str] = "delay"
+
+
+def check_to_amount(amount: int | str) -> int:
+    """
+    Check an amount for validity.
+
+    :param amount: the amount integer or string
+    :return: the amount integer
+    """
+    return check_to_int_range(amount, "amount", 1, 1_000_000)
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -532,7 +540,7 @@ class context(ElementResolver):
         if got is None:
             raise ValueError(
                 f"{cls.__name__} with name {name_or_key!r} does not exist.")
-        if cls is not got.__class__:
+        if not issubclass(got.__class__, cls):
             raise TypeError(
                 f"Expected {cls.__name__!r} element with name {name_or_key!r}"
                 f", but got instance of {got.__class__.__name__!r} instead. ")

@@ -149,21 +149,9 @@ is_random=True)), amount=750)
 """
 from dataclasses import dataclass, field
 
-from pycommons.types import check_to_int_range
-
-from warehouse.instance.element import COLUMN_AMOUNT, context
+from warehouse.instance.element import COLUMN_AMOUNT, check_to_amount, context
 from warehouse.instance.event import Event
 from warehouse.instance.part import COLUMN_PART, Part
-
-
-def check_to_amount(amount: int | str) -> int:
-    """
-    Check an amount for validity.
-
-    :param amount: the amount integer or string
-    :return: the amount integer
-    """
-    return check_to_int_range(amount, "amount", 1, 1_000_000)
 
 
 @dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
