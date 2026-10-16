@@ -50,8 +50,8 @@ class StorageModule(BaseModule):
         #: the amount of parts currently in overstock
         self.__in_overstock: Final[list[int]] = [0] * n_parts
         #: the overstock queue
-        self.__overstock_queue: Final[list[list[list[int]]]] = [
-            [] for _ in range(n_bin_types)]
+        self.__overstock_queue: Final[tuple[list[list[int]], ...]] = tuple(
+            [] for _ in range(n_bin_types))
         #: the amount of parts which were understocked
         self.__in_understock: Final[list[int]] = [0] * n_parts
         #: the empty bins of the given types
@@ -70,7 +70,8 @@ class StorageModule(BaseModule):
         in_understock: Final[list[int]] = self.__in_understock
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_types: Final[tuple[BinType, ...]] = self.__bin_types
-        over_queue: Final[list[list[list[int]]]] = self.__overstock_queue
+        over_queue: Final[tuple[list[list[int]], ...]] = (
+            self.__overstock_queue)
 
         for i in range(list.__len__(in_overstock)):
             in_overstock[i] = 0
