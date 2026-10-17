@@ -8,7 +8,6 @@ from pycommons.io.csv import (
     csv_scope,
     csv_val_or_none,
 )
-from pycommons.types import type_error
 
 from warehouse.instance.element import (
     MULTI_SEPARATOR,
@@ -53,17 +52,8 @@ class MinRule(Rule):
             material will arrive
         """
         super().__init__(key, name, effect_delay)
-        parts_set: Final[set[Part]] = set()
-        with context() as ctx:
-            if isinstance(parts, str):
-                parts = str.split(parts, MULTI_SEPARATOR)
-            if not isinstance(parts, Iterable):
-                raise type_error(parts, "parts", Iterable)
-            for part in parts:
-                parts_set.add(part if isinstance(part, Part) else ctx.resolve(
-                    Part, part))
-
-        object.__setattr__(self, "parts", tuple(sorted(parts_set)))
+        object.__setattr__(self, "parts", context().multi_resolve(
+            Part, parts))
         object.__setattr__(self, "minimum", check_to_amount(minimum))
         if tuple.__len__(self.parts) <= 0:
             raise ValueError("Rule does not have any parts?")

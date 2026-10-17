@@ -76,7 +76,7 @@ from pycommons.io.csv import (
 )
 from pycommons.io.csv import CsvReader as CsvReaderBase
 from pycommons.io.csv import CsvWriter as CsvWriterBase
-from pycommons.types import check_int_range, check_to_int_range
+from pycommons.types import check_int_range, check_to_int_range, type_error
 
 #: the CSV key column
 COLUMN_KEY: Final[str] = "key"
@@ -436,6 +436,29 @@ class ElementResolver:
         :return: the element
         """
         raise NotImplementedError
+
+    def multi_resolve(self, cls: type[T], value: str | Iterable[
+            T | str | int]) -> tuple[T, ...]:
+        """
+        Resolve several elements of a given type.
+
+        :param cls: the class
+        :param value: the raw value
+        :return: the result of the resolution
+        """
+        dataset: Final[set[T]] = set()
+        if isinstance(value, str):
+            value = str.split(value, MULTI_SEPARATOR)
+        if not isinstance(value, Iterable):
+            raise type_error(value, "value", Iterable)
+        for data in value:
+            use: T = data if isinstance(data, cls) else self.resolve(
+                cls, data)  # type: ignore
+            if use in dataset:
+                raise ValueError(
+                    f"Already encountered {data!r} as {use!r}.")
+            dataset.add(use)
+        return tuple(sorted(dataset))
 
 
 class context(ElementResolver):
