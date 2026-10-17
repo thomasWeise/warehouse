@@ -304,6 +304,15 @@ def str_to_timedelta(text: str) -> int:
 
     >>> str_to_timedelta('10 days, 0:00:00.001')
     864000001
+
+    >>> str_to_timedelta('150:00')
+    540000000
+
+    >>> str_to_timedelta('00:150')
+    9000000
+
+    >>> str_to_timedelta('2:30:00')
+    9000000
     """
     text = str.lower(str.strip(text))
     slen: Final[int] = str.__len__(text)
