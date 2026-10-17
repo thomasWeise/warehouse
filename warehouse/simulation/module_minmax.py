@@ -30,7 +30,8 @@ class MinMaxModule(StorageModule):
         self.__on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
             [] for _ in range(n_parts))
         rule_dict: dict[int, MinRule] = {
-            rule.part.key: rule for rule in instance.min_rules}
+            part.key: rule for rule in instance.min_rules
+            for part in rule.parts}
         #: the minimum rules
         self.__min: Final[tuple[MinRule | None, ...]] = tuple(
             rule_dict.get(k) for k in range(n_parts))

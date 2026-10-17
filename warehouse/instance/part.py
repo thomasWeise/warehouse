@@ -17,11 +17,11 @@ which it can be stored.
 ...     m3 = Part(2, "Skirt", "random_large")
 
 >>> str(m1)
-'P0'
+'Part0'
 >>> str(m2)
-'P1'
+'Part1'
 >>> str(m3)
-'P2'
+'Part2'
 
 >>> repr(m1)
 "Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
@@ -72,6 +72,8 @@ from warehouse.instance.element import Element, context, prepare_to_csv
 
 #: the CSV column for parts
 COLUMN_PART: Final[str] = "part"
+#: the CSV column for multiple parts
+COLUMN_PARTS: Final[str] = f"{COLUMN_PART}s"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)

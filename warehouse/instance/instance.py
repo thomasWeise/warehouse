@@ -229,16 +229,17 @@ class Instance(ElementResolver):
                     raise ValueError(f"Name of {min_rule!r} already in use"
                                      f" for {names[name]}.")
                 names[name] = min_rule
-                mrpk: int = min_rule.part.key
-                if min_rule.part is not part_lst[mrpk]:
-                    raise ValueError(
-                        "Inconsistent parts of minimum rule "
-                        f"{min_rule!r} and {part_lst[mrpk]!r}.")
-                if mrpk in min_rule_dct:
-                    raise ValueError(
-                        "Two minimum rules for same part:"
-                        f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
-                min_rule_dct[mrpk] = min_rule
+                for part in min_rule.parts:
+                    mrpk: int = part.key
+                    if part is not part_lst[mrpk]:
+                        raise ValueError(
+                            "Inconsistent parts of minimum rule "
+                            f"{min_rule!r} and {part_lst[mrpk]!r}.")
+                    if mrpk in min_rule_dct:
+                        raise ValueError(
+                            "Two minimum rules for same part:"
+                            f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
+                    min_rule_dct[mrpk] = min_rule
                 min_rule_lst.append(min_rule)
 
         object.__setattr__(self, "parts", tuple(part_lst))

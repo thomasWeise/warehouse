@@ -26,13 +26,13 @@ This may be useful for comparing data across instances.
 ...     e4 = Element(None, "D")
 
 >>> str(e1)
-'E0'
+'Element0'
 >>> str(e2)
-'E1'
+'Element1'
 >>> str(e3)
-'E2'
+'Element2'
 >>> str(e4)
-'E3'
+'Element3'
 
 >>> repr(e1)
 "Element(key=0, name='A')"
@@ -84,6 +84,9 @@ COLUMN_KEY: Final[str] = "key"
 COLUMN_NAME: Final[str] = "name"
 #: the CSV column for everything concerning amounts
 COLUMN_AMOUNT: Final[str] = "amount"
+
+#: the multi-element separator
+MULTI_SEPARATOR: Final[str] = "," if CSV_SEPARATOR != "," else ";"
 
 
 def check_to_amount(amount: int | str) -> int:
@@ -145,11 +148,11 @@ class Element:
         ...     b = Element(1, "B")
 
         >>> str(a)
-        'E0'
+        'Element0'
         >>> str(b)
-        'E1'
+        'Element1'
         """
-        return f"{self.__class__.__name__[0]}{self.key}"
+        return f"{self.__class__.__name__}{self.key}"
 
     def __lt__(self, other) -> bool:
         """
@@ -292,7 +295,7 @@ class Element:
             if isinstance(other, Element) else NotImplemented
 
     @classmethod
-    def to_csv(cls, data: Iterable["Element"]) -> Iterable[str]:
+    def to_csv(cls, data: Iterable[Self]) -> Iterable[str]:
         """
         Convert an iterable of the object to a CSV stream.
 
@@ -302,7 +305,7 @@ class Element:
         return CsvWriter.write(data=prepare_to_csv(data))
 
     @classmethod
-    def from_csv(cls, rows: Iterable[str]) -> Iterable["Element"]:
+    def from_csv(cls, rows: Iterable[str]) -> Iterable[Self]:
         """
         Get the data from CSV.
 
@@ -499,9 +502,10 @@ class context(ElementResolver):
         if str.__len__(use_name) < 1:
             raise ValueError(f"Name of element {element!r} cannot be empty, "
                              f"but got {name!r}.")
-        if CSV_SEPARATOR in use_name:
-            raise ValueError(f"Name of element {element!r} must not contain "
-                             f" {CSV_SEPARATOR!r}, but got {name!r}.")
+        for chrx in f"{MULTI_SEPARATOR}{CSV_SEPARATOR}":
+            if chrx in use_name:
+                raise ValueError(f"Name of element {element!r} must not"
+                                 f" contain {chrx!r}, but got {name!r}.")
 
         check_name: Final[str] = _process_name(use_name)
         if check_name in self.__elements_by_prepared_name:  # type: ignore

@@ -44,12 +44,12 @@ Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000, is_random=True))
 Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
 amount=500, is_random=True))
-MinRule(key=0, name='min_hat', effect_delay=100, part=Part(key=0, \
+MinRule(key=0, name='min_hat', effect_delay=100, parts=(Part(key=0, \
 name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), minimum=10)
+is_random=False)),), minimum=10)
 RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
-name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
+name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \
 minimum=10), amount=1200)
 <BLANKLINE>
 ===================
@@ -59,8 +59,8 @@ minimum=10), amount=1200)
 ===================
 <BLANKLINE>
 RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
-name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
+name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \
+bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \
 minimum=10), amount=1200)
 
 >>> hash(ev01)

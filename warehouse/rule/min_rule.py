@@ -8,15 +8,17 @@ from pycommons.io.csv import (
     csv_scope,
     csv_val_or_none,
 )
+from pycommons.types import type_error
 
-from warehouse.instance.element import CsvReader as CsvReaderBase
-from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import (
+    MULTI_SEPARATOR,
     check_to_amount,
     context,
     prepare_to_csv,
 )
-from warehouse.instance.part import COLUMN_PART, Part
+from warehouse.instance.element import CsvReader as CsvReaderBase
+from warehouse.instance.element import CsvWriter as CsvWriterBase
+from warehouse.instance.part import COLUMN_PARTS, Part
 from warehouse.instance.rule import COLUMN_EFFECT_DELAY, Rule
 from warehouse.instance.time import (
     str_to_timedelta,
@@ -32,12 +34,12 @@ class MinRule(Rule):
     """A class for identifying a minimum rule."""
 
     #: the part which is concerned here
-    part: Part
+    parts: tuple[Part, ...]
     #: the minimum value triggering the rule
     minimum: int
 
     def __init__(self, key: int | None, name: str,
-                 part: Part | int | str,
+                 parts: Iterable[Part | int | str] | str,
                  minimum: int | str = 1,
                  effect_delay: int = 150 * 60 * 1000) -> None:
         """
@@ -45,17 +47,26 @@ class MinRule(Rule):
 
         :param key: the rule key
         :param name: the rule name
-        :param part: the part concerned by the rule
+        :param parts: the part concerned by the rule
         :param minimum: the minimum value of that part
         :param effect_delay: the approximate delay after which the re-ordered
             material will arrive
         """
         super().__init__(key, name, effect_delay)
-        if not isinstance(part, Part):
-            with context() as ctx:
-                part = ctx.resolve(Part, part)
-        object.__setattr__(self, "part", part)
+        parts_set: Final[set[Part]] = set()
+        with context() as ctx:
+            if isinstance(parts, str):
+                parts = str.split(parts, MULTI_SEPARATOR)
+            if not isinstance(parts, Iterable):
+                raise type_error(parts, "parts", Iterable)
+            for part in parts:
+                parts_set.add(part if isinstance(part, Part) else ctx.resolve(
+                    Part, part))
+
+        object.__setattr__(self, "parts", tuple(sorted(parts_set)))
         object.__setattr__(self, "minimum", check_to_amount(minimum))
+        if tuple.__len__(self.parts) <= 0:
+            raise ValueError("Rule does not have any parts?")
 
     def __eq__(self, other) -> bool:
         """
@@ -66,8 +77,9 @@ class MinRule(Rule):
         """
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
-            self.part == other.part) and (self.minimum == other.minimum) and (
-                self.effect_delay == other.effect_delay)
+            self.parts == other.parts) and (
+            self.minimum == other.minimum) and (
+            self.effect_delay == other.effect_delay)
 
     def __ne__(self, other) -> bool:
         """
@@ -78,7 +90,7 @@ class MinRule(Rule):
         """
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
-            self.part != other.part) or (self.minimum != other.minimum) or (
+            self.parts != other.parts) or (self.minimum != other.minimum) or (
                 self.effect_delay != other.effect_delay)
 
     def __hash__(self) -> int:
@@ -129,7 +141,7 @@ class CsvReader(CsvReaderBase[T]):
         """
         super().__init__(columns, clazz)
         #: the part column
-        self.col_part: Final[int] = csv_column(columns, COLUMN_PART, True)
+        self.col_parts: Final[int] = csv_column(columns, COLUMN_PARTS, True)
         #: the minimum column
         self.col_min: Final[int] = csv_column(columns, COLUMN_MINIMUM, True)
         #: the delay column
@@ -146,7 +158,7 @@ class CsvReader(CsvReaderBase[T]):
         return self.clazz(
             key=csv_val_or_none(data, self.col_key, int),
             name=data[self.col_name],
-            part=data[self.col_part],
+            parts=data[self.col_parts],
             minimum=check_to_amount(data[self.col_min]),
             effect_delay=str_to_timedelta(data[self.col_delay]))
 
@@ -163,7 +175,7 @@ class CsvWriter(CsvWriterBase[T]):
         """
         super().__init__(data, scope)
         #: the part column
-        self.col_part: Final[str] = csv_scope(scope, COLUMN_PART)
+        self.col_parts: Final[str] = csv_scope(scope, COLUMN_PARTS)
         #: the minimum column
         self.col_min: Final[str] = csv_scope(scope, COLUMN_MINIMUM)
         #: the delay column
@@ -176,7 +188,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the column titles
         """
         yield from super().get_column_titles()
-        yield self.col_part
+        yield self.col_parts
         yield self.col_min
         yield self.col_delay
 
@@ -188,7 +200,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the row iterator
         """
         yield from super().get_row(data)
-        yield data.part.name
+        yield MULTI_SEPARATOR.join(part.name for part in data.parts)
         yield str(data.minimum)
         yield timedelta_to_str(data.effect_delay)
 
@@ -199,7 +211,9 @@ class CsvWriter(CsvWriterBase[T]):
         :return: the footer comments
         """
         yield from super().get_footer_comments()
-        yield f"{self.col_part}: the part for which the minimum is defined"
+        yield (f"{self.col_parts}: the part(s) for which the minimum is "
+               "defined; if the minimum holds for multiple parts, their "
+               f"names appear {MULTI_SEPARATOR!r}-separated")
         yield f"{self.col_min}: the minimum number of parts required"
         yield (f"{self.col_delay}: the time until the rule's effects become "
                f"visible")
