@@ -60,7 +60,7 @@ class MinMaxModule(StorageModule):
             if trigger > 0:
                 time: Final[int] = event.time
                 self.enqueue(RuleTriggeredEvent(
-                    time, event.priority + 1000, min_rule, trigger))
+                    time, event.priority + 1000, min_rule, part, trigger))
                 request: Final[WarehouseIn] = WarehouseIn(
                     time + min_rule.effect_delay, 0, part, trigger)
                 self.enqueue(request)

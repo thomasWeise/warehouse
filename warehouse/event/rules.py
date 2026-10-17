@@ -2,7 +2,6 @@
 Events regarding rules.
 
 >>> from warehouse.instance.bin_type import BinType
->>> from warehouse.instance.part import Part
 >>> from warehouse.rule.min_rule import MinRule
 >>> with context():
 ...     BinType(None, "random_small", 1000, is_random=True)
@@ -12,7 +11,8 @@ Events regarding rules.
 ...     Part(None, "shoe", "random_small")
 ...     Part(None, "trousers", "random_large")
 ...     MinRule(None, "min_hat", "hat", 10, 100)
-...     ev01 = RuleTriggeredEvent.create(1500000000000, 0, "min_hat", 1200)
+...     ev01 = RuleTriggeredEvent.create(1500000000000, 0, "min_hat",
+...                                      "hat", 1200)
 ...
 ...     events_1 = (ev01, )
 ...
@@ -50,21 +50,23 @@ is_random=False)),), minimum=10)
 RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
 name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \
-minimum=10), amount=1200)
+minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
+name='hat_bins', amount=30, is_random=False)), amount=1200)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-2017-07-14 10:40;rule_triggered;;1200;;min_hat
+2017-07-14 10:40;rule_triggered;hat;1200;;min_hat
 <BLANKLINE>
 ===================
 <BLANKLINE>
 RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
 name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \
-minimum=10), amount=1200)
+minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
+name='hat_bins', amount=30, is_random=False)), amount=1200)
 
 >>> hash(ev01)
-2467865476099009763
+-5537349579310125602
 """
 from dataclasses import dataclass, field
 from typing import Final
@@ -75,6 +77,7 @@ from warehouse.instance.element import (
     context,
 )
 from warehouse.instance.event import Event
+from warehouse.instance.part import COLUMN_PART, Part
 from warehouse.instance.rule import Rule
 
 #: the rule that was triggered, if any
@@ -87,6 +90,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
 
     #: the rule that was triggered
     rule: Rule = field(hash=True)
+    #: the part concerning this rule triggering, or `None` if none is needed
+    part: Part | None = field(hash=True)
     #: the amount involved in the triggering
     amount: int | None = field(hash=True)
 
@@ -102,7 +107,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             self.time == other.time) and (
             self.priority == other.priority) and (
             self.rule == other.rule) and (
-            self.amount == other.amount)
+            self.amount == other.amount) and (
+            self.part == other.part)
 
     def __ne__(self, other) -> bool:
         """
@@ -116,7 +122,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             self.time != other.time) or (
             self.priority != other.priority) or (
             self.rule != other.rule) or (
-            self.amount != other.amount)
+            self.amount != other.amount) or (
+            self.part != other.part)
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -128,6 +135,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         """
         if col == COLUMN_RULE:
             return "the name of the rule that was triggered"
+        if col == COLUMN_PART:
+            return "the part concerned by this rule, if any"
         if col == COLUMN_AMOUNT:
             return "the amount involved in triggering the rule, if any"
         return None
@@ -141,6 +150,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         """
         if column == COLUMN_RULE:
             return self.rule.name
+        if column == COLUMN_PART:
+            return "" if self.part is None else self.part.name
         if column == COLUMN_AMOUNT:
             return "" if self.amount is None else str(self.amount)
         return ""
@@ -152,13 +163,14 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
 
         :return: the csv columns
         """
-        return COLUMN_RULE, COLUMN_AMOUNT
+        return COLUMN_RULE, COLUMN_PART, COLUMN_AMOUNT
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, priority: int,
             rule: str | Rule,
-            amount: int | str | None, **_) \
+            part: int | str | Part | None = None,
+            amount: int | str | None = None, **_) \
             -> "RuleTriggeredEvent":  # type: ignore
         """
         Create the storage event.
@@ -166,14 +178,17 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         :param time: the time
         :param priority: the event priority
         :param rule: the rule involved
+        :param part: the part concerned, if any
         :param amount: the amount of the part to use
         :return: the storage event
         """
-        if not isinstance(rule, Rule):
-            with context() as ctx:
+        with context() as ctx:
+            if not isinstance(rule, Rule):
                 rule = ctx.resolve(Rule, rule)
+            if (part is not None) and (not isinstance(part, Part)):
+                part = ctx.resolve(Part, part)
         return cls(time, priority, rule,  # type: ignore
-                   None if amount is None else  # type: ignore
+                   part, None if amount is None else  # type: ignore
                    check_to_amount(amount))  # type: ignore
 
     @classmethod
@@ -193,4 +208,5 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         :return: the event description, if any
         """
         return (f"The rule of the given {COLUMN_RULE} was triggered. "
-                f"It may be parameterized with the given {COLUMN_AMOUNT}.")
+                f"It may be parameterized with the given {COLUMN_PART} and "
+                f"{COLUMN_AMOUNT}.")
