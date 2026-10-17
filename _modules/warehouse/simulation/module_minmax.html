@@ -1,0 +1,118 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.simulation.module_minmax — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/simulation/module_minmax.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_minmax</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.simulation.module_minmax</h1><div class=highlight><pre>
+<span></span><span class=sd>"""The warehouse min-max rule simulation."""</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>heapq</span><span class=w> </span><span class=kn>import</span> <span class=n>heapify</span><span class=p>,</span> <span class=n>heappop</span><span class=p>,</span> <span class=n>heappush</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Callable</span><span class=p>,</span> <span class=n>Final</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.rules</span><span class=w> </span><span class=kn>import</span> <span class=n>RuleTriggeredEvent</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.storage</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>WarehouseDemand</span><span class=p>,</span>
+    <span class=n>WarehouseIn</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.instance</span><span class=w> </span><span class=kn>import</span> <span class=n>Instance</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>Part</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.rule.min_rule</span><span class=w> </span><span class=kn>import</span> <span class=n>MinRule</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.simulation.module_storage</span><span class=w> </span><span class=kn>import</span> <span class=n>StorageModule</span>
+
+
+<div class=viewcode-block id=MinMaxModule>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.module_minmax.MinMaxModule>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>MinMaxModule</span><span class=p>(</span><span class=n>StorageModule</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The min-max part of the simulation."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>instance</span><span class=p>:</span> <span class=n>Instance</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the min/max part of the simulation.</span>
+
+<span class=sd>        :param instance: the scenario/instance to simulate</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>instance</span><span class=p>)</span>
+
+        <span class=n>n_parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>instance</span><span class=o>.</span><span class=n>parts</span><span class=p>)</span>
+
+        <span class=c1>#: the parts already ordered by the min/max rules</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__on_the_way</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=p>[]</span> <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>n_parts</span><span class=p>))</span>
+        <span class=n>rule_dict</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=n>MinRule</span><span class=p>]</span> <span class=o>=</span> <span class=p>{</span>
+            <span class=n>part</span><span class=o>.</span><span class=n>key</span><span class=p>:</span> <span class=n>rule</span> <span class=k>for</span> <span class=n>rule</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>min_rules</span>
+            <span class=k>for</span> <span class=n>part</span> <span class=ow>in</span> <span class=n>rule</span><span class=o>.</span><span class=n>parts</span><span class=p>}</span>
+        <span class=c1>#: the minimum rules</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__min</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>MinRule</span> <span class=o>|</span> <span class=kc>None</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=n>rule_dict</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>k</span><span class=p>)</span> <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>n_parts</span><span class=p>))</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_start</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""Begin the simulation."""</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>_start</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>queue</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__on_the_way</span><span class=p>:</span>
+            <span class=nb>list</span><span class=o>.</span><span class=n>clear</span><span class=p>(</span><span class=n>queue</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_handle_warehouse_demand</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseDemand</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Remove part from the warehouse.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=n>part</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Part</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>part</span>
+        <span class=n>part_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>min_rule</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>MinRule</span> <span class=o>|</span> <span class=kc>None</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__min</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span>
+
+        <span class=k>if</span> <span class=n>min_rule</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=n>otw</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__on_the_way</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span>
+            <span class=n>remaining</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>available_units</span><span class=p>(</span>
+                <span class=n>part</span><span class=p>)</span> <span class=o>+</span> <span class=n>_get_on_the_way</span><span class=p>(</span><span class=n>otw</span><span class=p>)</span> <span class=o>-</span> <span class=n>event</span><span class=o>.</span><span class=n>amount</span>
+            <span class=n>trigger</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>min_rule</span><span class=o>.</span><span class=n>minimum</span> <span class=o>-</span> <span class=n>remaining</span>
+            <span class=k>if</span> <span class=n>trigger</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>time</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>RuleTriggeredEvent</span><span class=p>(</span>
+                    <span class=n>time</span><span class=p>,</span> <span class=n>event</span><span class=o>.</span><span class=n>priority</span> <span class=o>+</span> <span class=mi>1000</span><span class=p>,</span> <span class=n>min_rule</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>trigger</span><span class=p>))</span>
+                <span class=n>request</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>]</span> <span class=o>=</span> <span class=n>WarehouseIn</span><span class=p>(</span>
+                    <span class=n>time</span> <span class=o>+</span> <span class=n>min_rule</span><span class=o>.</span><span class=n>effect_delay</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>trigger</span><span class=p>)</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>request</span><span class=p>)</span>
+                <span class=n>_put_one_the_way</span><span class=p>(</span><span class=n>otw</span><span class=p>,</span> <span class=n>request</span><span class=p>)</span>
+
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>_handle_warehouse_demand</span><span class=p>(</span><span class=n>event</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_handle_warehouse_in</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseIn</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Put newly arrived parts into the warehouse.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=n>_purge_on_the_way</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__on_the_way</span><span class=p>[</span><span class=n>event</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>key</span><span class=p>],</span> <span class=n>event</span><span class=p>)</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>_handle_warehouse_in</span><span class=p>(</span><span class=n>event</span><span class=p>)</span></div>
+
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>_get_on_the_way</span><span class=p>(</span><span class=n>otw</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>])</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get the amount of parts on the way.</span>
+
+<span class=sd>    :param otw: the on-the-way list</span>
+<span class=sd>    :return: the amount of parts on the way</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>sum</span><span class=p>(</span><span class=n>ev</span><span class=o>.</span><span class=n>amount</span> <span class=k>for</span> <span class=n>ev</span> <span class=ow>in</span> <span class=n>otw</span><span class=p>)</span>
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>_purge_on_the_way</span><span class=p>(</span><span class=n>otw</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>],</span>
+                      <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseIn</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Purge an event from the on-the-way queue.</span>
+
+<span class=sd>    :param otw: the queue</span>
+<span class=sd>    :param event: the event</span>
+<span class=sd>    """</span>
+    <span class=k>if</span> <span class=ow>not</span> <span class=n>otw</span><span class=p>:</span>
+        <span class=k>return</span>
+    <span class=k>if</span> <span class=n>event</span> <span class=ow>is</span> <span class=n>otw</span><span class=p>[</span><span class=mi>0</span><span class=p>]:</span>
+        <span class=n>heappop</span><span class=p>(</span><span class=n>otw</span><span class=p>)</span>
+        <span class=k>return</span>
+    <span class=k>for</span> <span class=n>idx</span><span class=p>,</span> <span class=n>ev</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>otw</span><span class=p>):</span>
+        <span class=k>if</span> <span class=n>ev</span> <span class=ow>is</span> <span class=n>event</span><span class=p>:</span>
+            <span class=k>del</span> <span class=n>otw</span><span class=p>[</span><span class=n>idx</span><span class=p>]</span>
+            <span class=n>heapify</span><span class=p>(</span><span class=n>otw</span><span class=p>)</span>
+            <span class=k>return</span>
+
+
+<span class=c1>#: we can directly reference the heappush function here.</span>
+<span class=n>_put_one_the_way</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Callable</span><span class=p>[[</span>
+    <span class=nb>list</span><span class=p>[</span><span class=n>WarehouseIn</span><span class=p>],</span> <span class=n>WarehouseIn</span><span class=p>],</span> <span class=kc>None</span><span class=p>]]</span> <span class=o>=</span> <span class=n>heappush</span>
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_minmax</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

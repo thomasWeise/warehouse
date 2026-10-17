@@ -1,0 +1,42 @@
+warehouse.event package
+=======================
+
+.. automodule:: warehouse.event
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+warehouse.event.bins module
+---------------------------
+
+.. automodule:: warehouse.event.bins
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.event.rules module
+----------------------------
+
+.. automodule:: warehouse.event.rules
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.event.storage module
+------------------------------
+
+.. automodule:: warehouse.event.storage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.event.time module
+---------------------------
+
+.. automodule:: warehouse.event.time
+   :members:
+   :show-inheritance:
+   :undoc-members:

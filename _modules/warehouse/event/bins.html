@@ -1,0 +1,279 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.event.bins — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/event/bins.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.bins</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.event.bins</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>Events regarding the storage and retrieval of part to and from bins.</span>
+
+<span class=sd>>>> from warehouse.instance.bin_type import BinType</span>
+<span class=sd>>>> with context():</span>
+<span class=sd>...     BinType(None, "random_small", 1000, True)</span>
+<span class=sd>...     BinType(None, "random_large", 500, True)</span>
+<span class=sd>...     BinType(None, "hat_bins", 30, False)</span>
+<span class=sd>...     Part(None, "hat", "hat_bins")</span>
+<span class=sd>...     Part(None, "shoe", "random_small")</span>
+<span class=sd>...     Part(None, "trousers", "random_large")</span>
+<span class=sd>...     ev01 = BinIn.create(1500000000000, 0, "hat", 10, "hat_bins")</span>
+<span class=sd>...     ev02 = BinIn.create(1700000000000, 0, "shoe", 15, "random_small")</span>
+<span class=sd>...     ev03 = BinIn.create(1800000000000, 0, "trousers", 7)</span>
+<span class=sd>...     ev04 = BinOut.create(1900000000000, 0, "hat", 9, "hat_bins")</span>
+<span class=sd>...     ev05 = BinOut.create(2000000000000, 0, "shoe", 8, "random_small")</span>
+<span class=sd>...     ev06 = BinOut.create(2100000000000, 0, "trousers", 3)</span>
+<span class=sd>...</span>
+<span class=sd>...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06)</span>
+<span class=sd>...</span>
+<span class=sd>...     for ev in events_1:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     csv = list(BinEvent.to_csv(events_1))</span>
+<span class=sd>...     for row in csv:</span>
+<span class=sd>...         if not str.startswith(row, "#"):</span>
+<span class=sd>...             print(row)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     events_2 = tuple(BinEvent.from_csv(csv))</span>
+<span class=sd>...     for ev in events_2:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>BinType(key=0, name='random_small', amount=1000, is_random=True)</span>
+<span class=sd>BinType(key=1, name='random_large', amount=500, is_random=True)</span>
+<span class=sd>BinType(key=2, name='hat_bins', amount=30, is_random=False)</span>
+<span class=sd>Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', \</span>
+<span class=sd>amount=30, is_random=False))</span>
+<span class=sd>Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \</span>
+<span class=sd>amount=1000, is_random=True))</span>
+<span class=sd>Part(key=2, name='trousers', bin_type=BinType(key=1, \</span>
+<span class=sd>name='random_large', amount=500, is_random=True))</span>
+<span class=sd>BinIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=10)</span>
+<span class=sd>BinIn(time=1700000000000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \</span>
+<span class=sd>amount=15)</span>
+<span class=sd>BinIn(time=1800000000000, priority=0, part=Part(key=2, name='trousers', \</span>
+<span class=sd>bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \</span>
+<span class=sd>amount=7)</span>
+<span class=sd>BinOut(time=1900000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=9)</span>
+<span class=sd>BinOut(time=2000000000000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \</span>
+<span class=sd>amount=8)</span>
+<span class=sd>BinOut(time=2100000000000, priority=0, part=Part(key=2, name='trousers', \</span>
+<span class=sd>bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \</span>
+<span class=sd>amount=3)</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>time;type;part;amount;bin_type;rule</span>
+<span class=sd>2017-07-14 10:40;bin_in;hat;10;hat_bins</span>
+<span class=sd>2023-11-15 06:13:20;bin_in;shoe;15;random_small</span>
+<span class=sd>2027-01-15 16:00;bin_in;trousers;7;random_large</span>
+<span class=sd>2030-03-18 01:46:40;bin_out;hat;9;hat_bins</span>
+<span class=sd>2033-05-18 11:33:20;bin_out;shoe;8;random_small</span>
+<span class=sd>2036-07-18 21:20;bin_out;trousers;3;random_large</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>BinIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=10)</span>
+<span class=sd>BinIn(time=1700000000000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \</span>
+<span class=sd>amount=15)</span>
+<span class=sd>BinIn(time=1800000000000, priority=0, part=Part(key=2, name='trousers', \</span>
+<span class=sd>bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \</span>
+<span class=sd>amount=7)</span>
+<span class=sd>BinOut(time=1900000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=9)</span>
+<span class=sd>BinOut(time=2000000000000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \</span>
+<span class=sd>amount=8)</span>
+<span class=sd>BinOut(time=2100000000000, priority=0, part=Part(key=2, name='trousers', \</span>
+<span class=sd>bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \</span>
+<span class=sd>amount=3)</span>
+
+<span class=sd>>>> hash(ev06)</span>
+<span class=sd>-2497297457874468673</span>
+<span class=sd>"""</span>
+
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.storage</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>COLUMN_AMOUNT</span><span class=p>,</span>
+    <span class=n>StorageEvent</span><span class=p>,</span>
+    <span class=n>check_to_amount</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin_type</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_BIN_TYPE</span><span class=p>,</span> <span class=n>BinType</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>context</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>Part</span>
+
+
+<div class=viewcode-block id=BinEvent>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>BinEvent</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>  <span class=c1># noqa: PLW1641</span>
+<span class=w>    </span><span class=sd>"""An amount of part has changed places."""</span>
+
+<div class=viewcode-block id=BinEvent.eventclass_needs_register>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent.eventclass_needs_register>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_needs_register</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Check whether the class should be registered.</span>
+
+<span class=sd>        :returns: `True` if it should be registered as a possible event type,</span>
+<span class=sd>            `False` otherwise; in this class, if it is neither `Event`,</span>
+<span class=sd>            `StorageEvent`, nor `BinEvent`.</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>eventclass_needs_register</span><span class=p>()</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span> <span class=o>!=</span> <span class=s2>"BinEvent"</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=BinEvent.eventclass_get_col_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent.eventclass_get_col_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_col_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_BIN_TYPE</span><span class=p>:</span>
+            <span class=k>return</span> <span class=p>(</span><span class=s2>"the type of bin into which is part stored in or "</span>
+                    <span class=s2>"taken out of"</span><span class=p>)</span>
+        <span class=k>return</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>eventclass_get_col_desc</span><span class=p>(</span><span class=n>col</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=BinEvent.event_get_csv_value>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent.event_get_csv_value>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>event_get_csv_value</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_BIN_TYPE</span><span class=p>:</span>
+            <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>bin_type</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>return</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>event_get_csv_value</span><span class=p>(</span><span class=n>column</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=BinEvent.eventclass_get_csv_columns>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent.eventclass_get_csv_columns>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns of the event.</span>
+
+<span class=sd>        :return: the csv columns</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>COLUMN_AMOUNT</span><span class=p>,</span> <span class=n>COLUMN_BIN_TYPE</span></div>
+
+
+<div class=viewcode-block id=BinEvent.create>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinEvent.create>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>create</span><span class=p>(</span>  <span class=c1># type: ignore  # pylint: disable=W0221</span>
+            <span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>priority</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span>
+            <span class=n>part</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=n>Part</span><span class=p>,</span> <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>,</span>
+            <span class=n>bin_type</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=n>BinType</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=s2>"BinEvent"</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time</span>
+<span class=sd>        :param priority: the priority</span>
+<span class=sd>        :param part: the part to use</span>
+<span class=sd>        :param amount: the amount of the part to use</span>
+<span class=sd>        :param bin_type: the optional bin type</span>
+<span class=sd>        :return: the bin event</span>
+<span class=sd>        """</span>
+        <span class=n>need_bin</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=p>(</span><span class=n>bin_type</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=n>bin_type</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>BinType</span><span class=p>)</span>
+        <span class=n>need_part</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>Part</span>
+        <span class=k>if</span> <span class=n>need_part</span> <span class=ow>or</span> <span class=n>need_bin</span><span class=p>:</span>
+            <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+                <span class=k>if</span> <span class=n>need_part</span><span class=p>:</span>
+                    <span class=n>part</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Part</span><span class=p>,</span> <span class=n>part</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+                <span class=k>if</span> <span class=n>need_bin</span><span class=p>:</span>
+                    <span class=n>bin_type</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>BinType</span><span class=p>,</span> <span class=n>bin_type</span><span class=p>)</span>  <span class=c1># type: ignore</span>
+
+        <span class=n>rv</span> <span class=o>=</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+                 <span class=n>check_to_amount</span><span class=p>(</span><span class=n>amount</span><span class=p>))</span>  <span class=c1># type: ignore</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>bin_type</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=n>rv</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>bin_type</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>bin_type</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Expected bin type </span><span class=si>{</span><span class=n>bin_type</span><span class=si>!r}</span><span class=s2> for </span><span class=si>{</span><span class=n>rv</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>rv</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=BinIn>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>BinIn</span><span class=p>(</span><span class=n>BinEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store part in a bin."""</span>
+
+<div class=viewcode-block id=BinIn.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinIn.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"bin_in"</span></div>
+
+
+<div class=viewcode-block id=BinIn.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinIn.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part is stored in a certain type "</span>
+                <span class=s2>"of bins; the amount of part and the amount of bins used "</span>
+                <span class=s2>"are the same, as part always comes in units that are "</span>
+                <span class=s2>"multiples of bin sizes."</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=BinOut>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinOut>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>BinOut</span><span class=p>(</span><span class=n>BinEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Retrieve part from a bin."""</span>
+
+<div class=viewcode-block id=BinOut.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinOut.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"bin_out"</span></div>
+
+
+<div class=viewcode-block id=BinOut.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.bins.BinOut.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part is retrieved from a certain "</span>
+                <span class=s2>"type of bins; the amount of part and the amount of bins "</span>
+                <span class=s2>"used are the same, as part always comes in units that "</span>
+                <span class=s2>"are multiples of bin sizes."</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.bins</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

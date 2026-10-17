@@ -1,0 +1,411 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.instance — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/instance.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.instance</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.instance</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A warehouse setup.</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     b1 = BinType(None, "random_small", 50, True)</span>
+<span class=sd>...     b2 = BinType(1, "random_large", 100, True)</span>
+<span class=sd>...     b3 = BinType(None, "wardrobe", 30)</span>
+<span class=sd>...     b4 = BinType(None, "drawer", 55)</span>
+<span class=sd>...     b5 = BinType(4, "shed", 76)</span>
+<span class=sd>...     m1 = Part(None, "Shoe", "random_small")</span>
+<span class=sd>...     m2 = Part(1, "Hat", "wardrobe")</span>
+<span class=sd>...     m3 = Part(2, "Skirt", "random_large")</span>
+<span class=sd>...     m4 = Part(None, "T-Shirt", "drawer")</span>
+<span class=sd>...     e1 = StartEvent(1005000000000, 0)</span>
+<span class=sd>...     e2 = EndEvent(1007000000000, 0)</span>
+<span class=sd>...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))</span>
+
+<span class=sd>>>> instance.parts</span>
+<span class=sd>(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \</span>
+<span class=sd>amount=50, is_random=True)), \</span>
+<span class=sd>Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \</span>
+<span class=sd>amount=30, is_random=False)), \</span>
+<span class=sd>Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=100, is_random=True)), \</span>
+<span class=sd>Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \</span>
+<span class=sd>amount=55, is_random=False)))</span>
+
+<span class=sd>>>> instance.bin_types</span>
+<span class=sd>(BinType(key=0, name='random_small', amount=50, is_random=True), \</span>
+<span class=sd>BinType(key=1, name='random_large', amount=100, is_random=True), \</span>
+<span class=sd>BinType(key=2, name='wardrobe', amount=30, is_random=False), \</span>
+<span class=sd>BinType(key=3, name='drawer', amount=55, is_random=False), \</span>
+<span class=sd>BinType(key=4, name='shed', amount=76, is_random=False))</span>
+
+<span class=sd>>>> instance.events</span>
+<span class=sd>(StartEvent(time=1005000000000, priority=0), \</span>
+<span class=sd>EndEvent(time=1007000000000, priority=0))</span>
+
+<span class=sd>>>> from pycommons.io.temp import temp_dir</span>
+<span class=sd>>>> with temp_dir() as td:</span>
+<span class=sd>...     _ = instance.to_directory(td)</span>
+<span class=sd>...     instance_2 = Instance.from_directory(td)</span>
+
+<span class=sd>>>> instance_2.parts</span>
+<span class=sd>(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \</span>
+<span class=sd>amount=50, is_random=True)), \</span>
+<span class=sd>Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \</span>
+<span class=sd>amount=30, is_random=False)), \</span>
+<span class=sd>Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=100, is_random=True)), \</span>
+<span class=sd>Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \</span>
+<span class=sd>amount=55, is_random=False)))</span>
+
+<span class=sd>>>> instance_2.bin_types</span>
+<span class=sd>(BinType(key=0, name='random_small', amount=50, is_random=True), \</span>
+<span class=sd>BinType(key=1, name='random_large', amount=100, is_random=True), \</span>
+<span class=sd>BinType(key=2, name='wardrobe', amount=30, is_random=False), \</span>
+<span class=sd>BinType(key=3, name='drawer', amount=55, is_random=False), \</span>
+<span class=sd>BinType(key=4, name='shed', amount=76, is_random=False))</span>
+
+<span class=sd>>>> instance_2.events</span>
+<span class=sd>(StartEvent(time=1005000000000, priority=0), \</span>
+<span class=sd>EndEvent(time=1007000000000, priority=0))</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span><span class=p>,</span> <span class=n>field</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>TypeVar</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.console</span><span class=w> </span><span class=kn>import</span> <span class=n>logger</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.path</span><span class=w> </span><span class=kn>import</span> <span class=n>Path</span><span class=p>,</span> <span class=n>directory_path</span><span class=p>,</span> <span class=n>write_lines</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>type_error</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.time</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>EndEvent</span><span class=p>,</span>
+    <span class=n>StartEvent</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin_type</span><span class=w> </span><span class=kn>import</span> <span class=n>BinType</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>Element</span><span class=p>,</span> <span class=n>ElementResolver</span><span class=p>,</span> <span class=n>context</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>Event</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>Part</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.time</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>EARLIEST_START</span><span class=p>,</span>
+    <span class=n>LATEST_END</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.rule.min_rule</span><span class=w> </span><span class=kn>import</span> <span class=n>MinRule</span>
+
+<span class=c1>#: the bin types file</span>
+<span class=n>FILE_BIN_TYPES</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"bin_types.csv"</span>
+<span class=c1>#: the parts file</span>
+<span class=n>FILE_PARTS</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"parts.csv"</span>
+<span class=c1>#: the events file</span>
+<span class=n>FILE_EVENTS</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"events.csv"</span>
+<span class=c1>#: the minimum rules file</span>
+<span class=n>FILE_MIN_RULES</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"min_rules.csv"</span>
+
+<span class=c1>#: the type variable for data to be written to CSV or to be read from CSV</span>
+<span class=n>T</span> <span class=o>=</span> <span class=n>TypeVar</span><span class=p>(</span><span class=s2>"T"</span><span class=p>,</span> <span class=n>bound</span><span class=o>=</span><span class=n>Element</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=Instance>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.instance.Instance>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>Instance</span><span class=p>(</span><span class=n>ElementResolver</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A warehousing instance."""</span>
+
+    <span class=c1>#: the bin configuration of the warehouse</span>
+    <span class=n>bin_types</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>BinType</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the part types available for the warehouse</span>
+    <span class=n>parts</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Part</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the pre-defined events for the instance</span>
+    <span class=n>events</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Event</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the min rules holding for this warehouse</span>
+    <span class=n>min_rules</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>MinRule</span><span class=p>,</span> <span class=o>...</span><span class=p>]</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>compare</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span>
+                 <span class=n>bin_types</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>BinType</span><span class=p>],</span>
+                 <span class=n>parts</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Part</span><span class=p>],</span>
+                 <span class=n>events</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>Event</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>,</span>
+                 <span class=n>min_rules</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>MinRule</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create an instance of the warehousing instance.</span>
+
+<span class=sd>        :param bin_types: the bin types</span>
+<span class=sd>        :param parts: the parts</span>
+<span class=sd>        :param events: the events</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>bin_types</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>bin_types</span><span class=p>,</span> <span class=s2>"bin_types"</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>)</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>parts</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>parts</span><span class=p>,</span> <span class=s2>"parts"</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>)</span>
+
+        <span class=n>part_lst</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Part</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>bin_type_lst</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>BinType</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>bin_type_parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>names</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=n>Element</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>bin_type</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>bin_types</span><span class=p>):</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>bin_type</span><span class=p>,</span> <span class=n>BinType</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>bin_type</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"bin_types[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>BinType</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>bin_type_lst</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>bin_type</span><span class=si>!r}</span><span class=s2> cannot be at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>name</span> <span class=o>=</span> <span class=n>bin_type</span><span class=o>.</span><span class=n>name</span>
+            <span class=k>if</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>names</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"Name of </span><span class=si>{</span><span class=n>bin_type</span><span class=si>!r}</span><span class=s2> already in use for </span><span class=si>{</span><span class=n>names</span><span class=p>[</span><span class=n>name</span><span class=p>]</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>names</span><span class=p>[</span><span class=n>bin_type</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_type</span>
+            <span class=n>bin_type_lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>bin_type</span><span class=p>)</span>
+            <span class=n>bin_type_parts</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
+
+        <span class=n>n_bin_types</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>bin_type_lst</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>n_bin_types</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>"No bin types specified!"</span><span class=p>)</span>
+
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>part</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>parts</span><span class=p>):</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>part</span><span class=p>,</span> <span class=n>Part</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>part</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"parts[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>Part</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>part_lst</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>part</span><span class=si>!r}</span><span class=s2> cannot be at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>name</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>name</span>
+            <span class=k>if</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>names</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"Name of </span><span class=si>{</span><span class=n>part</span><span class=si>!r}</span><span class=s2> already in use for </span><span class=si>{</span><span class=n>names</span><span class=p>[</span><span class=n>name</span><span class=p>]</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>mbt</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>bin_type</span>
+            <span class=n>btk</span> <span class=o>=</span> <span class=n>mbt</span><span class=o>.</span><span class=n>key</span>
+            <span class=k>if</span> <span class=n>mbt</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>bin_type_lst</span><span class=p>[</span><span class=n>btk</span><span class=p>]:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Inconsistent bin type </span><span class=si>{</span><span class=n>mbt</span><span class=si>!r}</span><span class=s2> of part "</span>
+                                 <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>part</span><span class=si>!r}</span><span class=s2>, because we already got "</span>
+                                 <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>bin_type_lst</span><span class=p>[</span><span class=n>btk</span><span class=p>]</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>names</span><span class=p>[</span><span class=n>part</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span>
+            <span class=n>bin_type_parts</span><span class=p>[</span><span class=n>btk</span><span class=p>]</span> <span class=o>+=</span> <span class=mi>1</span>
+            <span class=k>if</span> <span class=p>(</span><span class=ow>not</span> <span class=n>mbt</span><span class=o>.</span><span class=n>is_random</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=n>bin_type_parts</span><span class=p>[</span><span class=n>btk</span><span class=p>]</span> <span class=o>></span> <span class=mi>1</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"Bin type </span><span class=si>{</span><span class=n>mbt</span><span class=si>!r}</span><span class=s2> is not random, but has multiple "</span>
+                    <span class=sa>f</span><span class=s2>"associated materials, including </span><span class=si>{</span><span class=n>part</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>part_lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>part</span><span class=p>)</span>
+
+        <span class=n>n_parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>part_lst</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>n_parts</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>"No parts specified."</span><span class=p>)</span>
+
+        <span class=n>part_lst</span><span class=o>.</span><span class=n>sort</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>part</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>part_lst</span><span class=p>):</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"Inconsistent key for </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>-th part </span><span class=si>{</span><span class=n>part</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=n>bin_type_lst</span><span class=o>.</span><span class=n>sort</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>bin_type</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>bin_type_lst</span><span class=p>):</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=n>bin_type</span><span class=o>.</span><span class=n>key</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"Inconsistent key for </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>-th bin type </span><span class=si>{</span><span class=n>bin_type</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>events</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=n>events</span> <span class=o>=</span> <span class=p>()</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>events</span> <span class=o>=</span> <span class=nb>sorted</span><span class=p>(</span><span class=n>events</span><span class=p>)</span>
+            <span class=n>last_time</span> <span class=o>=</span> <span class=n>EARLIEST_START</span>
+            <span class=n>i</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span>
+            <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>event</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>events</span><span class=p>):</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>Event</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"event[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>Event</span><span class=p>)</span>
+                <span class=n>time</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=p>(</span><span class=n>EARLIEST_START</span> <span class=o><=</span> <span class=n>last_time</span> <span class=o><=</span> <span class=n>time</span> <span class=o><=</span> <span class=n>LATEST_END</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Inconsistent time for </span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>last_time</span> <span class=o>=</span> <span class=n>time</span>
+                <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>StartEvent</span><span class=p>):</span>
+                    <span class=k>if</span> <span class=n>i</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                            <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2> not permitted at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=k>elif</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>event</span><span class=p>,</span> <span class=n>EndEvent</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+                        <span class=n>i</span> <span class=o><</span> <span class=p>(</span><span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>events</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>)):</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>event</span><span class=si>!r}</span><span class=s2> not permitted at index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=p>()</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>events</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>StartEvent</span><span class=p>):</span>
+                    <span class=n>events</span><span class=o>.</span><span class=n>insert</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=n>StartEvent</span><span class=p>(</span><span class=n>events</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>time</span><span class=p>,</span> <span class=mi>0</span><span class=p>))</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>events</span><span class=p>)</span>
+
+        <span class=n>min_rule_lst</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>MinRule</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=n>min_rule_dct</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=n>MinRule</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=k>if</span> <span class=n>min_rules</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+            <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>min_rule</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>min_rules</span><span class=p>):</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>min_rule</span><span class=p>,</span> <span class=n>MinRule</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=n>type_error</span><span class=p>(</span><span class=n>min_rule</span><span class=p>,</span> <span class=sa>f</span><span class=s2>"min_rules[</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>]"</span><span class=p>,</span> <span class=n>MinRule</span><span class=p>)</span>
+                <span class=k>if</span> <span class=n>i</span> <span class=o>!=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>min_rule_lst</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>min_rule</span><span class=si>!r}</span><span class=s2> cannot be a index </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>name</span> <span class=o>=</span> <span class=n>min_rule</span><span class=o>.</span><span class=n>name</span>
+                <span class=k>if</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>names</span><span class=p>:</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Name of </span><span class=si>{</span><span class=n>min_rule</span><span class=si>!r}</span><span class=s2> already in use"</span>
+                                     <span class=sa>f</span><span class=s2>" for </span><span class=si>{</span><span class=n>names</span><span class=p>[</span><span class=n>name</span><span class=p>]</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>names</span><span class=p>[</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>min_rule</span>
+                <span class=k>for</span> <span class=n>part</span> <span class=ow>in</span> <span class=n>min_rule</span><span class=o>.</span><span class=n>parts</span><span class=p>:</span>
+                    <span class=n>mrpk</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span>
+                    <span class=k>if</span> <span class=n>part</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>part_lst</span><span class=p>[</span><span class=n>mrpk</span><span class=p>]:</span>
+                        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                            <span class=s2>"Inconsistent parts of minimum rule "</span>
+                            <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>min_rule</span><span class=si>!r}</span><span class=s2> and </span><span class=si>{</span><span class=n>part_lst</span><span class=p>[</span><span class=n>mrpk</span><span class=p>]</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                    <span class=k>if</span> <span class=n>mrpk</span> <span class=ow>in</span> <span class=n>min_rule_dct</span><span class=p>:</span>
+                        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                            <span class=s2>"Two minimum rules for same part:"</span>
+                            <span class=sa>f</span><span class=s2>" </span><span class=si>{</span><span class=n>min_rule</span><span class=si>!r}</span><span class=s2> and </span><span class=si>{</span><span class=n>min_rule_dct</span><span class=p>[</span><span class=n>mrpk</span><span class=p>]</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                    <span class=n>min_rule_dct</span><span class=p>[</span><span class=n>mrpk</span><span class=p>]</span> <span class=o>=</span> <span class=n>min_rule</span>
+                <span class=n>min_rule_lst</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>min_rule</span><span class=p>)</span>
+
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"parts"</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>part_lst</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"bin_types"</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>bin_type_lst</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"events"</span><span class=p>,</span> <span class=n>events</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"min_rules"</span><span class=p>,</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>min_rule_lst</span><span class=p>))</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"_names"</span><span class=p>,</span> <span class=n>names</span><span class=p>)</span>
+
+<div class=viewcode-block id=Instance.resolve>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.instance.Instance.resolve>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>resolve</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=bp>cls</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>name_or_key</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the element of the given name and type.</span>
+
+<span class=sd>        :param cls: the element class</span>
+<span class=sd>        :param name_or_key: the element name or key</span>
+
+<span class=sd>        :return: the element</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>):</span>
+            <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=n>BinType</span><span class=p>:</span>
+                <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>bin_types</span><span class=p>[</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=n>Part</span><span class=p>:</span>
+                <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>parts</span><span class=p>[</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>if</span> <span class=bp>cls</span> <span class=ow>is</span> <span class=n>MinRule</span><span class=p>:</span>
+                <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>min_rules</span><span class=p>[</span><span class=n>name_or_key</span><span class=p>]</span>  <span class=c1># type: ignore</span>
+            <span class=k>raise</span> <span class=ne>TypeError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Unsupported type </span><span class=si>{</span><span class=bp>cls</span><span class=si>}</span><span class=s2> for </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=n>res</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_names</span><span class=p>[</span>  <span class=c1># type: ignore  # noqa  # pylint: disable=E1101</span>
+            <span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>name_or_key</span><span class=p>)]</span>
+        <span class=k>if</span> <span class=n>res</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=bp>cls</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>TypeError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Excepted instance of </span><span class=si>{</span><span class=bp>cls</span><span class=si>}</span><span class=s2> for </span><span class=si>{</span><span class=n>name_or_key</span><span class=si>!r}</span><span class=s2>,"</span>
+                            <span class=sa>f</span><span class=s2>" but got </span><span class=si>{</span><span class=n>res</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>res</span></div>
+
+
+<div class=viewcode-block id=Instance.from_directory>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.instance.Instance.from_directory>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_directory</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>directory</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=s2>"Instance"</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Load a instance from a directory.</span>
+
+<span class=sd>        :param directory: the directory</span>
+<span class=sd>        :return: the instance</span>
+<span class=sd>        """</span>
+        <span class=n>source</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Path</span><span class=p>]</span> <span class=o>=</span> <span class=n>directory_path</span><span class=p>(</span><span class=n>directory</span><span class=p>)</span>
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Beginning to load instance/scenario from </span><span class=si>{</span><span class=n>source</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=n>file</span><span class=p>:</span> <span class=n>Path</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_BIN_TYPES</span><span class=p>)</span>
+            <span class=n>file</span><span class=o>.</span><span class=n>enforce_file</span><span class=p>()</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Now loading bin types from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>bin_types</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>BinType</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+            <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>bin_types</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>BinType</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>  <span class=c1># type: ignore</span>
+            <span class=n>got</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>bin_types</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>got</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not contain any bin types."</span><span class=p>)</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished loading </span><span class=si>{</span><span class=n>got</span><span class=si>}</span><span class=s2> bin types from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+            <span class=n>file</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_PARTS</span><span class=p>)</span>
+            <span class=n>file</span><span class=o>.</span><span class=n>enforce_file</span><span class=p>()</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Now loading parts from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=n>parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=n>Part</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[]</span>
+            <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>parts</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>Part</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>  <span class=c1># type: ignore</span>
+            <span class=n>got</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>parts</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>got</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not contain any parts."</span><span class=p>)</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished loading </span><span class=si>{</span><span class=n>got</span><span class=si>}</span><span class=s2> parts from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+            <span class=n>file</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_EVENTS</span><span class=p>)</span>
+            <span class=n>events</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Event</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span>
+            <span class=k>if</span> <span class=n>file</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+                <span class=n>file</span><span class=o>.</span><span class=n>enforce_file</span><span class=p>()</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Now loading events from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>events</span> <span class=o>=</span> <span class=p>[]</span>
+                <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                    <span class=n>events</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>Event</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>
+                <span class=n>got</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>events</span><span class=p>)</span>
+                <span class=k>if</span> <span class=n>got</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                        <span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not contain any events."</span><span class=p>)</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished loading </span><span class=si>{</span><span class=n>got</span><span class=si>}</span><span class=s2> events from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not exist, so we cannot load events."</span><span class=p>)</span>
+
+            <span class=n>file</span> <span class=o>=</span> <span class=n>source</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_MIN_RULES</span><span class=p>)</span>
+            <span class=n>min_rules</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>MinRule</span><span class=p>]</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span>
+            <span class=k>if</span> <span class=n>file</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+                <span class=n>file</span><span class=o>.</span><span class=n>enforce_file</span><span class=p>()</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Now loading events from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+                <span class=n>min_rules</span> <span class=o>=</span> <span class=p>[]</span>
+                <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_read</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                    <span class=n>min_rules</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>MinRule</span><span class=o>.</span><span class=n>from_csv</span><span class=p>(</span><span class=n>stream</span><span class=p>))</span>
+                <span class=n>got</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>min_rules</span><span class=p>)</span>
+                <span class=k>if</span> <span class=n>got</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                    <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span>
+                        <span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not contain any minimum rules."</span><span class=p>)</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished loading </span><span class=si>{</span><span class=n>got</span><span class=si>}</span><span class=s2> minimum rules from </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> does not exist, so we cannot "</span>
+                       <span class=s2>"load minimum rules."</span><span class=p>)</span>
+
+        <span class=n>result</span> <span class=o>=</span> <span class=n>Instance</span><span class=p>(</span><span class=n>bin_types</span><span class=o>=</span><span class=n>bin_types</span><span class=p>,</span>
+                          <span class=n>parts</span><span class=o>=</span><span class=n>parts</span><span class=p>,</span>
+                          <span class=n>events</span><span class=o>=</span><span class=n>events</span><span class=p>,</span>
+                          <span class=n>min_rules</span><span class=o>=</span><span class=n>min_rules</span><span class=p>)</span>
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished loading instance/scenario from </span><span class=si>{</span><span class=n>source</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>result</span></div>
+
+
+<div class=viewcode-block id=Instance.to_directory>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.instance.Instance.to_directory>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_directory</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>directory</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=n>Path</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Store a instance into a directory.</span>
+
+<span class=sd>        :param directory: the directory</span>
+<span class=sd>        :return: the path to the directory</span>
+<span class=sd>        """</span>
+        <span class=n>dest</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Path</span><span class=p>]</span> <span class=o>=</span> <span class=n>Path</span><span class=p>(</span><span class=n>directory</span><span class=p>)</span>
+        <span class=n>dest</span><span class=o>.</span><span class=n>ensure_dir_exists</span><span class=p>()</span>
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Beginning to store instance/scenario into </span><span class=si>{</span><span class=n>dest</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=n>file</span> <span class=o>=</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_BIN_TYPES</span><span class=p>)</span>
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Storing bin_types into </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+            <span class=n>write_lines</span><span class=p>(</span><span class=n>BinType</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>bin_types</span><span class=p>),</span> <span class=n>stream</span><span class=p>)</span>
+
+        <span class=n>file</span> <span class=o>=</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_PARTS</span><span class=p>)</span>
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Storing parts into </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+            <span class=n>write_lines</span><span class=p>(</span><span class=n>Part</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>parts</span><span class=p>),</span> <span class=n>stream</span><span class=p>)</span>
+
+        <span class=n>file</span> <span class=o>=</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_EVENTS</span><span class=p>)</span>
+        <span class=k>if</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>events</span><span class=p>)</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Storing events into </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>write_lines</span><span class=p>(</span><span class=n>Event</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>events</span><span class=p>),</span> <span class=n>stream</span><span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=k>if</span> <span class=n>file</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> exists, but we do "</span>
+                                 <span class=s2>"not have events to store."</span><span class=p>)</span>
+            <span class=n>logger</span><span class=p>(</span><span class=s2>"Instance does not have events, so we don't need to store"</span>
+                   <span class=sa>f</span><span class=s2>" them and thus won't create file </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=n>file</span> <span class=o>=</span> <span class=n>dest</span><span class=o>.</span><span class=n>resolve_inside</span><span class=p>(</span><span class=n>FILE_MIN_RULES</span><span class=p>)</span>
+        <span class=k>if</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>min_rules</span><span class=p>)</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Storing minimum rules into </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+            <span class=k>with</span> <span class=n>file</span><span class=o>.</span><span class=n>open_for_write</span><span class=p>()</span> <span class=k>as</span> <span class=n>stream</span><span class=p>:</span>
+                <span class=n>write_lines</span><span class=p>(</span><span class=n>MinRule</span><span class=o>.</span><span class=n>to_csv</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>min_rules</span><span class=p>),</span> <span class=n>stream</span><span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=k>if</span> <span class=n>file</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+                <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"File </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2> exists, but we do "</span>
+                                 <span class=s2>"not have minimum rules to store."</span><span class=p>)</span>
+            <span class=n>logger</span><span class=p>(</span><span class=s2>"Instance does not have minimum rules, so we don't need to"</span>
+                   <span class=sa>f</span><span class=s2>" store them and thus won't create file </span><span class=si>{</span><span class=n>file</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+
+        <span class=n>logger</span><span class=p>(</span><span class=sa>f</span><span class=s2>"Finished storing instance/scenario into </span><span class=si>{</span><span class=n>dest</span><span class=si>!r}</span><span class=s2>."</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>dest</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.instance</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

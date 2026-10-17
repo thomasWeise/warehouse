@@ -1,0 +1,42 @@
+warehouse.simulation package
+============================
+
+.. automodule:: warehouse.simulation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+warehouse.simulation.base module
+--------------------------------
+
+.. automodule:: warehouse.simulation.base
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.simulation.module\_minmax module
+------------------------------------------
+
+.. automodule:: warehouse.simulation.module_minmax
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.simulation.module\_storage module
+-------------------------------------------
+
+.. automodule:: warehouse.simulation.module_storage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.simulation.simulation module
+--------------------------------------
+
+.. automodule:: warehouse.simulation.simulation
+   :members:
+   :show-inheritance:
+   :undoc-members:

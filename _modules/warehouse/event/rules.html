@@ -1,0 +1,235 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.event.rules — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/event/rules.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.rules</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.event.rules</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>Events regarding rules.</span>
+
+<span class=sd>>>> from warehouse.instance.bin_type import BinType</span>
+<span class=sd>>>> from warehouse.rule.min_rule import MinRule</span>
+<span class=sd>>>> with context():</span>
+<span class=sd>...     BinType(None, "random_small", 1000, is_random=True)</span>
+<span class=sd>...     BinType(None, "random_large", 500, is_random=True)</span>
+<span class=sd>...     BinType(None, "hat_bins", 30)</span>
+<span class=sd>...     Part(None, "hat", "hat_bins")</span>
+<span class=sd>...     Part(None, "shoe", "random_small")</span>
+<span class=sd>...     Part(None, "trousers", "random_large")</span>
+<span class=sd>...     MinRule(None, "min_hat", "hat", 10, 100)</span>
+<span class=sd>...     ev01 = RuleTriggeredEvent.create(1500000000000, 0, "min_hat",</span>
+<span class=sd>...                                      "hat", 1200)</span>
+<span class=sd>...</span>
+<span class=sd>...     events_1 = (ev01, )</span>
+<span class=sd>...</span>
+<span class=sd>...     for ev in events_1:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     csv = list(Event.to_csv(events_1))</span>
+<span class=sd>...     for row in csv[1:]:</span>
+<span class=sd>...         if not str.startswith(row, "#"):</span>
+<span class=sd>...             print(row)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     events_2 = tuple(Event.from_csv(csv))</span>
+<span class=sd>...     for ev in events_2:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>BinType(key=0, name='random_small', amount=1000, is_random=True)</span>
+<span class=sd>BinType(key=1, name='random_large', amount=500, is_random=True)</span>
+<span class=sd>BinType(key=2, name='hat_bins', amount=30, is_random=False)</span>
+<span class=sd>Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False))</span>
+<span class=sd>Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \</span>
+<span class=sd>amount=1000, is_random=True))</span>
+<span class=sd>Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=500, is_random=True))</span>
+<span class=sd>MinRule(key=0, name='min_hat', effect_delay=100, parts=(Part(key=0, \</span>
+<span class=sd>name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)),), minimum=10)</span>
+<span class=sd>RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \</span>
+<span class=sd>name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \</span>
+<span class=sd>minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \</span>
+<span class=sd>name='hat_bins', amount=30, is_random=False)), amount=1200)</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>2017-07-14 10:40;rule_triggered;hat;1200;;min_hat</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \</span>
+<span class=sd>name='min_hat', effect_delay=100, parts=(Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)),), \</span>
+<span class=sd>minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \</span>
+<span class=sd>name='hat_bins', amount=30, is_random=False)), amount=1200)</span>
+
+<span class=sd>>>> hash(ev01)</span>
+<span class=sd>-5537349579310125602</span>
+<span class=sd>"""</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span><span class=p>,</span> <span class=n>field</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>COLUMN_AMOUNT</span><span class=p>,</span>
+    <span class=n>check_to_amount</span><span class=p>,</span>
+    <span class=n>context</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=n>Event</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>Part</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.rule</span><span class=w> </span><span class=kn>import</span> <span class=n>Rule</span>
+
+<span class=c1>#: the rule that was triggered, if any</span>
+<span class=n>COLUMN_RULE</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"rule"</span>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>unsafe_hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>RuleTriggeredEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>  <span class=c1># noqa: PLW1641</span>
+<span class=w>    </span><span class=sd>"""A rule was triggered."""</span>
+
+    <span class=c1>#: the rule that was triggered</span>
+    <span class=n>rule</span><span class=p>:</span> <span class=n>Rule</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the part concerning this rule triggering, or `None` if none is needed</span>
+    <span class=n>part</span><span class=p>:</span> <span class=n>Part</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the amount involved in the triggering</span>
+    <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__eq__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "equality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is equal to the other event,</span>
+<span class=sd>            `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>priority</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>priority</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>rule</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>rule</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>amount</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ne__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "inequality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is not equal than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>priority</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>priority</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>rule</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>rule</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>amount</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span>
+
+<div class=viewcode-block id=RuleTriggeredEvent.eventclass_get_col_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.eventclass_get_col_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_col_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_RULE</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the name of the rule that was triggered"</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_PART</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the part concerned by this rule, if any"</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the amount involved in triggering the rule, if any"</span>
+        <span class=k>return</span> <span class=kc>None</span></div>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent.event_get_csv_value>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.event_get_csv_value>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>event_get_csv_value</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_RULE</span><span class=p>:</span>
+            <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>rule</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_PART</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>""</span> <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=ow>is</span> <span class=kc>None</span> <span class=k>else</span> <span class=bp>self</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>""</span> <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>amount</span> <span class=ow>is</span> <span class=kc>None</span> <span class=k>else</span> <span class=nb>str</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span>
+        <span class=k>return</span> <span class=s2>""</span></div>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent.eventclass_get_csv_columns>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.eventclass_get_csv_columns>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns of the event.</span>
+
+<span class=sd>        :return: the csv columns</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>COLUMN_RULE</span><span class=p>,</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>COLUMN_AMOUNT</span></div>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent.create>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.create>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>create</span><span class=p>(</span>  <span class=c1># type: ignore  # pylint: disable=W0221</span>
+            <span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>priority</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span>
+            <span class=n>rule</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=n>Rule</span><span class=p>,</span>
+            <span class=n>part</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=n>Part</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>,</span>
+            <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>,</span> <span class=o>**</span><span class=n>_</span><span class=p>)</span> \
+            <span class=o>-></span> <span class=s2>"RuleTriggeredEvent"</span><span class=p>:</span>  <span class=c1># type: ignore</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time</span>
+<span class=sd>        :param priority: the event priority</span>
+<span class=sd>        :param rule: the rule involved</span>
+<span class=sd>        :param part: the part concerned, if any</span>
+<span class=sd>        :param amount: the amount of the part to use</span>
+<span class=sd>        :return: the storage event</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+            <span class=k>if</span> <span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>rule</span><span class=p>,</span> <span class=n>Rule</span><span class=p>):</span>
+                <span class=n>rule</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Rule</span><span class=p>,</span> <span class=n>rule</span><span class=p>)</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>part</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=ow>not</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>part</span><span class=p>,</span> <span class=n>Part</span><span class=p>)):</span>
+                <span class=n>part</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Part</span><span class=p>,</span> <span class=n>part</span><span class=p>)</span>
+        <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>rule</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+                   <span class=n>part</span><span class=p>,</span> <span class=kc>None</span> <span class=k>if</span> <span class=n>amount</span> <span class=ow>is</span> <span class=kc>None</span> <span class=k>else</span>  <span class=c1># type: ignore</span>
+                   <span class=n>check_to_amount</span><span class=p>(</span><span class=n>amount</span><span class=p>))</span>  <span class=c1># type: ignore</span></div>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"rule_triggered"</span></div>
+
+
+<div class=viewcode-block id=RuleTriggeredEvent.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.rules.RuleTriggeredEvent.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"The rule of the given </span><span class=si>{</span><span class=n>COLUMN_RULE</span><span class=si>}</span><span class=s2> was triggered. "</span>
+                <span class=sa>f</span><span class=s2>"It may be parameterized with the given </span><span class=si>{</span><span class=n>COLUMN_PART</span><span class=si>}</span><span class=s2> and "</span>
+                <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=n>COLUMN_AMOUNT</span><span class=si>}</span><span class=s2>."</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.rules</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

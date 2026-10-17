@@ -1,0 +1,270 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.simulation.module_storage — warehouse 0.8.1 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=ec16d22d"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/simulation/module_storage.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_storage</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.simulation.module_storage</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>The warehouse storage simulation.</span>
+
+<span class=sd>In this class, we implement the functionality needed by the local warehouse.</span>
+<span class=sd>This only concerns the movement of part units inside the warehouse, the</span>
+<span class=sd>putting of units of part into the warehouse, and the taking of units of</span>
+<span class=sd>part out of the warehouse.</span>
+<span class=sd>This is completely separate from any other logic, such as the re-ordering of</span>
+<span class=sd>part, the consumption of part at the assembly line, or anything else.</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>collections</span><span class=w> </span><span class=kn>import</span> <span class=n>Counter</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.bins</span><span class=w> </span><span class=kn>import</span> <span class=n>BinIn</span><span class=p>,</span> <span class=n>BinOut</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.storage</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>OverstockIn</span><span class=p>,</span>
+    <span class=n>OverstockOut</span><span class=p>,</span>
+    <span class=n>Understock</span><span class=p>,</span>
+    <span class=n>WarehouseDelivers</span><span class=p>,</span>
+    <span class=n>WarehouseDemand</span><span class=p>,</span>
+    <span class=n>WarehouseIn</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.bin_type</span><span class=w> </span><span class=kn>import</span> <span class=n>BinType</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.instance</span><span class=w> </span><span class=kn>import</span> <span class=n>Instance</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>Part</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.simulation.base</span><span class=w> </span><span class=kn>import</span> <span class=n>BaseModule</span>
+
+
+<div class=viewcode-block id=StorageModule>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.module_storage.StorageModule>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>StorageModule</span><span class=p>(</span><span class=n>BaseModule</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The storage part of the simulation."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>instance</span><span class=p>:</span> <span class=n>Instance</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage part of the simulation.</span>
+
+<span class=sd>        :param instance: the scenario/instance to simulate</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>instance</span><span class=p>)</span>
+        <span class=c1>#: the parts per bin type.</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__mat_bin</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=o>...</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=nb>tuple</span><span class=p>(</span><span class=n>part</span><span class=o>.</span><span class=n>key</span> <span class=k>for</span> <span class=n>part</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>parts</span> <span class=k>if</span>
+                  <span class=n>part</span><span class=o>.</span><span class=n>bin_type</span> <span class=ow>is</span> <span class=n>bt</span><span class=p>)</span> <span class=k>for</span> <span class=n>bt</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>bin_types</span><span class=p>)</span>
+        <span class=c1>#: the parts</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>Part</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=n>instance</span><span class=o>.</span><span class=n>parts</span>
+
+        <span class=n>n_parts</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>instance</span><span class=o>.</span><span class=n>parts</span><span class=p>)</span>
+        <span class=n>n_bin_types</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>instance</span><span class=o>.</span><span class=n>bin_types</span><span class=p>)</span>
+
+        <span class=c1>#: the amount of parts currently in overstock</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__in_overstock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>n_parts</span>
+        <span class=c1>#: the overstock queue</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_queue</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=p>[]</span> <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>n_bin_types</span><span class=p>))</span>
+        <span class=c1>#: the amount of parts which were understocked</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>n_parts</span>
+        <span class=c1>#: the empty bins of the given types</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__empty_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>n_bin_types</span>
+        <span class=c1>#: the amount of parts that are currently in the bins</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__in_bin</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>Counter</span><span class=p>[</span><span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span>
+            <span class=n>Counter</span><span class=p>(</span><span class=nb>dict</span><span class=o>.</span><span class=n>fromkeys</span><span class=p>(</span><span class=n>mb</span><span class=p>,</span> <span class=mi>0</span><span class=p>))</span> <span class=k>for</span> <span class=n>mb</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__mat_bin</span><span class=p>)</span>
+
+        <span class=c1>#: the bin types</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__bin_types</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>BinType</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=n>instance</span><span class=o>.</span><span class=n>bin_types</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_start</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""Begin the simulation."""</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>_start</span><span class=p>()</span>
+        <span class=n>in_overstock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_overstock</span>
+        <span class=n>in_understock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span>
+        <span class=n>empty_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_bins</span>
+        <span class=n>bin_types</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=n>BinType</span><span class=p>,</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__bin_types</span>
+        <span class=n>over_queue</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]],</span> <span class=o>...</span><span class=p>]]</span> <span class=o>=</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_queue</span><span class=p>)</span>
+
+        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>in_overstock</span><span class=p>)):</span>
+            <span class=n>in_overstock</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span>
+            <span class=n>in_understock</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span>
+
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>st</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__in_bin</span><span class=p>):</span>
+            <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__mat_bin</span><span class=p>[</span><span class=n>i</span><span class=p>]:</span>
+                <span class=n>st</span><span class=p>[</span><span class=n>k</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span>
+            <span class=n>empty_bins</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_types</span><span class=p>[</span><span class=n>i</span><span class=p>]</span><span class=o>.</span><span class=n>amount</span>
+            <span class=n>over_queue</span><span class=p>[</span><span class=n>i</span><span class=p>]</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_handle_warehouse_in</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseIn</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Store part into the warehouse.</span>
+
+<span class=sd>        :param event: the event with the information about the part</span>
+<span class=sd>            to be stored</span>
+<span class=sd>        :return: the event stream</span>
+<span class=sd>        """</span>
+        <span class=n>part</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Part</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>part</span>
+        <span class=n>part_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>bin_type</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinType</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>bin_type</span>
+        <span class=n>bin_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_type</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>amount</span>
+        <span class=n>empty_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_bins</span>
+        <span class=n>time</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+        <span class=n>priority</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>priority</span>
+
+        <span class=c1># First, we check if there is a prior pending request for the</span>
+        <span class=c1># parts. If yes, we directly satisfy it without putting the</span>
+        <span class=c1># material in any stock.</span>
+        <span class=n>use</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span><span class=p>[</span><span class=n>part_key</span><span class=p>],</span> <span class=n>amount</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>use</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>WarehouseDelivers</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>-=</span> <span class=n>use</span>
+            <span class=n>amount</span> <span class=o>-=</span> <span class=n>use</span>
+            <span class=k>if</span> <span class=n>amount</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>return</span>
+
+        <span class=c1># Now we check whether we can put the parts into empty bins.</span>
+        <span class=n>use</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>empty_bins</span><span class=p>[</span><span class=n>bin_key</span><span class=p>],</span> <span class=n>amount</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>use</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>empty_bins</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span> <span class=o>-=</span> <span class=n>use</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__in_bin</span><span class=p>[</span><span class=n>bin_key</span><span class=p>][</span><span class=n>part_key</span><span class=p>]</span> <span class=o>+=</span> <span class=n>use</span>
+            <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>BinIn</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+            <span class=n>amount</span> <span class=o>-=</span> <span class=n>use</span>
+            <span class=k>if</span> <span class=n>amount</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>return</span>
+
+        <span class=c1># Finally, all remaining parts go into the overstock.</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__in_overstock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>+=</span> <span class=n>amount</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_queue</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span><span class=o>.</span><span class=n>append</span><span class=p>([</span><span class=n>part_key</span><span class=p>,</span> <span class=n>amount</span><span class=p>])</span>
+        <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>OverstockIn</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>amount</span><span class=p>))</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_handle_warehouse_demand</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>WarehouseDemand</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Remove part from the warehouse.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=n>part</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Part</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>part</span>
+        <span class=n>part_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>bin_type</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>BinType</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>bin_type</span>
+        <span class=n>bin_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_type</span><span class=o>.</span><span class=n>key</span>
+        <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>amount</span>
+        <span class=n>time</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+        <span class=n>priority</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>priority</span>
+
+        <span class=n>in_bin</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Counter</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_bin</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span>
+        <span class=n>in_overstock</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_overstock</span>
+
+        <span class=c1># Check how much part we can actually deliver.</span>
+        <span class=n>use</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>in_bin</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>+</span> <span class=n>in_overstock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span>
+        <span class=k>if</span> <span class=n>use</span> <span class=o><</span> <span class=n>amount</span><span class=p>:</span>
+            <span class=c1># We cannot fulfill this request, so we are in an understock</span>
+            <span class=c1># situation.</span>
+            <span class=c1># We remember the request, though, so as soon as parts come in,</span>
+            <span class=c1># we can directly ship them to satisfy the understock requests</span>
+            <span class=c1># first.</span>
+            <span class=n>under</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>amount</span> <span class=o>-</span> <span class=n>use</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>+=</span> <span class=n>under</span>
+            <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>Understock</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>under</span><span class=p>))</span>
+            <span class=k>if</span> <span class=n>use</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>return</span>
+
+            <span class=c1># Make a modified copy of the original event</span>
+            <span class=n>amount</span> <span class=o>=</span> <span class=n>use</span>
+
+        <span class=n>deliver_amount</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>amount</span>
+        <span class=n>empty_bins</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__empty_bins</span>
+        <span class=n>bin_type_empty</span> <span class=o>=</span> <span class=n>empty_bins</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span>
+
+        <span class=k>if</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>use</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>in_bin</span><span class=p>[</span><span class=n>part_key</span><span class=p>],</span> <span class=n>amount</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>use</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                <span class=c1># We have part in the bin and can ship it.</span>
+                <span class=c1># This means that we take the part out of the bin.</span>
+                <span class=c1># This creates new empty bins</span>
+                <span class=n>amount</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>in_bin</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>bin_type_empty</span> <span class=o>+=</span> <span class=n>use</span>
+                <span class=n>empty_bins</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_type_empty</span>
+                <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>BinOut</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+
+            <span class=n>use</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>in_overstock</span><span class=p>[</span><span class=n>part_key</span><span class=p>],</span> <span class=n>amount</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>use</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                <span class=c1># Now take from overstock</span>
+                <span class=n>amount</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>in_overstock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>_over_unqueue</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__overstock_queue</span><span class=p>[</span><span class=n>bin_key</span><span class=p>],</span> <span class=n>part_key</span><span class=p>,</span> <span class=n>use</span><span class=p>)</span>
+                <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>OverstockOut</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+
+        <span class=k>if</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>"Huh?"</span><span class=p>)</span>
+
+        <span class=c1># When we get here, we have extracted all the required part and</span>
+        <span class=c1># can now ship it out of the warehouse.</span>
+        <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>WarehouseDelivers</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span> <span class=n>deliver_amount</span><span class=p>))</span>
+
+        <span class=c1># Some bins became empty, so let's fill them.</span>
+        <span class=k>if</span> <span class=n>bin_type_empty</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+            <span class=n>over_queue</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]]</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__overstock_queue</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span>
+            <span class=k>while</span> <span class=n>over_queue</span><span class=p>:</span>
+                <span class=n>other_part</span><span class=p>,</span> <span class=n>other_amount</span> <span class=o>=</span> <span class=n>over_queue</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+                <span class=n>use</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>bin_type_empty</span><span class=p>,</span> <span class=n>other_amount</span><span class=p>)</span>
+                <span class=n>use_part</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>__parts</span><span class=p>[</span><span class=n>other_part</span><span class=p>]</span>
+                <span class=n>_over_unqueue</span><span class=p>(</span><span class=n>over_queue</span><span class=p>,</span> <span class=n>other_part</span><span class=p>,</span> <span class=n>use</span><span class=p>)</span>
+                <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>OverstockOut</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>use_part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+
+                <span class=n>bin_type_empty</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>empty_bins</span><span class=p>[</span><span class=n>bin_key</span><span class=p>]</span> <span class=o>=</span> <span class=n>bin_type_empty</span>
+                <span class=n>in_bin</span><span class=p>[</span><span class=n>other_part</span><span class=p>]</span> <span class=o>+=</span> <span class=n>use</span>
+                <span class=n>in_overstock</span><span class=p>[</span><span class=n>other_part</span><span class=p>]</span> <span class=o>-=</span> <span class=n>use</span>
+                <span class=n>priority</span> <span class=o>+=</span> <span class=mi>1</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>BinIn</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>use_part</span><span class=p>,</span> <span class=n>use</span><span class=p>))</span>
+
+                <span class=k>if</span> <span class=n>bin_type_empty</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                    <span class=k>break</span>
+
+<div class=viewcode-block id=StorageModule.available_units>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.module_storage.StorageModule.available_units>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>available_units</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>part</span><span class=p>:</span> <span class=n>Part</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the amount of units currently available in the warehouse.</span>
+
+<span class=sd>        :param part: the part</span>
+<span class=sd>        :return: the units</span>
+<span class=sd>        """</span>
+        <span class=n>part_key</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>part</span><span class=o>.</span><span class=n>key</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>__in_bin</span><span class=p>[</span><span class=n>part</span><span class=o>.</span><span class=n>bin_type</span><span class=o>.</span><span class=n>key</span><span class=p>][</span><span class=n>part_key</span><span class=p>]</span>
+                <span class=o>+</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_overstock</span><span class=p>[</span><span class=n>part_key</span><span class=p>]</span>
+                <span class=o>-</span> <span class=bp>self</span><span class=o>.</span><span class=n>__in_understock</span><span class=p>[</span><span class=n>part_key</span><span class=p>])</span></div>
+</div>
+
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>_over_unqueue</span><span class=p>(</span><span class=n>over_lst</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]],</span>
+                  <span class=n>part_key</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Remove the given amount of material from the overstock queue.</span>
+
+<span class=sd>    :param over_lst: the overstock queue</span>
+<span class=sd>    :param part_key: the material key</span>
+<span class=sd>    :param amount: the amount of material to remove</span>
+<span class=sd>    """</span>
+    <span class=n>total</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>over_lst</span><span class=p>)</span>
+    <span class=n>i</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=k>while</span> <span class=p>(</span><span class=n>i</span> <span class=o><</span> <span class=n>total</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>):</span>
+        <span class=n>current</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>over_lst</span><span class=p>[</span><span class=n>i</span><span class=p>]</span>
+        <span class=k>if</span> <span class=n>current</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>!=</span> <span class=n>part_key</span><span class=p>:</span>
+            <span class=n>i</span> <span class=o>+=</span> <span class=mi>1</span>
+            <span class=k>continue</span>
+        <span class=n>got</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>current</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
+        <span class=n>remove</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>got</span><span class=p>,</span> <span class=n>amount</span><span class=p>)</span>
+        <span class=n>got</span> <span class=o>-=</span> <span class=n>remove</span>
+        <span class=k>if</span> <span class=n>got</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+            <span class=k>del</span> <span class=n>over_lst</span><span class=p>[</span><span class=n>i</span><span class=p>]</span>
+            <span class=n>total</span> <span class=o>-=</span> <span class=mi>1</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>current</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>=</span> <span class=n>got</span>
+        <span class=n>amount</span> <span class=o>-=</span> <span class=n>remove</span>
+    <span class=k>if</span> <span class=n>amount</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=sa>f</span><span class=s2>"There are </span><span class=si>{</span><span class=n>amount</span><span class=si>}</span><span class=s2> units of part"</span>
+                         <span class=sa>f</span><span class=s2>" </span><span class=si>{</span><span class=n>part_key</span><span class=si>}</span><span class=s2> unaccounted for in overstock."</span><span class=p>)</span>
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.1 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_storage</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
