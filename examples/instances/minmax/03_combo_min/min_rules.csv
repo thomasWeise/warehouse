@@ -1,3 +1,4 @@
-name;parts;minimum;effect_delay
+name;part;minimum;effect_delay
 min_A;A;30;00:150
-min_BC;B,C;40;1:40
+min_B;B;40;1:40
+min_C;C;40;1:40
