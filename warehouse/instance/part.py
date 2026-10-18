@@ -93,9 +93,8 @@ class Part(Element):
         :param bin_type: the bin type to use
         """
         super().__init__(key, name)
-        if not isinstance(bin_type, BinType):
-            with context() as ctx:
-                bin_type = ctx.resolve(BinType, bin_type)
+        with context() as ctx:
+            bin_type = ctx.resolve(BinType, bin_type)
         object.__setattr__(self, "bin_type", bin_type)
 
     def __eq__(self, other) -> bool:

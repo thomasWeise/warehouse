@@ -75,7 +75,7 @@ from warehouse.event.time import (
     StartEvent,
 )
 from warehouse.instance.bin_type import BinType
-from warehouse.instance.element import Element, ElementResolver, context
+from warehouse.instance.element import Element, context
 from warehouse.instance.event import (
     Event,
 )
@@ -100,7 +100,7 @@ T = TypeVar("T", bound=Element)
 
 
 @dataclass(frozen=True, init=False, order=True, eq=True)
-class Instance(ElementResolver):
+class Instance:
     """A warehousing instance."""
 
     #: the bin configuration of the warehouse
@@ -246,31 +246,6 @@ class Instance(ElementResolver):
         object.__setattr__(self, "bin_types", tuple(bin_type_lst))
         object.__setattr__(self, "events", events)
         object.__setattr__(self, "min_rules", tuple(min_rule_lst))
-        object.__setattr__(self, "_names", names)
-
-    def resolve(self, cls: type[T], name_or_key: str | int) -> T:
-        """
-        Get the element of the given name and type.
-
-        :param cls: the element class
-        :param name_or_key: the element name or key
-
-        :return: the element
-        """
-        if isinstance(name_or_key, int):
-            if cls is BinType:
-                return self.bin_types[name_or_key]  # type: ignore
-            if cls is Part:
-                return self.parts[name_or_key]  # type: ignore
-            if cls is MinRule:
-                return self.min_rules[name_or_key]  # type: ignore
-            raise TypeError(f"Unsupported type {cls} for {name_or_key!r}.")
-        res = self._names[  # type: ignore  # noqa  # pylint: disable=E1101
-            str.strip(name_or_key)]
-        if res.__class__ is not cls:
-            raise TypeError(f"Excepted instance of {cls} for {name_or_key!r},"
-                            f" but got {res!r}.")
-        return res
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":

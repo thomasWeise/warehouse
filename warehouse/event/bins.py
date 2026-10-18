@@ -174,15 +174,10 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
         :param bin_type: the optional bin type
         :return: the bin event
         """
-        need_bin: bool = (bin_type is not None) and (
-            bin_type.__class__ is not BinType)
-        need_part: bool = part.__class__ is not Part
-        if need_part or need_bin:
-            with context() as ctx:
-                if need_part:
-                    part = ctx.resolve(Part, part)  # type: ignore
-                if need_bin:
-                    bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
+        with context() as ctx:
+            part = ctx.resolve(Part, part)  # type: ignore
+            if bin_type is not None:
+                bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
 
         rv = cls(time, priority, part,  # type: ignore
                  check_to_amount(amount))  # type: ignore

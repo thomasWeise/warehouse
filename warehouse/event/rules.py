@@ -183,9 +183,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         :return: the storage event
         """
         with context() as ctx:
-            if not isinstance(rule, Rule):
-                rule = ctx.resolve(Rule, rule)
-            if (part is not None) and (not isinstance(part, Part)):
+            rule = ctx.resolve(Rule, rule)
+            if part is not None:
                 part = ctx.resolve(Part, part)
         return cls(time, priority, rule,  # type: ignore
                    part, None if amount is None else  # type: ignore

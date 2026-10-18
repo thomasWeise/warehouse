@@ -65,6 +65,7 @@ Element(key=3, name='D')
 
 from contextlib import suppress
 from dataclasses import dataclass, field
+from itertools import chain
 from typing import Final, Iterable, Self, TypeVar, cast
 
 from pycommons.io.csv import (
@@ -423,45 +424,7 @@ def _process_name(name: str) -> str:
     return str.replace(str.lower(str.strip(name)), " ", "")
 
 
-class ElementResolver:
-    """The base class for element resolvers."""
-
-    def resolve(self, cls: type[T], name_or_key: str | int) -> T:
-        """
-        Get the element of the given name and type.
-
-        :param cls: the element class
-        :param name_or_key: the element name or key
-
-        :return: the element
-        """
-        raise NotImplementedError
-
-    def multi_resolve(self, cls: type[T], value: str | Iterable[
-            T | str | int]) -> tuple[T, ...]:
-        """
-        Resolve several elements of a given type.
-
-        :param cls: the class
-        :param value: the raw value
-        :return: the result of the resolution
-        """
-        dataset: Final[set[T]] = set()
-        if isinstance(value, str):
-            value = str.split(value, MULTI_SEPARATOR)
-        if not isinstance(value, Iterable):
-            raise type_error(value, "value", Iterable)
-        for data in value:
-            use: T = data if isinstance(data, cls) else self.resolve(
-                cls, data)  # type: ignore
-            if use in dataset:
-                raise ValueError(
-                    f"Already encountered {data!r} as {use!r}.")
-            dataset.add(use)
-        return tuple(sorted(dataset))
-
-
-class context(ElementResolver):
+class context:
     """A context for constructing elements."""
 
     def __new__(cls) -> "context":  # noqa
@@ -540,35 +503,88 @@ class context(ElementResolver):
         object.__setattr__(element, "_hash", dict.__len__(
             self.__elements_by_name) - 1)  # type: ignore
 
-    def resolve(self, cls: type[T], name_or_key: str | int) -> T:
+    def resolve(self, cls: type[T], value: T | str | int) -> T:
         """
         Get the element of the given name and type.
 
         :param cls: the element class
-        :param name_or_key: the element name or key
+        :param value: the value to be resolved
 
         :return: the element
+
+        >>> class SubElement(Element):
+        ...     pass
+
+        >>> with context() as ctx:
+        ...     a = Element(None, "hello")
+        ...     b = SubElement(None, "world")
+        ...     print(ctx.resolve(Element, "hello"))
+        ...     print(ctx.resolve(Element, 0))
+        ...     print(ctx.resolve(Element, a))
+        ...     print(ctx.resolve(SubElement, "world"))
+        ...     print(ctx.resolve(SubElement, b))
+        ...     print(ctx.resolve(SubElement, 0))
+        ...     print(ctx.resolve(Element, b))
+        ...     print(ctx.resolve(Element, "world"))
+        Element0
+        Element0
+        Element0
+        SubElement0
+        SubElement0
+        SubElement0
+        SubElement0
+        SubElement0
         """
-        if isinstance(name_or_key, int):
-            try:
-                got = self.__element_lists[cls][name_or_key]  # type: ignore
-            except IndexError as ie:
-                raise ValueError(f"{cls.__name__} with key {name_or_key!r} "
-                                 "does not exist.") from ie
-        else:
-            got = self.__elements_by_name.get(name_or_key)  # type: ignore
+        if isinstance(value, cls):
+            return value
+
+        got: T | None = None
+        if isinstance(value, str):
+            got = self.__elements_by_name.get(value)  # type: ignore
             if got is None:
                 got = self.__elements_by_prepared_name.get(  # type: ignore
-                    _process_name(name_or_key))
+                    _process_name(value))
                 if got is None:
-                    with suppress(ValueError, IndexError):
-                        got = self.__element_lists[cls][  # type: ignore
-                            int(name_or_key)]
+                    with suppress(ValueError):
+                        value = int(value)
+        if (got is None) and isinstance(value, int):
+            for source in chain((cls, ),  # type: ignore
+                                self.__element_lists.keys()):  # type: ignore
+                if issubclass(source, cls):
+                    with suppress(IndexError):
+                        got = self.__element_lists[  # type: ignore
+                            source][value]  # type: ignore
+                        if got is not None:
+                            break
         if got is None:
             raise ValueError(
-                f"{cls.__name__} with name {name_or_key!r} does not exist.")
-        if not issubclass(got.__class__, cls):
+                f"{cls.__name__} with name {value!r} does not exist.")
+        if not isinstance(got, cls):
             raise TypeError(
-                f"Expected {cls.__name__!r} element with name {name_or_key!r}"
+                f"Expected {cls.__name__!r} element with name {value!r}"
                 f", but got instance of {got.__class__.__name__!r} instead. ")
         return got
+
+    def multi_resolve(self, cls: type[T], value: T | str | Iterable[
+            T | str | int]) -> tuple[T, ...]:
+        """
+        Resolve several elements of a given type.
+
+        :param cls: the class
+        :param value: the raw value
+        :return: the result of the resolution
+        """
+        if isinstance(value, cls):
+            return (value, )
+        dataset: Final[set[T]] = set()
+        if isinstance(value, str):
+            value = str.split(value, MULTI_SEPARATOR)
+        if not isinstance(value, Iterable):
+            raise type_error(value, "value", Iterable)
+        for data in value:
+            use: T = self.resolve(cls, data)  # type: ignore
+            if use in dataset:
+                raise ValueError(
+                    f"Already encountered {data!r} as {use!r}.")
+            dataset.add(use)
+        return tuple(sorted(dataset))

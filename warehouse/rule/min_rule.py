@@ -51,9 +51,8 @@ class MinRule(Rule):
             material will arrive
         """
         super().__init__(key, name, effect_delay)
-        if not isinstance(part, Part):
-            with context() as ctx:
-                part = ctx.resolve(Part, part)
+        with context() as ctx:
+            part = ctx.resolve(Part, part)
         object.__setattr__(self, "part", part)
         object.__setattr__(self, "minimum", check_to_amount(minimum))
 

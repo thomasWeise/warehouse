@@ -252,9 +252,8 @@ class StorageEvent(Event):  # noqa: PLW1641
         :param amount: the amount of the part to use
         :return: the storage event
         """
-        if not isinstance(part, Part):
-            with context() as ctx:
-                part = ctx.resolve(Part, part)
+        with context() as ctx:
+            part = ctx.resolve(Part, part)
         return cls(time, priority, part,  # type: ignore
                    check_to_amount(amount))  # type: ignore
 
