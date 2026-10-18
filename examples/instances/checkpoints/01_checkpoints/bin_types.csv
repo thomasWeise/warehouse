@@ -1,0 +1,7 @@
+name;amount;is_random
+rack_1;100;T
+rack_2;500;T
+rack_3;300;T
+floor_1;200;F
+floor_2;50;F
+floor_3;25;F
