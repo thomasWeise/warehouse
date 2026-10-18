@@ -27,10 +27,14 @@ Product(key=0, name='tracksuite')
 Product(key=1, name='cupboard')
 """
 
+from typing import Final
 
 from warehouse.instance.element import (
     Element,
 )
+
+#: the CSV column for products
+COLUMN_PRODUCT: Final[str] = "product"
 
 
 class Product(Element):

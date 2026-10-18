@@ -27,10 +27,14 @@ Checkpoint(key=0, name='M1')
 Checkpoint(key=1, name='S2')
 """
 
+from typing import Final
 
 from warehouse.instance.element import (
     Element,
 )
+
+#: the CSV column for checkpoints
+COLUMN_CHECKPOINT: Final[str] = "checkpoint"
 
 
 class Checkpoint(Element):

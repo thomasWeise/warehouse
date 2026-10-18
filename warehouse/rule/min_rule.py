@@ -14,12 +14,11 @@ from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import (
     check_to_amount,
     context,
-    prepare_to_csv,
 )
 from warehouse.instance.part import COLUMN_PART, Part
-from warehouse.instance.rule import COLUMN_EFFECT_DELAY, Rule
+from warehouse.instance.rule import Rule
 from warehouse.instance.time import (
-    str_to_timedelta,
+    COLUMN_EFFECT_DELAY,
     timedelta_to_str,
 )
 
@@ -39,7 +38,7 @@ class MinRule(Rule):
     def __init__(self, key: int | None, name: str,
                  part: Part | int | str,
                  minimum: int | str = 1,
-                 effect_delay: int = 150 * 60 * 1000) -> None:
+                 effect_delay: int | str = 150 * 60 * 1000) -> None:
         """
         Create a new minimum rule.
 
@@ -97,8 +96,7 @@ class MinRule(Rule):
         :param data: the data
         :return: the stream
         """
-        return CsvWriter[MinRule].write(  # type: ignore
-            data=prepare_to_csv(data))  # type: ignore
+        return CsvWriter[MinRule].write(data)
 
     @classmethod
     def from_csv(cls, rows: Iterable[str]) -> Iterable["MinRule"]:
@@ -146,8 +144,8 @@ class CsvReader(CsvReaderBase[T]):
             key=csv_val_or_none(data, self.col_key, int),
             name=data[self.col_name],
             part=data[self.col_part],
-            minimum=check_to_amount(data[self.col_min]),
-            effect_delay=str_to_timedelta(data[self.col_delay]))
+            minimum=data[self.col_min],
+            effect_delay=data[self.col_delay])
 
 
 class CsvWriter(CsvWriterBase[T]):

@@ -68,12 +68,10 @@ from pycommons.io.csv import (
 from warehouse.instance.bin_type import COLUMN_BIN_TYPE, BinType
 from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
-from warehouse.instance.element import Element, context, prepare_to_csv
+from warehouse.instance.element import Element, context
 
 #: the CSV column for parts
 COLUMN_PART: Final[str] = "part"
-#: the CSV column for multiple parts
-COLUMN_PARTS: Final[str] = f"{COLUMN_PART}s"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -136,8 +134,7 @@ class Part(Element):
         :param data: the data
         :return: the stream
         """
-        return CsvWriter[Part].write(  # type: ignore
-            data=prepare_to_csv(data))  # type: ignore
+        return CsvWriter[Part].write(data=data)
 
     @classmethod
     def from_csv(cls, rows: Iterable[str]) -> Iterable["Part"]:

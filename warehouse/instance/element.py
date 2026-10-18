@@ -303,7 +303,7 @@ class Element:
         :param data: the data
         :return: the stream
         """
-        return CsvWriter.write(data=prepare_to_csv(data))
+        return CsvWriter.write(data)
 
     @classmethod
     def from_csv(cls, rows: Iterable[str]) -> Iterable[Self]:
@@ -395,19 +395,6 @@ class CsvWriter(CsvWriterBase[T]):
         yield f"{self.col_key}: the unique key of the element within its type"
         yield (f"{self.col_name}: the unique name of the element (unique over "
                "all elements of all types)")
-
-
-def prepare_to_csv(data: Iterable[Element]) -> Iterable[Element]:
-    """
-    Prepare an element stream for CSV output.
-
-    :param data: the data
-    :return: the prepared data stream
-    """
-    if isinstance(data, list):
-        data.sort()
-        return data
-    return sorted(data)
 
 
 #: the singleton attr name

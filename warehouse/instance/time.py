@@ -25,6 +25,13 @@ EARLIEST_START: Final[int] = 1000000000000
 #: the latest end time for an event
 LATEST_END: Final[int] = 3500000000000
 
+
+#: the CSV column for delays
+COLUMN_DELAY: Final[str] = "delay"
+
+#: the CSV column for delays of the effect of rules.
+COLUMN_EFFECT_DELAY: Final[str] = f"effect_{COLUMN_DELAY}"
+
 #: the internal time zone information record
 __TZ: Final[ZoneInfo] = ZoneInfo("Asia/Shanghai")
 

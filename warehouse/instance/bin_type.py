@@ -52,13 +52,13 @@ from typing import Final, Iterable, TypeVar, cast
 
 from pycommons.io.csv import csv_column, csv_scope, csv_val_or_none
 from pycommons.strings.string_conv import bool_to_str, str_to_bool
-from pycommons.types import check_int_range, type_error
+from pycommons.types import type_error
 
 from warehouse.instance.element import (
     COLUMN_AMOUNT,
     Element,
+    check_to_amount,
     context,
-    prepare_to_csv,
 )
 from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
@@ -80,7 +80,7 @@ class BinType(Element):  # noqa: PLW1641
     is_random: bool
 
     def __init__(self, key: int | None, name: str,
-                 amount: int = 1,
+                 amount: int | str = 1,
                  is_random: bool = False) -> None:
         """
         Create a new bin type.
@@ -93,8 +93,7 @@ class BinType(Element):  # noqa: PLW1641
         super().__init__(key, name)
         if not isinstance(is_random, bool):
             raise type_error(is_random, "is_random", bool)
-        object.__setattr__(self, "amount", check_int_range(
-            amount, "amount", 1, 1_000_000_000))
+        object.__setattr__(self, "amount", check_to_amount(amount))
         object.__setattr__(self, "is_random", is_random)
 
     def __hash__(self) -> int:
@@ -136,8 +135,7 @@ class BinType(Element):  # noqa: PLW1641
         :param data: the data
         :return: the stream
         """
-        return CsvWriter[BinType].write(  # type: ignore
-            data=prepare_to_csv(data))  # type: ignore
+        return CsvWriter[BinType].write(data)
 
     @classmethod
     def from_csv(cls, rows: Iterable[str]) -> Iterable["BinType"]:
@@ -182,7 +180,7 @@ class CsvReader(CsvReaderBase[T]):
         """
         return self.clazz(key=csv_val_or_none(
             data, self.col_key, int), name=data[self.col_name],
-            amount=int(data[self.col_amount]),
+            amount=data[self.col_amount],
             is_random=str_to_bool(data[self.col_is_random]))
 
 

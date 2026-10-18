@@ -1,13 +1,12 @@
 """Classes containing rule information."""
 
 from dataclasses import dataclass
-from typing import Final
 
 from warehouse.instance.element import Element
-from warehouse.instance.time import check_timedelta
-
-#: the CSV column for delays of the effect of rules.
-COLUMN_EFFECT_DELAY: Final[str] = "effect_delay"
+from warehouse.instance.time import (
+    check_timedelta,
+    str_to_timedelta,
+)
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -18,7 +17,7 @@ class Rule(Element):
     effect_delay: int
 
     def __init__(self, key: int | None, name: str,
-                 effect_delay: int = 150 * 60 * 1000) -> None:
+                 effect_delay: int | str = 150 * 60 * 1000) -> None:
         """
         Create a new minimum rule.
 
@@ -28,7 +27,9 @@ class Rule(Element):
             action triggered by the rule comes into effect
         """
         super().__init__(key, name)
-        object.__setattr__(self, "effect_delay", check_timedelta(effect_delay))
+        object.__setattr__(
+            self, "effect_delay", check_timedelta(effect_delay) if isinstance(
+                effect_delay, int) else str_to_timedelta(effect_delay))
 
     def __eq__(self, other) -> bool:
         """
