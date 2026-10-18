@@ -75,11 +75,13 @@ from warehouse.event.time import (
     StartEvent,
 )
 from warehouse.instance.bin_type import BinType
+from warehouse.instance.checkpoint import Checkpoint
 from warehouse.instance.element import Element, context
 from warehouse.instance.event import (
     Event,
 )
 from warehouse.instance.part import Part
+from warehouse.instance.product import Product
 from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
@@ -94,6 +96,10 @@ FILE_PARTS: Final[str] = "parts.csv"
 FILE_EVENTS: Final[str] = "events.csv"
 #: the minimum rules file
 FILE_MIN_RULES: Final[str] = "min_rules.csv"
+#: the products file
+FILE_PRODUCTS: Final[str] = "products.csv"
+#: the checkpoints file
+FILE_CHECKPOINTS: Final[str] = "checkpoints.csv"
 
 
 @dataclass(frozen=True, init=False, order=True, eq=True)
@@ -108,18 +114,26 @@ class Instance:
     events: tuple[Event, ...] = field(hash=True, compare=True)
     #: the min rules holding for this warehouse
     min_rules: tuple[MinRule, ...] = field(hash=True, compare=True)
+    #: the set of products
+    products: tuple[Product, ...] = field(hash=True, compare=True)
+    #: the set of checkpoints
+    checkpoints: tuple[Checkpoint, ...] = field(hash=True, compare=True)
 
     def __init__(self,
-                 bin_types: Iterable[BinType],
-                 parts: Iterable[Part],
+                 bin_types: Iterable[BinType] | None = None,
+                 parts: Iterable[Part] | None = None,
                  events: Iterable[Event] | None = None,
-                 min_rules: Iterable[MinRule] | None = None) -> None:
+                 min_rules: Iterable[MinRule] | None = None,
+                 products: Iterable[Product] | None = None,
+                 checkpoints: Iterable[Checkpoint] | None = None) -> None:
         """
         Create an instance of the warehousing instance.
 
         :param bin_types: the bin types
         :param parts: the parts
         :param events: the events
+        :param products: the products
+        :param checkpoints: the checkpoints
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -159,6 +173,11 @@ class Instance:
                     f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
             min_rule_dct[mrpk] = min_rule
 
+        object.__setattr__(self, "products", _load_type(
+            products, Product, names))
+        object.__setattr__(self, "checkpoints", _load_type(
+            checkpoints, Checkpoint, names))
+
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
         """
@@ -179,11 +198,17 @@ class Instance:
                 source.resolve_inside(FILE_EVENTS), Event)
             min_rules: tuple[MinRule, ...] = _load_csv(
                 source.resolve_inside(FILE_MIN_RULES), MinRule)
+            products: tuple[Product, ...] = _load_csv(
+                source.resolve_inside(FILE_PRODUCTS), Product)
+            checkpoints: tuple[Checkpoint, ...] = _load_csv(
+                source.resolve_inside(FILE_CHECKPOINTS), Checkpoint)
 
         result = Instance(bin_types=bin_types,
                           parts=parts,
                           events=events,
-                          min_rules=min_rules)
+                          min_rules=min_rules,
+                          products=products,
+                          checkpoints=checkpoints)
         logger(f"Finished loading instance/scenario from {source!r}.")
         return result
 
@@ -203,6 +228,10 @@ class Instance:
         _write_csv(dest.resolve_inside(FILE_EVENTS), Event, self.events)
         _write_csv(dest.resolve_inside(FILE_MIN_RULES), MinRule,
                    self.min_rules)
+        _write_csv(dest.resolve_inside(FILE_PRODUCTS), Product,
+                   self.products)
+        _write_csv(dest.resolve_inside(FILE_CHECKPOINTS), Checkpoint,
+                   self.checkpoints)
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest
 
