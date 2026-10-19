@@ -1,5 +1,5 @@
 checkpoint;product;part;delay;amount
-M1;jacket;A;01:00;1
-M1;jacket;B;02:00;2
-S1;jacket;C;00:20;3
-S2;jacket;D;00:15;2
+M1;jacket;A;01:00;3
+M1;jacket;B;02:00;4
+S1;jacket;C;00:20;5
+S2;jacket;D;00:15;6

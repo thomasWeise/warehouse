@@ -38,6 +38,11 @@ class BaseModule:
         self.instance: Final[Instance] = instance
         #: the internal queue
         self.__queue: Final[list[Event]] = []
+        #: the start priority
+        self.__max_priority: Final[int] = 1 + max(
+            ev.priority for ev in instance.events)
+        #: the next priority value
+        self.__priority: int = 0
 
     def enqueue(self, event: Event) -> None:
         """
@@ -54,6 +59,16 @@ class BaseModule:
         # sorted in ascending order is always a min-heap.
         queue.clear()
         queue.extend(self.instance.events)
+        self.__priority = self.__max_priority
+
+    def _priority(self) -> int:
+        """
+        Get the next priority value.
+
+        :return: the next priority value
+        """
+        self.__priority += 1
+        return self.__priority
 
     def _handle_start_event(self, event: StartEvent) -> None:
         """
@@ -192,7 +207,7 @@ class BaseModule:
 
         queue.clear()
         if end_event is None:
-            end_event = EndEvent(time, 0)
+            end_event = EndEvent(time, self._priority())
             self._handle_end_event(end_event)
             yield end_event
 

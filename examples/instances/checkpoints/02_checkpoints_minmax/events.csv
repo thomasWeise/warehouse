@@ -1,0 +1,31 @@
+time;type;part;amount;bin_type;checkpoint;product;rule
+
+2026-10-15 08:00;start
+
+2026-10-15 08:15;warehouse_in;A;25
+2026-10-15 08:15;warehouse_in;B;30
+2026-10-15 08:15;warehouse_in;C;40
+2026-10-15 08:15;warehouse_in;D;20
+
+2026-10-15 08:20;checkpoint;;;;M1;jacket
+2026-10-15 08:50;checkpoint;;;;M1;jacket
+2026-10-15 09:20;checkpoint;;;;M1;jacket
+2026-10-15 09:50;checkpoint;;;;M1;jacket
+2026-10-15 10:20;checkpoint;;;;M1;jacket
+2026-10-15 10:50;checkpoint;;;;M1;jacket
+
+2026-10-15 11:00;checkpoint;;;;S1;jacket
+
+2026-10-15 11:20;checkpoint;;;;M1;jacket
+
+2026-10-15 11:30;checkpoint;;;;S1;jacket
+
+2026-10-15 11:50;checkpoint;;;;M1;jacket
+
+2026-10-15 12:00;checkpoint;;;;S1;jacket
+
+2026-10-15 12:20;checkpoint;;;;M1;jacket
+
+2026-10-15 12:30;checkpoint;;;;S1;jacket
+
+2026-10-15 13:00;checkpoint;;;;S1;jacket

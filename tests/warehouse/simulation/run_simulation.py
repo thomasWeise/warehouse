@@ -34,6 +34,25 @@ def __str_tuple(s: Iterable[str]) -> tuple[str, ...]:
     return tuple(filter(__keep, map(str.strip, s)))
 
 
+def __strs_same(a: tuple[str, ...], b: tuple[str, ...]) -> None:
+    """
+    Check that two string tuples are the same.
+
+    :param a: the first tuple
+    :param b: the second tuple
+    """
+    assert a.__class__ is b.__class__
+    assert tuple.__len__(a) == tuple.__len__(b)
+    assert a is not b
+    if a == b:
+        return
+
+    for i, aa in enumerate(a):
+        bb = b[i]
+        if aa != bb:
+            raise ValueError(f"Error in line {i + 1}: {aa!r} != {bb!r}.")
+
+
 def __check_events(events: Iterable[Event]) -> None:
     """
     Check a sequence of events.
@@ -62,12 +81,13 @@ def __check_events(events: Iterable[Event]) -> None:
     assert isinstance(last_event, EndEvent)
 
 
-def __assert_2_events_same(a: Event, b: Event) -> None:
+def __assert_2_events_same(a: Event, b: Event, i: int) -> None:
     """
     Check whether two events are the same.
 
     :param a: the first event
     :param b: the second event
+    :param i: the line
     """
     assert a.__class__ is b.__class__
     assert a is not b
@@ -77,11 +97,15 @@ def __assert_2_events_same(a: Event, b: Event) -> None:
     b_prio: Final[int] = b.priority
 
     object.__setattr__(a, "priority", b_prio)
-    assert a == b
+    if a != b:
+        object.__setattr__(a, "priority", a_prio)
+        raise ValueError(f"Error in line {i + 1}: {a!r} != {b!r}.")
 
     object.__setattr__(a, "priority", a_prio)
     object.__setattr__(b, "priority", a_prio)
-    assert a == b
+    if a != b:
+        object.__setattr__(b, "priority", b_prio)
+        raise ValueError(f"Error in line {i + 1}: {a!r} != {b!r}.")
 
     object.__setattr__(b, "priority", b_prio)
 
@@ -102,12 +126,12 @@ def __assert_same_events(a: tuple[Event, ...],
         return
 
     for i, aa in enumerate(a):
-        __assert_2_events_same(aa, b[i])
-        __assert_2_events_same(b[i], aa)
+        __assert_2_events_same(aa, b[i], i)
+        __assert_2_events_same(b[i], aa, i)
 
     for i, bb in enumerate(b):
-        __assert_2_events_same(bb, a[i])
-        __assert_2_events_same(a[i], bb)
+        __assert_2_events_same(bb, a[i], i)
+        __assert_2_events_same(a[i], bb, i)
 
 
 def run_and_test_simulation(use_dir: str = Path(
@@ -146,7 +170,7 @@ def run_and_test_simulation(use_dir: str = Path(
     with expected_file.open_for_read() as f:
         csv_2_raw: Final[tuple[str, ...]] = tuple(f)
     csv_2: Final[tuple[str, ...]] = __str_tuple(csv_2_raw)
-    assert csv_2 == csv_1
+    __strs_same(csv_2, csv_1)
 
     with context():
         Instance.from_directory(use_path)

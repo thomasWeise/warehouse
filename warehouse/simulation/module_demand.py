@@ -43,7 +43,7 @@ class DemandModule(MinMaxModule):
         time: Final[int] = event.time
         for demand in self.__demands(event.checkpoint.key)(event.product.key):
             self.enqueue(WarehouseDemand(
-                time + demand.delay, 0, demand.part,
+                time + demand.delay, self._priority(), demand.part,
                 demand.amount * event.amount))
 
 

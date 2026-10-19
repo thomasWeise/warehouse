@@ -1,29 +1,33 @@
 time;type;part;amount;bin_type;checkpoint;product;rule
 2026-10-15 08:00;start
 2026-10-15 08:15;warehouse_in;A;10
-2026-10-15 08:15;bin_in;A;10;rack_1
 2026-10-15 08:15;warehouse_in;B;20
-2026-10-15 08:15;bin_in;B;20;rack_1
 2026-10-15 08:15;warehouse_in;C;30
-2026-10-15 08:15;bin_in;C;30;rack_1
 2026-10-15 08:15;warehouse_in;D;10
+2026-10-15 08:15;bin_in;A;10;rack_1
+2026-10-15 08:15;bin_in;B;20;rack_1
+2026-10-15 08:15;bin_in;C;30;rack_1
 2026-10-15 08:15;bin_in;D;10;rack_1
 
 2026-10-15 08:20;checkpoint;;1;;M1;jacket
-2026-10-15 09:20;warehouse_demand;A;1
-2026-10-15 09:20;bin_out;A;1;rack_1
-2026-10-15 09:20;warehouse_delivered;A;1
-2026-10-15 10:20;warehouse_demand;B;2
-2026-10-15 10:20;bin_out;B;2;rack_1
-2026-10-15 10:20;warehouse_delivered;B;2
+
+2026-10-15 09:20;warehouse_demand;A;3
+2026-10-15 09:20;bin_out;A;3;rack_1
+2026-10-15 09:20;warehouse_delivered;A;3
+
+2026-10-15 10:20;warehouse_demand;B;4
+2026-10-15 10:20;bin_out;B;4;rack_1
+2026-10-15 10:20;warehouse_delivered;B;4
 
 2026-10-15 11:20;checkpoint;;1;;S1;jacket
-2026-10-15 11:40;warehouse_demand;C;3
-2026-10-15 11:40;bin_out;C;3;rack_1
-2026-10-15 11:40;warehouse_delivered;C;3
+
+2026-10-15 11:40;warehouse_demand;C;5
+2026-10-15 11:40;bin_out;C;5;rack_1
+2026-10-15 11:40;warehouse_delivered;C;5
 
 2026-10-15 15:20;checkpoint;;1;;S2;jacket
-2026-10-15 15:35;warehouse_demand;D;2
-2026-10-15 15:35;bin_out;D;2;rack_1
-2026-10-15 15:35;warehouse_delivered;D;2
+
+2026-10-15 15:35;warehouse_demand;D;6
+2026-10-15 15:35;bin_out;D;6;rack_1
+2026-10-15 15:35;warehouse_delivered;D;6
 2026-10-15 15:35;end

@@ -401,7 +401,7 @@ class CsvReader(CsvReaderBase[Event]):
         col_names: Final[Iterable[str]] = cls.eventclass_get_csv_columns()
 
         time: Final[int] = str_to_time(data[cols[COLUMN_TIME]])
-        priority: Final[int] = self.__priority if (
+        priority: Final[int] = (self.__priority + 1) if (
             time <= self.__last_time) else 0
 
         ret = cls.create(time=time, priority=priority, **{c: csv_str_or_none(
@@ -410,8 +410,8 @@ class CsvReader(CsvReaderBase[Event]):
         if not isinstance(ret, Event):
             raise type_error(ret, "parse_row result", Event)
 
-        self.__priority = priority + 1_000_000_000
         self.__last_time = time
+        self.__priority = priority
         return ret
 
 
