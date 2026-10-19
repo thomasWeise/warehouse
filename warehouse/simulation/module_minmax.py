@@ -27,18 +27,18 @@ class MinMaxModule(StorageModule):
         n_parts: Final[int] = tuple.__len__(instance.parts)
 
         #: the parts already ordered by the min/max rules
-        self.__on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
+        self.__mm_on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
             [] for _ in range(n_parts))
         rule_dict: dict[int, MinRule] = {
             rule.part.key: rule for rule in instance.min_rules}
         #: the minimum rules
-        self.__min: Final[tuple[MinRule | None, ...]] = tuple(
+        self.__mm_min: Final[tuple[MinRule | None, ...]] = tuple(
             rule_dict.get(k) for k in range(n_parts))
 
     def _start(self) -> None:
         """Begin the simulation."""
         super()._start()
-        for queue in self.__on_the_way:
+        for queue in self.__mm_on_the_way:
             list.clear(queue)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
@@ -49,10 +49,10 @@ class MinMaxModule(StorageModule):
         """
         part: Final[Part] = event.part
         part_key: Final[int] = part.key
-        min_rule: Final[MinRule | None] = self.__min[part_key]
+        min_rule: Final[MinRule | None] = self.__mm_min[part_key]
 
         if min_rule is not None:
-            otw: Final[list[WarehouseIn]] = self.__on_the_way[part_key]
+            otw: Final[list[WarehouseIn]] = self.__mm_on_the_way[part_key]
             remaining: Final[int] = self.available_units(
                 part) + _get_on_the_way(otw) - event.amount
             trigger: Final[int] = min_rule.minimum - remaining
@@ -74,7 +74,7 @@ class MinMaxModule(StorageModule):
 
         :param event: the event
         """
-        _purge_on_the_way(self.__on_the_way[event.part.key], event)
+        _purge_on_the_way(self.__mm_on_the_way[event.part.key], event)
         super()._handle_warehouse_in(event)
 
 

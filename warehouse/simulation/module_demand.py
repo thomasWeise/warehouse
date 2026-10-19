@@ -32,7 +32,7 @@ class DemandModule(MinMaxModule):
 
         #: the demand lookup
         self.__demands: Final[Callable[[int], Callable[[
-            int], tuple[Demand, ...]]]] = _flatten2(raw)
+            int], tuple[Demand, ...]]]] = _flatten_cp(raw)
 
     def _handle_checkpoint(self, event: CheckpointEvent) -> None:
         """
@@ -67,7 +67,7 @@ def __empty2(_) -> Callable[[Any], tuple]:
     return __empty
 
 
-def _flatten2(data: dict) -> Callable[[int], Callable[[int], tuple]]:
+def _flatten_cp(data: dict) -> Callable[[int], Callable[[int], tuple]]:
     """
     Convert a map to a callable.
 
