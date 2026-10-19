@@ -1,0 +1,196 @@
+time;type;part;amount;bin_type;checkpoint;product;rule
+
+2026-10-15 08:00;start
+
+2026-10-15 08:15;warehouse_in;A;20
+2026-10-15 08:15;warehouse_in;B;25
+2026-10-15 08:15;warehouse_in;C;30
+2026-10-15 08:15;warehouse_in;D;35
+2026-10-15 08:15;bin_in;A;20;rack_1
+2026-10-15 08:15;bin_in;B;25;rack_1
+2026-10-15 08:15;bin_in;C;30;rack_1
+2026-10-15 08:15;bin_in;D;25;rack_1
+2026-10-15 08:15;overstock_in;D;10
+
+2026-10-15 08:20;checkpoint;;1;;M1;jacket
+
+2026-10-15 08:45;warehouse_demand;A;3
+2026-10-15 08:45;bin_out;A;3;rack_1
+2026-10-15 08:45;warehouse_delivered;A;3
+2026-10-15 08:45;overstock_out;D;3
+2026-10-15 08:45;bin_in;D;3;rack_1
+
+2026-10-15 08:50;checkpoint;;1;;M1;jacket
+
+2026-10-15 09:05;warehouse_demand;B;4
+2026-10-15 09:05;bin_out;B;4;rack_1
+2026-10-15 09:05;warehouse_delivered;B;4
+2026-10-15 09:05;overstock_out;D;4
+2026-10-15 09:05;bin_in;D;4;rack_1
+
+2026-10-15 09:15;warehouse_demand;A;3
+2026-10-15 09:15;bin_out;A;3;rack_1
+2026-10-15 09:15;warehouse_delivered;A;3
+2026-10-15 09:15;overstock_out;D;3
+2026-10-15 09:15;bin_in;D;3;rack_1
+
+2026-10-15 09:20;checkpoint;;1;;M1;jacket
+2026-10-15 09:20;rule_triggered;A;1;;;;jit_A
+
+2026-10-15 09:35;warehouse_demand;B;4
+2026-10-15 09:35;bin_out;B;4;rack_1
+2026-10-15 09:35;warehouse_delivered;B;4
+
+2026-10-15 09:45;warehouse_demand;A;3
+2026-10-15 09:45;bin_out;A;3;rack_1
+2026-10-15 09:45;warehouse_delivered;A;3
+
+2026-10-15 09:50;checkpoint;;1;;M1;jacket
+2026-10-15 09:50;rule_triggered;A;3;;;;jit_A
+2026-10-15 09:50;rule_triggered;B;3;;;;jit_B
+
+2026-10-15 10:05;warehouse_demand;B;4
+2026-10-15 10:05;bin_out;B;4;rack_1
+2026-10-15 10:05;warehouse_delivered;B;4
+
+2026-10-15 10:15;warehouse_demand;A;3
+2026-10-15 10:15;bin_out;A;3;rack_1
+2026-10-15 10:15;warehouse_delivered;A;3
+
+2026-10-15 10:20;checkpoint;;1;;M1;jacket
+2026-10-15 10:20;rule_triggered;A;3;;;;jit_A
+2026-10-15 10:20;rule_triggered;B;4;;;;jit_B
+
+2026-10-15 10:35;warehouse_demand;B;4
+2026-10-15 10:35;bin_out;B;4;rack_1
+2026-10-15 10:35;warehouse_delivered;B;4
+
+2026-10-15 10:45;warehouse_demand;A;3
+2026-10-15 10:45;bin_out;A;3;rack_1
+2026-10-15 10:45;warehouse_delivered;A;3
+
+2026-10-15 10:50;checkpoint;;1;;M1;jacket
+2026-10-15 10:50;rule_triggered;A;3;;;;jit_A
+2026-10-15 10:50;rule_triggered;B;4;;;;jit_B
+
+2026-10-15 11:00;checkpoint;;1;;S1;jacket
+
+2026-10-15 11:05;warehouse_demand;B;4
+2026-10-15 11:05;bin_out;B;4;rack_1
+2026-10-15 11:05;warehouse_delivered;B;4
+
+2026-10-15 11:15;warehouse_demand;A;3
+2026-10-15 11:15;bin_out;A;3;rack_1
+2026-10-15 11:15;warehouse_delivered;A;3
+
+2026-10-15 11:20;checkpoint;;1;;M1;jacket
+2026-10-15 11:20;rule_triggered;A;3;;;;jit_A
+2026-10-15 11:20;rule_triggered;B;4;;;;jit_B
+
+2026-10-15 11:23;warehouse_in;A;1
+2026-10-15 11:23;bin_in;A;1;rack_1
+
+2026-10-15 11:30;checkpoint;;1;;S1;jacket
+
+2026-10-15 11:35;warehouse_demand;B;4
+2026-10-15 11:35;warehouse_demand;C;5
+2026-10-15 11:35;bin_out;B;4;rack_1
+2026-10-15 11:35;warehouse_delivered;B;4
+2026-10-15 11:35;bin_out;C;5;rack_1
+2026-10-15 11:35;warehouse_delivered;C;5
+
+2026-10-15 11:45;warehouse_demand;A;3
+2026-10-15 11:45;bin_out;A;3;rack_1
+2026-10-15 11:45;warehouse_delivered;A;3
+
+2026-10-15 11:50;checkpoint;;1;;M1;jacket
+2026-10-15 11:50;rule_triggered;A;3;;;;jit_A
+2026-10-15 11:50;rule_triggered;B;4;;;;jit_B
+
+2026-10-15 11:53;warehouse_in;A;3
+2026-10-15 11:53;bin_in;A;3;rack_1
+
+2026-10-15 12:00;checkpoint;;1;;S1;jacket
+
+2026-10-15 12:01;warehouse_in;B;3
+2026-10-15 12:01;bin_in;B;3;rack_1
+
+2026-10-15 12:05;warehouse_demand;B;4
+2026-10-15 12:05;warehouse_demand;C;5
+2026-10-15 12:05;bin_out;B;4;rack_1
+2026-10-15 12:05;warehouse_delivered;B;4
+2026-10-15 12:05;bin_out;C;5;rack_1
+2026-10-15 12:05;warehouse_delivered;C;5
+
+2026-10-15 12:15;warehouse_demand;A;3
+2026-10-15 12:15;bin_out;A;3;rack_1
+2026-10-15 12:15;warehouse_delivered;A;3
+
+2026-10-15 12:20;checkpoint;;1;;M1;jacket
+2026-10-15 12:20;rule_triggered;A;3;;;;jit_A
+2026-10-15 12:20;rule_triggered;B;4;;;;jit_B
+
+2026-10-15 12:23;warehouse_in;A;3
+2026-10-15 12:23;bin_in;A;3;rack_1
+
+2026-10-15 12:30;checkpoint;;1;;S1;jacket
+2026-10-15 12:30;rule_triggered;C;5;;;;jit_C
+
+2026-10-15 12:31;warehouse_in;B;4
+2026-10-15 12:31;bin_in;B;4;rack_1
+
+2026-10-15 12:35;warehouse_demand;B;4
+2026-10-15 12:35;warehouse_demand;C;5
+2026-10-15 12:35;bin_out;B;4;rack_1
+2026-10-15 12:35;warehouse_delivered;B;4
+2026-10-15 12:35;bin_out;C;5;rack_1
+2026-10-15 12:35;warehouse_delivered;C;5
+
+2026-10-15 12:45;warehouse_demand;A;3
+2026-10-15 12:45;bin_out;A;3;rack_1
+2026-10-15 12:45;warehouse_delivered;A;3
+
+2026-10-15 12:53;warehouse_in;A;3
+2026-10-15 12:53;bin_in;A;3;rack_1
+
+2026-10-15 13:00;checkpoint;;1;;S1;jacket
+2026-10-15 13:00;rule_triggered;C;5;;;;jit_C
+
+2026-10-15 13:01;warehouse_in;B;4
+2026-10-15 13:01;bin_in;B;4;rack_1
+
+2026-10-15 13:05;warehouse_demand;B;4
+2026-10-15 13:05;warehouse_demand;C;5
+2026-10-15 13:05;bin_out;B;4;rack_1
+2026-10-15 13:05;warehouse_delivered;B;4
+2026-10-15 13:05;bin_out;C;5;rack_1
+2026-10-15 13:05;warehouse_delivered;C;5
+
+2026-10-15 13:23;warehouse_in;A;3
+2026-10-15 13:23;bin_in;A;3;rack_1
+
+2026-10-15 13:31;warehouse_in;B;4
+2026-10-15 13:31;bin_in;B;4;rack_1
+
+2026-10-15 13:35;warehouse_demand;C;5
+2026-10-15 13:35;bin_out;C;5;rack_1
+2026-10-15 13:35;warehouse_delivered;C;5
+
+2026-10-15 13:53;warehouse_in;A;3
+2026-10-15 13:53;bin_in;A;3;rack_1
+
+2026-10-15 14:01;warehouse_in;B;4
+2026-10-15 14:01;bin_in;B;4;rack_1
+
+2026-10-15 14:23;warehouse_in;A;3
+2026-10-15 14:23;bin_in;A;3;rack_1
+
+2026-10-15 14:31;warehouse_in;B;4
+2026-10-15 14:31;bin_in;B;4;rack_1
+
+2026-10-15 14:37;warehouse_in;C;5
+2026-10-15 14:37;bin_in;C;5;rack_1
+
+2026-10-15 15:07;warehouse_in;C;5
+2026-10-15 15:07;bin_in;C;5;rack_1
+2026-10-15 15:07;end

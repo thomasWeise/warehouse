@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 
 from warehouse.instance.checkpoint import COLUMN_CHECKPOINT, Checkpoint
-from warehouse.instance.element import COLUMN_AMOUNT, check_to_amount, context
+from warehouse.instance.element import COLUMN_AMOUNT, context
 from warehouse.instance.event import Event
 from warehouse.instance.product import COLUMN_PRODUCT, Product
 
@@ -15,8 +15,6 @@ class CheckpointEvent(Event):  # noqa: PLW1641
     checkpoint: Checkpoint = field(hash=True)
     #: the product
     product: Product = field(hash=True)
-    #: the amount to store/retrieve
-    amount: int = field(hash=True)
 
     def __eq__(self, other) -> bool:
         """
@@ -30,8 +28,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             self.time == other.time) and (
             self.priority == other.priority) and (
             self.checkpoint == other.checkpoint) and (
-            self.product == other.product) and (
-            self.amount == other.amount)
+            self.product == other.product)
 
     def __ne__(self, other) -> bool:
         """
@@ -45,8 +42,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             self.time != other.time) or (
             self.priority != other.priority) or (
             self.checkpoint != other.checkpoint) or (
-            self.product != other.product) or (
-            self.amount != other.amount)
+            self.product != other.product)
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -60,9 +56,6 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             return "the checkpoint that was reached"
         if col == COLUMN_PRODUCT:
             return "the product that reached the checkpoint"
-        if col == COLUMN_AMOUNT:
-            return ("the amount of product that reached the checkpoint, "
-                    "usually 1")
         return None
 
     def event_get_csv_value(self, column: str) -> str:
@@ -77,7 +70,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
         if column == COLUMN_PRODUCT:
             return self.product.name
         if column == COLUMN_AMOUNT:
-            return str(self.amount)
+            return "1"
         return ""
 
     @classmethod
@@ -87,14 +80,13 @@ class CheckpointEvent(Event):  # noqa: PLW1641
 
         :return: the csv columns
         """
-        return COLUMN_CHECKPOINT, COLUMN_PRODUCT, COLUMN_AMOUNT
+        return COLUMN_CHECKPOINT, COLUMN_PRODUCT
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, priority: int,
             checkpoint: int | str | Checkpoint,
-            product: int | str | Product,
-            amount: int | str | None, **_) \
+            product: int | str | Product, **_) \
             -> "CheckpointEvent":  # type: ignore
         """
         Create the checkpoint event.
@@ -109,9 +101,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
         with context() as ctx:
             checkpoint = ctx.resolve(Checkpoint, checkpoint)
             product = ctx.resolve(Product, product)
-        return cls(time, priority, checkpoint, product,  # type: ignore
-                   1 if amount is None else  # type: ignore
-                   check_to_amount(amount))  # type: ignore
+        return cls(time, priority, checkpoint, product)  # type: ignore
 
     @classmethod
     def eventclass_get_csv_type(cls) -> str:
@@ -129,5 +119,4 @@ class CheckpointEvent(Event):  # noqa: PLW1641
 
         :return: the event description, if any
         """
-        return (f"a certain {COLUMN_AMOUNT} (usually 1) of a {COLUMN_PRODUCT}"
-                f" has reached a {COLUMN_CHECKPOINT}")
+        return f"1 unit of a {COLUMN_PRODUCT} reached a {COLUMN_CHECKPOINT}"

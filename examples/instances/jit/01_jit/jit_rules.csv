@@ -1,0 +1,5 @@
+name;checkpoint;product;part;minimum;effect_delay
+jit_A;M1;jacket;A;15;02:03
+jit_B;M1;jacket;B;20;02:11
+jit_C;S1;jacket;C;25;02:07
+jit_D;S2;jacket;D;30;02:05

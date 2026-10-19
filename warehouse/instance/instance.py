@@ -185,12 +185,12 @@ class Instance:
                 FILE_PARTS), Part)
             min_rules: tuple[MinRule, ...] = _load_csv(
                 source.resolve_inside(FILE_MIN_RULES), MinRule)
-            jit_rules: tuple[JitRule, ...] = _load_csv(
-                source.resolve_inside(FILE_JIT_RULES), JitRule)
             products: tuple[Product, ...] = _load_csv(
                 source.resolve_inside(FILE_PRODUCTS), Product)
             checkpoints: tuple[Checkpoint, ...] = _load_csv(
                 source.resolve_inside(FILE_CHECKPOINTS), Checkpoint)
+            jit_rules: tuple[JitRule, ...] = _load_csv(
+                source.resolve_inside(FILE_JIT_RULES), JitRule)
             demands: tuple[Demand, ...] = _load_csv(
                 source.resolve_inside(FILE_DEMANDS), Demand)
             events: tuple[Event, ...] = _load_csv(

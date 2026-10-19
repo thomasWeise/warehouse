@@ -44,7 +44,7 @@ class DemandModule(MinMaxModule):
         for demand in self.__demands(event.checkpoint.key)(event.product.key):
             self.enqueue(WarehouseDemand(
                 time + demand.delay, self._priority(), demand.part,
-                demand.amount * event.amount))
+                demand.amount))
 
 
 def __empty(_: Any) -> tuple:

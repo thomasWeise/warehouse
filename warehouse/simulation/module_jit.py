@@ -61,8 +61,7 @@ class JitModule(DemandModule):
             part: Part = jit_rule.part
             part_key: int = jit_rule.part.key
             otw: list[WarehouseIn] = self.__jit_on_the_way[part_key]
-            remaining: int = self.available_units(
-                part) + _get_on_the_way(otw) - event.amount
+            remaining: int = self.available_units(part) + _get_on_the_way(otw)
             trigger: int = jit_rule.minimum - remaining
             if trigger > 0:
                 self.enqueue(RuleTriggeredEvent(
