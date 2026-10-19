@@ -57,7 +57,7 @@ class MinRule(Rule):
 
     def __eq__(self, other) -> bool:
         """
-        Compare two parts for "equality".
+        Compare two minimum rules for "equality".
 
         :param other: the other element
         :return: `True` if this element is equal, `False` otherwise
@@ -69,7 +69,7 @@ class MinRule(Rule):
 
     def __ne__(self, other) -> bool:
         """
-        Compare two parts for "not equal".
+        Compare two minimum rules for "not equal".
 
         :param other: the other element
         :return: `True` if this element is not equal, `False` otherwise

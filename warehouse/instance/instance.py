@@ -87,6 +87,7 @@ from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
 )
+from warehouse.rule.jit_rule import JitRule
 from warehouse.rule.min_rule import MinRule
 
 #: the bin types file
@@ -97,6 +98,8 @@ FILE_PARTS: Final[str] = "parts.csv"
 FILE_EVENTS: Final[str] = "events.csv"
 #: the minimum rules file
 FILE_MIN_RULES: Final[str] = "min_rules.csv"
+#: the JIT rules file
+FILE_JIT_RULES: Final[str] = "jit_rules.csv"
 #: the products file
 FILE_PRODUCTS: Final[str] = "products.csv"
 #: the checkpoints file
@@ -117,6 +120,8 @@ class Instance:
     events: tuple[Event, ...] = field(hash=True, compare=True)
     #: the min rules holding for this warehouse
     min_rules: tuple[MinRule, ...] = field(hash=True, compare=True)
+    #: the JIT rules holding for this warehouse
+    jit_rules: tuple[JitRule, ...] = field(hash=True, compare=True)
     #: the set of products
     products: tuple[Product, ...] = field(hash=True, compare=True)
     #: the set of checkpoints
@@ -129,6 +134,7 @@ class Instance:
                  parts: Iterable[Part] | None = None,
                  events: Iterable[Event] | None = None,
                  min_rules: Iterable[MinRule] | None = None,
+                 jit_rules: Iterable[JitRule] | None = None,
                  products: Iterable[Product] | None = None,
                  checkpoints: Iterable[Checkpoint] | None = None,
                  demands: Iterable[Demand] | None = None) -> None:
@@ -138,6 +144,8 @@ class Instance:
         :param bin_types: the bin types
         :param parts: the parts
         :param events: the events
+        :param min_rules: the minimum rules
+        :param jit_rules: the JIT rules
         :param products: the products
         :param checkpoints: the checkpoints
         :param demands: the demands
@@ -145,47 +153,19 @@ class Instance:
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
             bin_types, BinType, names))
-
-        bin_type_parts: Final[list[int]] = [0] * tuple.__len__(self.bin_types)
-        object.__setattr__(self, "parts", _load_type(parts, Part, names))
-        for part in self.parts:
-            mbt = part.bin_type
-            btk = mbt.key
-            if mbt is not self.bin_types[btk]:
-                raise ValueError(f"Inconsistent bin type {mbt!r} of part "
-                                 f"{part!r}, because we already got "
-                                 f"{self.bin_types[btk]!r}.")
-            names[part.name] = part
-            bin_type_parts[btk] += 1
-            if (not mbt.is_random) and (bin_type_parts[btk] > 1):
-                raise ValueError(
-                    f"Bin type {mbt!r} is not random, but has multiple "
-                    f"associated materials, including {part!r}.")
-
-        object.__setattr__(self, "events", _load_events(events))
-        object.__setattr__(self, "min_rules", _load_type(
-            min_rules, MinRule, names))
-
-        min_rule_dct: Final[dict[int, MinRule]] = {}
-        for min_rule in self.min_rules:
-            part = min_rule.part
-            mrpk: int = part.key
-            if part is not self.parts[mrpk]:
-                raise ValueError(
-                    "Inconsistent part of minimum rule "
-                    f"{min_rule!r} and {self.parts[mrpk]!r}.")
-            if mrpk in min_rule_dct:
-                raise ValueError(
-                    "Two minimum rules for same part:"
-                    f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
-            min_rule_dct[mrpk] = min_rule
-
+        object.__setattr__(self, "parts", _load_parts(
+            parts, names, self.bin_types))
+        object.__setattr__(self, "min_rules", _load_min_rules(
+            min_rules, names, self.parts))
         object.__setattr__(self, "products", _load_type(
             products, Product, names))
         object.__setattr__(self, "checkpoints", _load_type(
             checkpoints, Checkpoint, names))
         object.__setattr__(self, "demands", _load_demands(
             demands, self.products, self.checkpoints, self.parts))
+        object.__setattr__(self, "jit_rules", _load_jit_rules(
+            jit_rules, names, self.parts, self.checkpoints, self.products))
+        object.__setattr__(self, "events", _load_events(events))
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
@@ -205,6 +185,8 @@ class Instance:
                 FILE_PARTS), Part)
             min_rules: tuple[MinRule, ...] = _load_csv(
                 source.resolve_inside(FILE_MIN_RULES), MinRule)
+            jit_rules: tuple[JitRule, ...] = _load_csv(
+                source.resolve_inside(FILE_JIT_RULES), JitRule)
             products: tuple[Product, ...] = _load_csv(
                 source.resolve_inside(FILE_PRODUCTS), Product)
             checkpoints: tuple[Checkpoint, ...] = _load_csv(
@@ -218,6 +200,7 @@ class Instance:
                           parts=parts,
                           events=events,
                           min_rules=min_rules,
+                          jit_rules=jit_rules,
                           products=products,
                           checkpoints=checkpoints,
                           demands=demands)
@@ -240,6 +223,8 @@ class Instance:
         _write_csv(dest.resolve_inside(FILE_EVENTS), Event, self.events)
         _write_csv(dest.resolve_inside(FILE_MIN_RULES), MinRule,
                    self.min_rules)
+        _write_csv(dest.resolve_inside(FILE_JIT_RULES), JitRule,
+                   self.jit_rules)
         _write_csv(dest.resolve_inside(FILE_PRODUCTS), Product,
                    self.products)
         _write_csv(dest.resolve_inside(FILE_CHECKPOINTS), Checkpoint,
@@ -332,6 +317,123 @@ def _load_events(source: Iterable[Event] | None) -> tuple[Event, ...]:
     if not isinstance(events[0], StartEvent):
         events.insert(0, StartEvent(events[0].time, 0))
     return tuple(events)
+
+
+def _load_parts(parts: Iterable[Part] | None,
+                names: dict[str, Element],
+                bin_types: tuple[BinType, ...]) -> tuple[Part, ...]:
+    """
+    Load the parts.
+
+    :param parts: the parts
+    :param names: the names dictionary
+    :param bin_types: the bin types
+    :return: the parts tuple
+    """
+    result: Final[tuple[Part, ...]] = _load_type(parts, Part, names)
+    if tuple.__len__(result) <= 0:
+        return result
+
+    bin_type_parts: Final[list[int]] = [0] * tuple.__len__(bin_types)
+    for part in result:
+        mbt = part.bin_type
+        btk = mbt.key
+        if mbt is not bin_types[btk]:
+            raise ValueError(f"Inconsistent bin type {mbt!r} of part "
+                             f"{part!r}, because we already got "
+                             f"{bin_types[btk]!r}.")
+        names[part.name] = part
+        bin_type_parts[btk] += 1
+        if (not mbt.is_random) and (bin_type_parts[btk] > 1):
+            raise ValueError(
+                f"Bin type {mbt!r} is not random, but has multiple "
+                f"associated materials, including {part!r}.")
+    return result
+
+
+def _load_min_rules(min_rules: Iterable[MinRule] | None,
+                    names: dict[str, Element],
+                    parts: tuple[Part, ...]) -> tuple[MinRule, ...]:
+    """
+    Load the minimum rules.
+
+    :param min_rules: the minimum rules
+    :param names: the names
+    :param parts: the parts
+    :return: the result
+    """
+    result: Final[tuple[MinRule, ...]] = _load_type(min_rules, MinRule, names)
+    if tuple.__len__(result) <= 0:
+        return result
+
+    min_rule_dct: Final[dict[int, MinRule]] = {}
+    for min_rule in result:
+        part = min_rule.part
+        mrpk: int = part.key
+        if part is not parts[mrpk]:
+            raise ValueError(
+                "Inconsistent part of minimum rule "
+                f"{min_rule!r} and {parts[mrpk]!r}.")
+        if mrpk in min_rule_dct:
+            raise ValueError(
+                "Two minimum rules for same part:"
+                f" {min_rule!r} and {min_rule_dct[mrpk]!r}.")
+        min_rule_dct[mrpk] = min_rule
+
+    return result
+
+
+def _load_jit_rules(jit_rules: Iterable[JitRule] | None,
+                    names: dict[str, Element],
+                    parts: tuple[Part, ...],
+                    checkpoints: tuple[Checkpoint, ...],
+                    products: tuple[Product, ...]) -> tuple[JitRule, ...]:
+    """
+    Load the minimum rules.
+
+    :param min_rules: the minimum rules
+    :param names: the names
+    :param parts: the parts
+    :param checkpoints: the checkpoints
+    :param products: the products
+    :return: the result
+    """
+    result: Final[tuple[JitRule, ...]] = _load_type(jit_rules, JitRule, names)
+    if tuple.__len__(result) <= 0:
+        return result
+
+    jit_rule_dct: Final[dict[tuple[int, int, int], JitRule]] = {}
+    for jit_rule in result:
+        part = jit_rule.part
+        pak: int = part.key
+        checkpoint = jit_rule.checkpoint
+        chk: int = checkpoint.key
+        product = jit_rule.product
+        prk = product.key
+
+        if part is not parts[pak]:
+            raise ValueError(
+                "Inconsistent part of JIT rule "
+                f"{jit_rule!r} and {parts[pak]!r}.")
+
+        if checkpoint is not checkpoints[chk]:
+            raise ValueError(
+                "Inconsistent part of JIT rule "
+                f"{jit_rule!r} and {checkpoints[chk]!r}.")
+
+        if product is not products[prk]:
+            raise ValueError(
+                "Inconsistent part of JIT rule "
+                f"{jit_rule!r} and {products[prk]!r}.")
+
+        key = pak, chk, prk
+        if key in jit_rule_dct:
+            raise ValueError(
+                "Two JIT rules for same part, checkpoint, and product:"
+                f" {jit_rule!r} and {jit_rule_dct[key]!r}.")
+        jit_rule_dct[key] = jit_rule
+
+    return result
 
 
 def _load_demands(source: Iterable[Demand] | None,
