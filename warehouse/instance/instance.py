@@ -122,7 +122,7 @@ class Instance:
     #: the set of checkpoints
     checkpoints: tuple[Checkpoint, ...] = field(hash=True, compare=True)
     #: the set of demands
-    demands: tuple[Checkpoint, ...] = field(hash=True, compare=True)
+    demands: tuple[Demand, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -203,8 +203,6 @@ class Instance:
                 FILE_BIN_TYPES), BinType)
             parts: tuple[Part, ...] = _load_csv(source.resolve_inside(
                 FILE_PARTS), Part)
-            events: tuple[Event, ...] = _load_csv(
-                source.resolve_inside(FILE_EVENTS), Event)
             min_rules: tuple[MinRule, ...] = _load_csv(
                 source.resolve_inside(FILE_MIN_RULES), MinRule)
             products: tuple[Product, ...] = _load_csv(
@@ -213,6 +211,8 @@ class Instance:
                 source.resolve_inside(FILE_CHECKPOINTS), Checkpoint)
             demands: tuple[Demand, ...] = _load_csv(
                 source.resolve_inside(FILE_DEMANDS), Demand)
+            events: tuple[Event, ...] = _load_csv(
+                source.resolve_inside(FILE_EVENTS), Event)
 
         result = Instance(bin_types=bin_types,
                           parts=parts,
@@ -363,7 +363,7 @@ def _load_demands(source: Iterable[Demand] | None,
             raise ValueError(f"{demand!r} checkpoint {cp!r} is not"
                              f" {checkpoints[cp.key]!r}.")
         prt: Part = demand.part
-        if prt is not checkpoints[prt.key]:
+        if prt is not parts[prt.key]:
             raise ValueError(f"{demand!r} part {prt!r} is not"
                              f" {parts[prt.key]!r}.")
         found.append(demand)

@@ -2,11 +2,14 @@ time;type;part;amount;bin_type;checkpoint;product;rule
 2026-10-15 08:00;start
 2026-10-15 08:15;warehouse_in;A;40
 2026-10-15 08:15;bin_in;A;40;rack_1
+
 2026-10-15 08:35;warehouse_in;B;70
 2026-10-15 08:35;bin_in;B;60;rack_1
 2026-10-15 08:35;overstock_in;B;10
+
 2026-10-15 08:50;warehouse_in;C;30
 2026-10-15 08:50;overstock_in;C;30
+
 2026-10-15 09:05;warehouse_demand;C;20
 2026-10-15 09:05;overstock_out;C;20
 2026-10-15 09:05;warehouse_delivered;C;20

@@ -94,7 +94,8 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             cls, time: int, priority: int,
             checkpoint: int | str | Checkpoint,
             product: int | str | Product,
-            amount: int | str, **_) -> "CheckpointEvent":  # type: ignore
+            amount: int | str | None, **_) \
+            -> "CheckpointEvent":  # type: ignore
         """
         Create the checkpoint event.
 
@@ -109,6 +110,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             checkpoint = ctx.resolve(Checkpoint, checkpoint)
             product = ctx.resolve(Product, product)
         return cls(time, priority, checkpoint, product,  # type: ignore
+                   1 if amount is None else  # type: ignore
                    check_to_amount(amount))  # type: ignore
 
     @classmethod

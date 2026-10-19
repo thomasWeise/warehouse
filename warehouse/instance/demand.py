@@ -83,7 +83,7 @@ class Demand:
         :return: the sequence of objects
         """
         with context():
-            yield from CsvReader.read(rows=rows, clazz=cls)
+            yield from CsvReader.read(rows=rows)
 
 
 class CsvReader(CsvReaderBase[Demand]):

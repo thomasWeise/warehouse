@@ -6,7 +6,7 @@ from tests.warehouse.simulation.run_simulation import run_and_test_simulation
 
 
 def test_warehouse_simulation() -> None:
-    """Test all the warehouse example simulations."""
+    """Test all the min/max example simulations."""
     root = Path(__file__).up(4).resolve_inside("examples/instances/minmax")
     assert root.exists()
     assert root.is_dir()

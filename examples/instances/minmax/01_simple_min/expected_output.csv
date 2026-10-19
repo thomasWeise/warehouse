@@ -1,29 +1,39 @@
 time;type;part;amount;bin_type;checkpoint;product;rule
 2026-10-15 08:00;start
+
 2026-10-15 08:15;warehouse_in;A;20
 2026-10-15 08:15;bin_in;A;20;rack_1
 2026-10-15 08:20;warehouse_demand;A;15
 2026-10-15 08:20;bin_out;A;15;rack_1
 2026-10-15 08:20;warehouse_delivered;A;15
 2026-10-15 08:20;rule_triggered;A;25;;;;min_A
+
 2026-10-15 10:20;warehouse_demand;A;5
 2026-10-15 10:20;bin_out;A;5;rack_1
 2026-10-15 10:20;warehouse_delivered;A;5
 2026-10-15 10:20;rule_triggered;A;5;;;;min_A
+
 2026-10-15 10:50;warehouse_in;A;25
 2026-10-15 10:50;bin_in;A;25;rack_1
+
 2026-10-15 12:40;warehouse_demand;A;7
 2026-10-15 12:40;bin_out;A;7;rack_1
 2026-10-15 12:40;warehouse_delivered;A;7
 2026-10-15 12:40;rule_triggered;A;7;;;;min_A
+
 2026-10-15 12:50;warehouse_in;A;5
 2026-10-15 12:50;bin_in;A;5;rack_1
+
 2026-10-15 14:10;warehouse_demand;A;3
 2026-10-15 14:10;bin_out;A;3;rack_1
 2026-10-15 14:10;warehouse_delivered;A;3
+
 2026-10-15 14:10;rule_triggered;A;3;;;;min_A
+
 2026-10-15 15:10;warehouse_in;A;7
 2026-10-15 15:10;bin_in;A;7;rack_1
+
 2026-10-15 16:40;warehouse_in;A;3
 2026-10-15 16:40;bin_in;A;3;rack_1
+
 2026-10-15 16:40;end
