@@ -76,6 +76,7 @@ from warehouse.event.time import (
 )
 from warehouse.instance.bin_type import BinType
 from warehouse.instance.checkpoint import Checkpoint
+from warehouse.instance.demand import Demand
 from warehouse.instance.element import Element, context
 from warehouse.instance.event import (
     Event,
@@ -100,6 +101,8 @@ FILE_MIN_RULES: Final[str] = "min_rules.csv"
 FILE_PRODUCTS: Final[str] = "products.csv"
 #: the checkpoints file
 FILE_CHECKPOINTS: Final[str] = "checkpoints.csv"
+#: the demands file
+FILE_DEMANDS: Final[str] = "demands.csv"
 
 
 @dataclass(frozen=True, init=False, order=True, eq=True)
@@ -118,6 +121,8 @@ class Instance:
     products: tuple[Product, ...] = field(hash=True, compare=True)
     #: the set of checkpoints
     checkpoints: tuple[Checkpoint, ...] = field(hash=True, compare=True)
+    #: the set of demands
+    demands: tuple[Checkpoint, ...] = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -125,7 +130,8 @@ class Instance:
                  events: Iterable[Event] | None = None,
                  min_rules: Iterable[MinRule] | None = None,
                  products: Iterable[Product] | None = None,
-                 checkpoints: Iterable[Checkpoint] | None = None) -> None:
+                 checkpoints: Iterable[Checkpoint] | None = None,
+                 demands: Iterable[Demand] | None = None) -> None:
         """
         Create an instance of the warehousing instance.
 
@@ -134,6 +140,7 @@ class Instance:
         :param events: the events
         :param products: the products
         :param checkpoints: the checkpoints
+        :param demands: the demands
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -177,6 +184,8 @@ class Instance:
             products, Product, names))
         object.__setattr__(self, "checkpoints", _load_type(
             checkpoints, Checkpoint, names))
+        object.__setattr__(self, "demands", _load_demands(
+            demands, self.products, self.checkpoints, self.parts))
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
@@ -202,13 +211,16 @@ class Instance:
                 source.resolve_inside(FILE_PRODUCTS), Product)
             checkpoints: tuple[Checkpoint, ...] = _load_csv(
                 source.resolve_inside(FILE_CHECKPOINTS), Checkpoint)
+            demands: tuple[Demand, ...] = _load_csv(
+                source.resolve_inside(FILE_DEMANDS), Demand)
 
         result = Instance(bin_types=bin_types,
                           parts=parts,
                           events=events,
                           min_rules=min_rules,
                           products=products,
-                          checkpoints=checkpoints)
+                          checkpoints=checkpoints,
+                          demands=demands)
         logger(f"Finished loading instance/scenario from {source!r}.")
         return result
 
@@ -232,6 +244,8 @@ class Instance:
                    self.products)
         _write_csv(dest.resolve_inside(FILE_CHECKPOINTS), Checkpoint,
                    self.checkpoints)
+        _write_csv(dest.resolve_inside(FILE_DEMANDS), Demand,
+                   self.demands)
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest
 
@@ -240,7 +254,21 @@ class Instance:
 T = TypeVar("T", bound=Element)
 
 #: the type variable for data to be written to CSV or to be read from CSV
-A = TypeVar("A", bound=Element | Event)
+A = TypeVar("A", bound=Element | Event | Demand)
+
+
+def __iterable(source: Iterable[A], cls: type[A]) -> Iterable[A]:
+    """
+    Enforce that `source` is an iterable.
+
+    :param source: the source
+    :param cls: the class
+    :return: the source
+    """
+    if not isinstance(source, Iterable):
+        raise type_error(source, f"source[{cls.__name__}]", (
+            Iterable, type[None]))
+    return source
 
 
 def _load_type(source: Iterable[T] | None,
@@ -257,24 +285,18 @@ def _load_type(source: Iterable[T] | None,
     """
     if source is None:
         return ()
-    if not isinstance(source, Iterable):
-        raise type_error(source, f"source[{cls.__name__}]", (
-            Iterable, type[None]))
 
-    found: list[T] = []
-    for element in source:
+    found: Final[list[T]] = sorted(__iterable(source, cls))
+    for i, element in enumerate(found):
         if not isinstance(element, cls):
             raise type_error(element, "element", cls)
-
+        if i != element.key:
+            raise ValueError(f"{element!r} cannot be at index {i}.")
         name: str = element.name
         if name in names:
             raise ValueError(f"Name {name!r} of {element!r} already "
                              f"used by {names[name]!r}.")
-        found.append(element)
-    found.sort()
-    for i, element in enumerate(found):
-        if i != element.key:
-            raise ValueError(f"{element!r} cannot be at index {i}.")
+
     return tuple(found)
 
 
@@ -288,7 +310,7 @@ def _load_events(source: Iterable[Event] | None) -> tuple[Event, ...]:
     if source is None:
         return ()
 
-    events = sorted(source)
+    events = sorted(__iterable(source, Event))
     last_time = EARLIEST_START
     i = -1
     for i, event in enumerate(events):
@@ -310,6 +332,43 @@ def _load_events(source: Iterable[Event] | None) -> tuple[Event, ...]:
     if not isinstance(events[0], StartEvent):
         events.insert(0, StartEvent(events[0].time, 0))
     return tuple(events)
+
+
+def _load_demands(source: Iterable[Demand] | None,
+                  products: tuple[Product, ...],
+                  checkpoints: tuple[Checkpoint, ...],
+                  parts: tuple[Part, ...]) -> tuple[Demand, ...]:
+    """
+    Load a source of demands.
+
+    :param source: the source data
+    :param products: the products
+    :param checkpoints: the checkpoints
+    :param parts: the parts
+    :return: the tuple
+    """
+    if source is None:
+        return ()
+
+    found: Final[list[Demand]] = []
+    for i, demand in enumerate(sorted(__iterable(source, Demand))):
+        if not isinstance(demand, Demand):
+            raise type_error(demand, f"demand[{i}]", Demand)
+        prod: Product = demand.product
+        if prod is not products[prod.key]:
+            raise ValueError(
+                f"{demand!r} product {prod!r} is not {products[prod.key]!r}.")
+        cp: Checkpoint = demand.checkpoint
+        if cp is not checkpoints[cp.key]:
+            raise ValueError(f"{demand!r} checkpoint {cp!r} is not"
+                             f" {checkpoints[cp.key]!r}.")
+        prt: Part = demand.part
+        if prt is not checkpoints[prt.key]:
+            raise ValueError(f"{demand!r} part {prt!r} is not"
+                             f" {parts[prt.key]!r}.")
+        found.append(demand)
+
+    return tuple(found)
 
 
 def _load_csv(file: Path, cls: type[A]) -> tuple[A, ...]:

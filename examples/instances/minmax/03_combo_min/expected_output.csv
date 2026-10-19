@@ -1,4 +1,4 @@
-time;type;part;amount;bin_type;rule
+time;type;part;amount;bin_type;checkpoint;product;rule
 2026-10-15 08:00;start
 2026-10-15 08:15;warehouse_in;A;50
 2026-10-15 08:15;bin_in;A;50;rack_1
@@ -14,17 +14,17 @@ time;type;part;amount;bin_type;rule
 2026-10-15 08:20;bin_in;B;40;rack_1
 2026-10-15 08:20;overstock_out;C;6
 2026-10-15 08:20;bin_in;C;6;rack_1
-2026-10-15 08:20;rule_triggered;A;26;;min_A
+2026-10-15 08:20;rule_triggered;A;26;;;;min_A
 2026-10-15 08:30;warehouse_demand;B;55
 2026-10-15 08:30;bin_out;B;55;rack_1
 2026-10-15 08:30;warehouse_delivered;B;55
 2026-10-15 08:30;overstock_out;C;44
 2026-10-15 08:30;bin_in;C;44;rack_1
-2026-10-15 08:30;rule_triggered;B;5;;min_B
+2026-10-15 08:30;rule_triggered;B;5;;;;min_B
 2026-10-15 08:40;warehouse_demand;C;12
 2026-10-15 08:40;bin_out;C;12;rack_1
 2026-10-15 08:40;warehouse_delivered;C;12
-2026-10-15 08:40;rule_triggered;C;2;;min_C
+2026-10-15 08:40;rule_triggered;C;2;;;;min_C
 2026-10-15 10:10;warehouse_in;B;5
 2026-10-15 10:10;bin_in;B;5;rack_1
 2026-10-15 10:20;warehouse_in;C;2
@@ -37,12 +37,12 @@ time;type;part;amount;bin_type;rule
 2026-10-15 12:40;warehouse_delivered;A;10
 2026-10-15 12:40;overstock_out;A;10
 2026-10-15 12:40;bin_in;A;10;rack_1
-2026-10-15 12:40;rule_triggered;A;10;;min_A
+2026-10-15 12:40;rule_triggered;A;10;;;;min_A
 2026-10-15 14:10;warehouse_demand;B;50
 2026-10-15 14:10;understock;B;10
 2026-10-15 14:10;bin_out;B;40;rack_1
 2026-10-15 14:10;warehouse_delivered;B;40
-2026-10-15 14:10;rule_triggered;B;50;;min_B
+2026-10-15 14:10;rule_triggered;B;50;;;;min_B
 2026-10-15 15:10;warehouse_in;A;10
 2026-10-15 15:10;bin_in;A;10;rack_1
 2026-10-15 15:50;warehouse_in;B;50
@@ -54,15 +54,15 @@ time;type;part;amount;bin_type;rule
 2026-10-15 16:40;warehouse_delivered;A;30
 2026-10-15 16:40;overstock_out;B;10
 2026-10-15 16:40;bin_in;B;10;rack_1
-2026-10-15 16:40;rule_triggered;A;30;;min_A
+2026-10-15 16:40;rule_triggered;A;30;;;;min_A
 2026-10-15 16:50;warehouse_demand;B;20
 2026-10-15 16:50;bin_out;B;20;rack_1
 2026-10-15 16:50;warehouse_delivered;B;20
-2026-10-15 16:50;rule_triggered;B;20;;min_B
+2026-10-15 16:50;rule_triggered;B;20;;;;min_B
 2026-10-15 17:10;warehouse_demand;C;30
 2026-10-15 17:10;bin_out;C;30;rack_1
 2026-10-15 17:10;warehouse_delivered;C;30
-2026-10-15 17:10;rule_triggered;C;30;;min_C
+2026-10-15 17:10;rule_triggered;C;30;;;;min_C
 2026-10-15 18:30;warehouse_in;B;20
 2026-10-15 18:30;bin_in;B;20;rack_1
 2026-10-15 18:50;warehouse_in;C;30

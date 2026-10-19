@@ -497,5 +497,6 @@ def _load_event_types() -> None:
     for name in ("warehouse.event.time",
                  "warehouse.event.storage",
                  "warehouse.event.bins",
-                 "warehouse.event.rules"):
+                 "warehouse.event.rules",
+                 "warehouse.event.checkpoint"):
         import_module(name)  # noqa  # type: ignore  # pylint: disable=C0415

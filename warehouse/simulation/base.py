@@ -4,6 +4,7 @@ from heapq import heappop, heappush
 from typing import Callable, Final, Generator
 
 from warehouse.event.bins import BinEvent, BinIn, BinOut
+from warehouse.event.checkpoint import CheckpointEvent
 from warehouse.event.rules import RuleTriggeredEvent
 from warehouse.event.storage import (
     OverstockIn,
@@ -131,6 +132,13 @@ class BaseModule:
         :param event: the rule trigger event
         """
 
+    def _handle_checkpoint(self, event: CheckpointEvent) -> None:
+        """
+        Handle that an amount of a given product has reached a checkpoint.
+
+        :param event: the event
+        """
+
     def available_units(self, part: Part) -> int:
         """
         Get the available units of the given part.
@@ -225,6 +233,8 @@ class BaseModule:
             self._handle_warehouse_delivers,  # type: ignore
             id(RuleTriggeredEvent):  # type: ignore
             self._handle_rule_triggered,  # type: ignore
+            id(CheckpointEvent):  # type: ignore
+            self._handle_checkpoint,  # type: ignore
         }.__getitem__
 
 

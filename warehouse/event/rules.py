@@ -55,7 +55,7 @@ name='hat_bins', amount=30, is_random=False)), amount=1200)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-2017-07-14 10:40;rule_triggered;hat;1200;;min_hat
+2017-07-14 10:40;rule_triggered;hat;1200;;;;min_hat
 <BLANKLINE>
 ===================
 <BLANKLINE>

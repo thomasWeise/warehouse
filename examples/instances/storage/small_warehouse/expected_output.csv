@@ -1,4 +1,4 @@
-time;type;part;amount;bin_type;rule
+time;type;part;amount;bin_type;checkpoint;product;rule
 2026-01-02 09:00;start
 2026-01-02 09:05;warehouse_in;skirt;500
 2026-01-02 09:05;bin_in;skirt;500;random_small
