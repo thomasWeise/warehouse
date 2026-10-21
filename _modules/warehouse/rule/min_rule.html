@@ -1,0 +1,231 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.rule.min_rule — warehouse 0.8.3 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=7f96dc5e"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/rule/min_rule.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.rule.min_rule</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.rule.min_rule</h1><div class=highlight><pre>
+<span></span><span class=sd>"""A class holding the information of a minimum rule."""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Iterable</span><span class=p>,</span> <span class=n>TypeVar</span><span class=p>,</span> <span class=n>cast</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.csv</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>csv_column</span><span class=p>,</span>
+    <span class=n>csv_scope</span><span class=p>,</span>
+    <span class=n>csv_val_or_none</span><span class=p>,</span>
+<span class=p>)</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvReader</span> <span class=k>as</span> <span class=n>CsvReaderBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>CsvWriter</span> <span class=k>as</span> <span class=n>CsvWriterBase</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>check_to_amount</span><span class=p>,</span>
+    <span class=n>context</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>Part</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.rule</span><span class=w> </span><span class=kn>import</span> <span class=n>Rule</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.time</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>COLUMN_EFFECT_DELAY</span><span class=p>,</span>
+    <span class=n>timedelta_to_str</span><span class=p>,</span>
+<span class=p>)</span>
+
+<span class=c1>#: the minimum column</span>
+<span class=n>COLUMN_MINIMUM</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"minimum"</span>
+
+
+<div class=viewcode-block id=MinRule>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.MinRule>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>MinRule</span><span class=p>(</span><span class=n>Rule</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A class for identifying a minimum rule."""</span>
+
+    <span class=c1>#: the part which is concerned here</span>
+    <span class=n>part</span><span class=p>:</span> <span class=n>Part</span>
+    <span class=c1>#: the minimum value triggering the rule</span>
+    <span class=n>minimum</span><span class=p>:</span> <span class=nb>int</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>key</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=kc>None</span><span class=p>,</span> <span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span>
+                 <span class=n>part</span><span class=p>:</span> <span class=n>Part</span> <span class=o>|</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>,</span>
+                 <span class=n>minimum</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>=</span> <span class=mi>1</span><span class=p>,</span>
+                 <span class=n>effect_delay</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>=</span> <span class=mi>150</span> <span class=o>*</span> <span class=mi>60</span> <span class=o>*</span> <span class=mi>1000</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create a new minimum rule.</span>
+
+<span class=sd>        :param key: the rule key</span>
+<span class=sd>        :param name: the rule name</span>
+<span class=sd>        :param part: the part concerned by the rule</span>
+<span class=sd>        :param minimum: the minimum value of that part</span>
+<span class=sd>        :param effect_delay: the approximate delay after which the re-ordered</span>
+<span class=sd>            material will arrive</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>key</span><span class=p>,</span> <span class=n>name</span><span class=p>,</span> <span class=n>effect_delay</span><span class=p>)</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+            <span class=n>part</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Part</span><span class=p>,</span> <span class=n>part</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"part"</span><span class=p>,</span> <span class=n>part</span><span class=p>)</span>
+        <span class=nb>object</span><span class=o>.</span><span class=fm>__setattr__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s2>"minimum"</span><span class=p>,</span> <span class=n>check_to_amount</span><span class=p>(</span><span class=n>minimum</span><span class=p>))</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__eq__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two minimum rules for "equality".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is equal, `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>name</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>name</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>minimum</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>minimum</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>effect_delay</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>effect_delay</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ne__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare two minimum rules for "not equal".</span>
+
+<span class=sd>        :param other: the other element</span>
+<span class=sd>        :return: `True` if this element is not equal, `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>key</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>key</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>name</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>name</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>minimum</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>minimum</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>effect_delay</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>effect_delay</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__hash__</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the hash code of the minimum rule.</span>
+
+<span class=sd>        :return: the hash code</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_hash</span>
+
+<div class=viewcode-block id=MinRule.to_csv>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.MinRule.to_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>to_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+               <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"MinRule"</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>  <span class=c1># type: ignore</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Convert an iterable of the object to a CSV stream.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :return: the stream</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>CsvWriter</span><span class=p>[</span><span class=n>MinRule</span><span class=p>]</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>data</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=MinRule.from_csv>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.MinRule.from_csv>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>from_csv</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>rows</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=s2>"MinRule"</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the data from CSV.</span>
+
+<span class=sd>        :param rows: the rows</span>
+<span class=sd>        :return: the sequence of objects</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>():</span>
+            <span class=k>yield from</span> <span class=n>CsvReader</span><span class=p>[</span><span class=n>MinRule</span><span class=p>]</span><span class=o>.</span><span class=n>read</span><span class=p>(</span><span class=n>rows</span><span class=o>=</span><span class=n>rows</span><span class=p>,</span> <span class=n>clazz</span><span class=o>=</span><span class=bp>cls</span><span class=p>)</span></div>
+</div>
+
+
+
+<span class=c1>#: the type variable for data to be written to CSV or to be read from CSV</span>
+<span class=n>T</span> <span class=o>=</span> <span class=n>TypeVar</span><span class=p>(</span><span class=s2>"T"</span><span class=p>,</span> <span class=n>bound</span><span class=o>=</span><span class=s2>"MinRule"</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=CsvReader>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvReader>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvReader</span><span class=p>(</span><span class=n>CsvReaderBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""A CsvReader that reads named objects from a CSV file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>columns</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>int</span><span class=p>],</span>
+                 <span class=n>clazz</span><span class=p>:</span> <span class=nb>type</span><span class=p>[</span><span class=n>T</span><span class=p>]</span> <span class=o>=</span> <span class=n>cast</span><span class=p>(</span><span class=s2>"type[T]"</span><span class=p>,</span> <span class=n>Part</span><span class=p>)):</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize.</span>
+
+<span class=sd>        :param columns: the named object columns</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>clazz</span><span class=p>)</span>
+        <span class=c1>#: the part column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_part</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+        <span class=c1>#: the minimum column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_min</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span><span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_MINIMUM</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+        <span class=c1>#: the delay column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_delay</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_column</span><span class=p>(</span>
+            <span class=n>columns</span><span class=p>,</span> <span class=n>COLUMN_EFFECT_DELAY</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+
+<div class=viewcode-block id=CsvReader.parse_row>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvReader.parse_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>parse_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>str</span><span class=p>])</span> <span class=o>-></span> <span class=n>T</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Parse a data row.</span>
+
+<span class=sd>        :param data: the data row</span>
+<span class=sd>        :return: the instance</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>clazz</span><span class=p>(</span>
+            <span class=n>key</span><span class=o>=</span><span class=n>csv_val_or_none</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_key</span><span class=p>,</span> <span class=nb>int</span><span class=p>),</span>
+            <span class=n>name</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_name</span><span class=p>],</span>
+            <span class=n>part</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_part</span><span class=p>],</span>
+            <span class=n>minimum</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_min</span><span class=p>],</span>
+            <span class=n>effect_delay</span><span class=o>=</span><span class=n>data</span><span class=p>[</span><span class=bp>self</span><span class=o>.</span><span class=n>col_delay</span><span class=p>])</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=CsvWriter>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvWriter>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>CsvWriter</span><span class=p>(</span><span class=n>CsvWriterBase</span><span class=p>[</span><span class=n>T</span><span class=p>]):</span>
+<span class=w>    </span><span class=sd>"""Write the data to a csv file."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>Iterable</span><span class=p>[</span><span class=n>T</span><span class=p>],</span> <span class=n>scope</span><span class=p>:</span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Initialize the CSV writer.</span>
+
+<span class=sd>        :param data: the data</span>
+<span class=sd>        :param scope: the scope</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=n>scope</span><span class=p>)</span>
+        <span class=c1>#: the part column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_part</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_PART</span><span class=p>)</span>
+        <span class=c1>#: the minimum column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_min</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_MINIMUM</span><span class=p>)</span>
+        <span class=c1>#: the delay column</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>col_delay</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=n>csv_scope</span><span class=p>(</span><span class=n>scope</span><span class=p>,</span> <span class=n>COLUMN_EFFECT_DELAY</span><span class=p>)</span>
+
+<div class=viewcode-block id=CsvWriter.get_column_titles>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvWriter.get_column_titles>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_column_titles</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column titles.</span>
+
+<span class=sd>        :returns: the column titles</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_column_titles</span><span class=p>()</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_part</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_min</span>
+        <span class=k>yield</span> <span class=bp>self</span><span class=o>.</span><span class=n>col_delay</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_row>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvWriter.get_row>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_row</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>data</span><span class=p>:</span> <span class=n>T</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Render a single named object CSV row.</span>
+
+<span class=sd>        :param data: the named object</span>
+<span class=sd>        :returns: the row iterator</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_row</span><span class=p>(</span><span class=n>data</span><span class=p>)</span>
+        <span class=k>yield</span> <span class=n>data</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>yield</span> <span class=nb>str</span><span class=p>(</span><span class=n>data</span><span class=o>.</span><span class=n>minimum</span><span class=p>)</span>
+        <span class=k>yield</span> <span class=n>timedelta_to_str</span><span class=p>(</span><span class=n>data</span><span class=o>.</span><span class=n>effect_delay</span><span class=p>)</span></div>
+
+
+<div class=viewcode-block id=CsvWriter.get_footer_comments>
+<a class=viewcode-back href=../../../warehouse.rule.html#warehouse.rule.min_rule.CsvWriter.get_footer_comments>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>get_footer_comments</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-></span> <span class=n>Iterable</span><span class=p>[</span><span class=nb>str</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the footer comments.</span>
+
+<span class=sd>        :return: the footer comments</span>
+<span class=sd>        """</span>
+        <span class=k>yield from</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>get_footer_comments</span><span class=p>()</span>
+        <span class=k>yield</span> <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_part</span><span class=si>}</span><span class=s2>: the part for which the minimum is defined"</span>
+        <span class=k>yield</span> <span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_min</span><span class=si>}</span><span class=s2>: the minimum number of parts required"</span>
+        <span class=k>yield</span> <span class=p>(</span><span class=sa>f</span><span class=s2>"</span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>col_delay</span><span class=si>}</span><span class=s2>: the time until the rule's effects become "</span>
+               <span class=sa>f</span><span class=s2>"visible"</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.rule.min_rule</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

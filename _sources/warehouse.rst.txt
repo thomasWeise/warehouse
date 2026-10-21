@@ -1,0 +1,29 @@
+warehouse package
+=================
+
+.. automodule:: warehouse
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   warehouse.event
+   warehouse.instance
+   warehouse.rule
+   warehouse.simulation
+
+Submodules
+----------
+
+warehouse.version module
+------------------------
+
+.. automodule:: warehouse.version
+   :members:
+   :show-inheritance:
+   :undoc-members:

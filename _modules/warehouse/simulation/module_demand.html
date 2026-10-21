@@ -1,0 +1,94 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.simulation.module_demand — warehouse 0.8.3 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=7f96dc5e"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/simulation/module_demand.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_demand</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.simulation.module_demand</h1><div class=highlight><pre>
+<span></span><span class=sd>"""The warehouse module implementing demand."""</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Any</span><span class=p>,</span> <span class=n>Callable</span><span class=p>,</span> <span class=n>Final</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.checkpoint</span><span class=w> </span><span class=kn>import</span> <span class=n>CheckpointEvent</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.event.storage</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>WarehouseDemand</span><span class=p>,</span>
+<span class=p>)</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.demand</span><span class=w> </span><span class=kn>import</span> <span class=n>Demand</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.instance</span><span class=w> </span><span class=kn>import</span> <span class=n>Instance</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.simulation.module_minmax</span><span class=w> </span><span class=kn>import</span> <span class=n>MinMaxModule</span>
+
+
+<div class=viewcode-block id=DemandModule>
+<a class=viewcode-back href=../../../warehouse.simulation.html#warehouse.simulation.module_demand.DemandModule>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>DemandModule</span><span class=p>(</span><span class=n>MinMaxModule</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The demand part of the simulation."""</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>instance</span><span class=p>:</span> <span class=n>Instance</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the min/max part of the simulation.</span>
+
+<span class=sd>        :param instance: the scenario/instance to simulate</span>
+<span class=sd>        """</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>instance</span><span class=p>)</span>
+
+        <span class=n>raw</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=nb>list</span><span class=p>[</span><span class=n>Demand</span><span class=p>]]]]</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=k>for</span> <span class=n>checkpoint</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>checkpoints</span><span class=p>:</span>
+            <span class=n>use</span><span class=p>:</span> <span class=nb>dict</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=nb>list</span><span class=p>[</span><span class=n>Demand</span><span class=p>]]</span> <span class=o>=</span> <span class=p>{}</span>
+            <span class=n>raw</span><span class=p>[</span><span class=n>checkpoint</span><span class=o>.</span><span class=n>key</span><span class=p>]</span> <span class=o>=</span> <span class=n>use</span>
+            <span class=k>for</span> <span class=n>product</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>products</span><span class=p>:</span>
+                <span class=n>use</span><span class=p>[</span><span class=n>product</span><span class=o>.</span><span class=n>key</span><span class=p>]</span> <span class=o>=</span> <span class=p>[]</span>
+        <span class=k>for</span> <span class=n>demand</span> <span class=ow>in</span> <span class=n>instance</span><span class=o>.</span><span class=n>demands</span><span class=p>:</span>
+            <span class=n>raw</span><span class=p>[</span><span class=n>demand</span><span class=o>.</span><span class=n>checkpoint</span><span class=o>.</span><span class=n>key</span><span class=p>][</span><span class=n>demand</span><span class=o>.</span><span class=n>product</span><span class=o>.</span><span class=n>key</span><span class=p>]</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>demand</span><span class=p>)</span>
+
+        <span class=c1>#: the demand lookup</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>__demands</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>Callable</span><span class=p>[[</span><span class=nb>int</span><span class=p>],</span> <span class=n>Callable</span><span class=p>[[</span>
+            <span class=nb>int</span><span class=p>],</span> <span class=nb>tuple</span><span class=p>[</span><span class=n>Demand</span><span class=p>,</span> <span class=o>...</span><span class=p>]]]]</span> <span class=o>=</span> <span class=n>_flatten_cp</span><span class=p>(</span><span class=n>raw</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=nf>_handle_checkpoint</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>event</span><span class=p>:</span> <span class=n>CheckpointEvent</span><span class=p>)</span> <span class=o>-></span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Handle that an amount of a given product has reached a checkpoint.</span>
+
+<span class=sd>        :param event: the event</span>
+<span class=sd>        """</span>
+        <span class=n>time</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>event</span><span class=o>.</span><span class=n>time</span>
+        <span class=k>for</span> <span class=n>demand</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>__demands</span><span class=p>(</span><span class=n>event</span><span class=o>.</span><span class=n>checkpoint</span><span class=o>.</span><span class=n>key</span><span class=p>)(</span><span class=n>event</span><span class=o>.</span><span class=n>product</span><span class=o>.</span><span class=n>key</span><span class=p>):</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>enqueue</span><span class=p>(</span><span class=n>WarehouseDemand</span><span class=p>(</span>
+                <span class=n>time</span> <span class=o>+</span> <span class=n>demand</span><span class=o>.</span><span class=n>delay</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>_priority</span><span class=p>(),</span> <span class=n>demand</span><span class=o>.</span><span class=n>part</span><span class=p>,</span>
+                <span class=n>demand</span><span class=o>.</span><span class=n>amount</span><span class=p>))</span></div>
+
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>__empty</span><span class=p>(</span><span class=n>_</span><span class=p>:</span> <span class=n>Any</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get an empty tuple.</span>
+
+<span class=sd>    :param _: ignored</span>
+<span class=sd>    :return: the empty tuple</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=p>()</span>
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>__empty2</span><span class=p>(</span><span class=n>_</span><span class=p>)</span> <span class=o>-></span> <span class=n>Callable</span><span class=p>[[</span><span class=n>Any</span><span class=p>],</span> <span class=nb>tuple</span><span class=p>]:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get an empty 2 tuple.</span>
+
+<span class=sd>    :param _: ignored</span>
+<span class=sd>    :return: the empty tuple</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>__empty</span>
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>_flatten_cp</span><span class=p>(</span><span class=n>data</span><span class=p>:</span> <span class=nb>dict</span><span class=p>)</span> <span class=o>-></span> <span class=n>Callable</span><span class=p>[[</span><span class=nb>int</span><span class=p>],</span> <span class=n>Callable</span><span class=p>[[</span><span class=nb>int</span><span class=p>],</span> <span class=nb>tuple</span><span class=p>]]:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert a map to a callable.</span>
+
+<span class=sd>    :param data: the data map</span>
+<span class=sd>    :return: the function</span>
+<span class=sd>    """</span>
+    <span class=n>has_any</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=kc>False</span>
+    <span class=k>for</span> <span class=n>key</span><span class=p>,</span> <span class=n>value</span> <span class=ow>in</span> <span class=n>data</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+        <span class=n>has</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=kc>False</span>
+        <span class=k>for</span> <span class=n>kk</span><span class=p>,</span> <span class=n>vv</span> <span class=ow>in</span> <span class=n>value</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+            <span class=k>if</span> <span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>vv</span><span class=p>)</span> <span class=o>></span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>has</span> <span class=o>=</span> <span class=kc>True</span>
+            <span class=n>value</span><span class=p>[</span><span class=n>kk</span><span class=p>]</span> <span class=o>=</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>vv</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>has</span><span class=p>:</span>
+            <span class=n>data</span><span class=p>[</span><span class=n>key</span><span class=p>]</span> <span class=o>=</span> <span class=n>value</span><span class=o>.</span><span class=fm>__getitem__</span>
+            <span class=n>has_any</span> <span class=o>=</span> <span class=kc>True</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>data</span><span class=p>[</span><span class=n>key</span><span class=p>]</span> <span class=o>=</span> <span class=n>__empty</span>
+    <span class=k>return</span> <span class=n>data</span><span class=o>.</span><span class=fm>__getitem__</span> <span class=k>if</span> <span class=n>has_any</span> <span class=k>else</span> <span class=n>__empty2</span>
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.simulation.module_demand</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

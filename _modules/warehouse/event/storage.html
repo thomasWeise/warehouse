@@ -1,0 +1,476 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.event.storage — warehouse 0.8.3 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=7f96dc5e"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/event/storage.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.storage</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.event.storage</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>Events regarding the storage and retrieval of parts in/from the warehouse.</span>
+
+<span class=sd>>>> from warehouse.instance.bin_type import BinType</span>
+<span class=sd>>>> with context():</span>
+<span class=sd>...     BinType(None, "random_small", 1000, is_random=True)</span>
+<span class=sd>...     BinType(None, "random_large", 500, is_random=True)</span>
+<span class=sd>...     BinType(None, "hat_bins", 30)</span>
+<span class=sd>...     Part(None, "hat", "hat_bins")</span>
+<span class=sd>...     Part(None, "shoe", "random_small")</span>
+<span class=sd>...     Part(None, "trousers", "random_large")</span>
+<span class=sd>...     ev01 = WarehouseIn.create(1500000000000, 0, "hat", 1200)</span>
+<span class=sd>...     ev02 = WarehouseIn.create(1500000020000, 0, "shoe", 40)</span>
+<span class=sd>...     ev03 = WarehouseIn.create(1500007020000, 0, "trousers", 750)</span>
+<span class=sd>...     ev04 = OverstockIn.create(1500009000000, 0, "hat", 200)</span>
+<span class=sd>...     ev05 = OverstockIn.create(1500009500000, 0, "shoe", 10)</span>
+<span class=sd>...     ev06 = OverstockIn.create(1500029500000, 0, "trousers", 250)</span>
+<span class=sd>...     ev07 = OverstockOut.create(1500039000000, 0, "hat", 200)</span>
+<span class=sd>...     ev08 = OverstockOut.create(1500049500000, 0, "shoe", 10)</span>
+<span class=sd>...     ev09 = OverstockOut.create(1500051500000, 0, "trousers", 250)</span>
+<span class=sd>...     ev10 = WarehouseDemand.create(1600000000000, 0, "hat", 1200)</span>
+<span class=sd>...     ev11 = WarehouseDemand.create(1600000020000, 0, "shoe", 40)</span>
+<span class=sd>...     ev12 = WarehouseDemand.create(1600007020000, 0, "trousers", "750")</span>
+<span class=sd>...</span>
+<span class=sd>...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06, ev07,</span>
+<span class=sd>...                 ev08, ev09, ev10, ev11, ev12)</span>
+<span class=sd>...</span>
+<span class=sd>...     for ev in events_1:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     csv = list(Event.to_csv(events_1))</span>
+<span class=sd>...     for row in csv[1:]:</span>
+<span class=sd>...         if not str.startswith(row, "#"):</span>
+<span class=sd>...             print(row)</span>
+<span class=sd>...</span>
+<span class=sd>...     print()</span>
+<span class=sd>...     print("===================")</span>
+<span class=sd>...     print()</span>
+<span class=sd>...</span>
+<span class=sd>...     events_2 = tuple(Event.from_csv(csv))</span>
+<span class=sd>...     for ev in events_2:</span>
+<span class=sd>...         print(ev)</span>
+<span class=sd>BinType(key=0, name='random_small', amount=1000, is_random=True)</span>
+<span class=sd>BinType(key=1, name='random_large', amount=500, is_random=True)</span>
+<span class=sd>BinType(key=2, name='hat_bins', amount=30, is_random=False)</span>
+<span class=sd>Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False))</span>
+<span class=sd>Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \</span>
+<span class=sd>amount=1000, is_random=True))</span>
+<span class=sd>Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=500, is_random=True))</span>
+<span class=sd>WarehouseIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=1200)</span>
+<span class=sd>WarehouseIn(time=1500000020000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=40)</span>
+<span class=sd>WarehouseIn(time=1500007020000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=750)</span>
+<span class=sd>OverstockIn(time=1500009000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=200)</span>
+<span class=sd>OverstockIn(time=1500009500000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=10)</span>
+<span class=sd>OverstockIn(time=1500029500000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=500, is_random=True)), amount=250)</span>
+<span class=sd>OverstockOut(time=1500039000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=200)</span>
+<span class=sd>OverstockOut(time=1500049500000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=10)</span>
+<span class=sd>OverstockOut(time=1500051500000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=250)</span>
+<span class=sd>WarehouseDemand(time=1600000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=1200)</span>
+<span class=sd>WarehouseDemand(time=1600000020000, priority=0, part=Part(key=1, \</span>
+<span class=sd>name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=40)</span>
+<span class=sd>WarehouseDemand(time=1600007020000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=750)</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>2017-07-14 10:40;warehouse_in;hat;1200</span>
+<span class=sd>2017-07-14 10:40:20;warehouse_in;shoe;40</span>
+<span class=sd>2017-07-14 12:37;warehouse_in;trousers;750</span>
+<span class=sd>2017-07-14 13:10;overstock_in;hat;200</span>
+<span class=sd>2017-07-14 13:18:20;overstock_in;shoe;10</span>
+<span class=sd>2017-07-14 18:51:40;overstock_in;trousers;250</span>
+<span class=sd>2017-07-14 21:30;overstock_out;hat;200</span>
+<span class=sd>2017-07-15 00:25;overstock_out;shoe;10</span>
+<span class=sd>2017-07-15 00:58:20;overstock_out;trousers;250</span>
+<span class=sd>2020-09-13 20:26:40;warehouse_demand;hat;1200</span>
+<span class=sd>2020-09-13 20:27;warehouse_demand;shoe;40</span>
+<span class=sd>2020-09-13 22:23:40;warehouse_demand;trousers;750</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>===================</span>
+<span class=sd>&LTBLANKLINE></span>
+<span class=sd>WarehouseIn(time=1500000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \</span>
+<span class=sd>amount=1200)</span>
+<span class=sd>WarehouseIn(time=1500000020000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=40)</span>
+<span class=sd>WarehouseIn(time=1500007020000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=750)</span>
+<span class=sd>OverstockIn(time=1500009000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=200)</span>
+<span class=sd>OverstockIn(time=1500009500000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=10)</span>
+<span class=sd>OverstockIn(time=1500029500000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', \</span>
+<span class=sd>amount=500, is_random=True)), amount=250)</span>
+<span class=sd>OverstockOut(time=1500039000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=200)</span>
+<span class=sd>OverstockOut(time=1500049500000, priority=0, part=Part(key=1, name='shoe', \</span>
+<span class=sd>bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=10)</span>
+<span class=sd>OverstockOut(time=1500051500000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=250)</span>
+<span class=sd>WarehouseDemand(time=1600000000000, priority=0, part=Part(key=0, name='hat', \</span>
+<span class=sd>bin_type=BinType(key=2, name='hat_bins', amount=30, \</span>
+<span class=sd>is_random=False)), amount=1200)</span>
+<span class=sd>WarehouseDemand(time=1600000020000, priority=0, part=Part(key=1, \</span>
+<span class=sd>name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \</span>
+<span class=sd>is_random=True)), amount=40)</span>
+<span class=sd>WarehouseDemand(time=1600007020000, priority=0, part=Part(key=2, \</span>
+<span class=sd>name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \</span>
+<span class=sd>is_random=True)), amount=750)</span>
+
+<span class=sd>>>> hash(ev02)</span>
+<span class=sd>7497175492123864008</span>
+<span class=sd>"""</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span><span class=p>,</span> <span class=n>field</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_AMOUNT</span><span class=p>,</span> <span class=n>check_to_amount</span><span class=p>,</span> <span class=n>context</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=n>Event</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.part</span><span class=w> </span><span class=kn>import</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>Part</span>
+
+
+<div class=viewcode-block id=StorageEvent>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent>[docs]</a>
+<span class=nd>@dataclass</span><span class=p>(</span><span class=n>frozen</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>init</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>order</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>eq</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>unsafe_hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+<span class=k>class</span><span class=w> </span><span class=nc>StorageEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>  <span class=c1># noqa: PLW1641</span>
+<span class=w>    </span><span class=sd>"""An amount of part has changed places."""</span>
+
+    <span class=c1>#: the part</span>
+    <span class=n>part</span><span class=p>:</span> <span class=n>Part</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=c1>#: the amount to store/retrieve</span>
+    <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>field</span><span class=p>(</span><span class=nb>hash</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+<div class=viewcode-block id=StorageEvent.eventclass_needs_register>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent.eventclass_needs_register>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_needs_register</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Check whether the event class need to be registered.</span>
+
+<span class=sd>        :returns: `True` if it should be registered as a possible event type,</span>
+<span class=sd>            `False` otherwise; in this case: `True` if it should be is not</span>
+<span class=sd>            `Event` or `StorageEvent`.</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>eventclass_needs_register</span><span class=p>()</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>cls</span><span class=o>.</span><span class=vm>__name__</span> <span class=o>!=</span> <span class=s2>"StorageEvent"</span><span class=p>)</span></div>
+
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__eq__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "equality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is equal to the other event,</span>
+<span class=sd>            `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>priority</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>priority</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>amount</span> <span class=o>==</span> <span class=n>other</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span>
+
+    <span class=k>def</span><span class=w> </span><span class=fm>__ne__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>other</span><span class=p>)</span> <span class=o>-></span> <span class=nb>bool</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Compare this event with another event object for "inequality".</span>
+
+<span class=sd>        :param other: the other event</span>
+<span class=sd>        :return: `True` if this event is not equal than the other event,</span>
+<span class=sd>            `False` otherwise</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=vm>__class__</span> <span class=ow>is</span> <span class=ow>not</span> <span class=n>other</span><span class=o>.</span><span class=vm>__class__</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>time</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>time</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>priority</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>priority</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>part</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>part</span><span class=p>)</span> <span class=ow>or</span> <span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>amount</span> <span class=o>!=</span> <span class=n>other</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span>
+
+<div class=viewcode-block id=StorageEvent.eventclass_get_col_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent.eventclass_get_col_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_col_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>,</span> <span class=n>col</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the column description.</span>
+
+<span class=sd>        :param col: the column</span>
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_PART</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the type of part associated with the event"</span>
+        <span class=k>if</span> <span class=n>col</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=s2>"the amount of part stored or retrieved"</span>
+        <span class=k>return</span> <span class=kc>None</span></div>
+
+
+<div class=viewcode-block id=StorageEvent.event_get_csv_value>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent.event_get_csv_value>[docs]</a>
+    <span class=k>def</span><span class=w> </span><span class=nf>event_get_csv_value</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>column</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get a specific csv value.</span>
+
+<span class=sd>        :param column: the csv column</span>
+<span class=sd>        :return: the value</span>
+<span class=sd>        """</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_PART</span><span class=p>:</span>
+            <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>part</span><span class=o>.</span><span class=n>name</span>
+        <span class=k>if</span> <span class=n>column</span> <span class=o>==</span> <span class=n>COLUMN_AMOUNT</span><span class=p>:</span>
+            <span class=k>return</span> <span class=nb>str</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>amount</span><span class=p>)</span>
+        <span class=k>return</span> <span class=s2>""</span></div>
+
+
+<div class=viewcode-block id=StorageEvent.eventclass_get_csv_columns>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent.eventclass_get_csv_columns>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_columns</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=o>...</span><span class=p>]:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the CSV columns of the event.</span>
+
+<span class=sd>        :return: the csv columns</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=n>COLUMN_PART</span><span class=p>,</span> <span class=n>COLUMN_AMOUNT</span></div>
+
+
+<div class=viewcode-block id=StorageEvent.create>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.StorageEvent.create>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>create</span><span class=p>(</span>  <span class=c1># type: ignore  # pylint: disable=W0221</span>
+            <span class=bp>cls</span><span class=p>,</span> <span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>priority</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>part</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span> <span class=o>|</span> <span class=n>Part</span><span class=p>,</span>
+            <span class=n>amount</span><span class=p>:</span> <span class=nb>int</span> <span class=o>|</span> <span class=nb>str</span><span class=p>,</span> <span class=o>**</span><span class=n>_</span><span class=p>)</span> <span class=o>-></span> <span class=s2>"StorageEvent"</span><span class=p>:</span>  <span class=c1># type: ignore</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Create the storage event.</span>
+
+<span class=sd>        :param time: the time</span>
+<span class=sd>        :param priority: the event priority</span>
+<span class=sd>        :param part: the part to use</span>
+<span class=sd>        :param amount: the amount of the part to use</span>
+<span class=sd>        :return: the storage event</span>
+<span class=sd>        """</span>
+        <span class=k>with</span> <span class=n>context</span><span class=p>()</span> <span class=k>as</span> <span class=n>ctx</span><span class=p>:</span>
+            <span class=n>part</span> <span class=o>=</span> <span class=n>ctx</span><span class=o>.</span><span class=n>resolve</span><span class=p>(</span><span class=n>Part</span><span class=p>,</span> <span class=n>part</span><span class=p>)</span>
+        <span class=k>return</span> <span class=bp>cls</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>priority</span><span class=p>,</span> <span class=n>part</span><span class=p>,</span>  <span class=c1># type: ignore</span>
+                   <span class=n>check_to_amount</span><span class=p>(</span><span class=n>amount</span><span class=p>))</span>  <span class=c1># type: ignore</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=WarehouseIn>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>WarehouseIn</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store part in the warehouse."""</span>
+
+<div class=viewcode-block id=WarehouseIn.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseIn.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"warehouse_in"</span></div>
+
+
+<div class=viewcode-block id=WarehouseIn.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseIn.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part has arrived at the warehouse "</span>
+                <span class=s2>"and needs to be stored; it then needs to be decided where to"</span>
+                <span class=s2>" put it."</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=WarehouseDemand>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDemand>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>WarehouseDemand</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Retrieve parts from the warehouse."""</span>
+
+<div class=viewcode-block id=WarehouseDemand.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDemand.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"warehouse_demand"</span></div>
+
+
+<div class=viewcode-block id=WarehouseDemand.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDemand.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part is requested from the "</span>
+                <span class=s2>"warehouse and needs to be taken out of the stored amount of "</span>
+                <span class=s2>"this part; it then needs to be decided from which bin to"</span>
+                <span class=s2>" take it or, if there is overstock, maybe it can be taken "</span>
+                <span class=s2>"from there."</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=WarehouseDelivers>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDelivers>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>WarehouseDelivers</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Part was retrieved from the warehouse."""</span>
+
+<div class=viewcode-block id=WarehouseDelivers.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDelivers.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"warehouse_delivered"</span></div>
+
+
+<div class=viewcode-block id=WarehouseDelivers.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.WarehouseDelivers.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"a certain amount of a part is shipped by the warehouse"</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=OverstockIn>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockIn>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>OverstockIn</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Store part in the overstock."""</span>
+
+<div class=viewcode-block id=OverstockIn.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockIn.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"overstock_in"</span></div>
+
+
+<div class=viewcode-block id=OverstockIn.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockIn.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part has arrived in the warehouse,"</span>
+                <span class=s2>" but it could not be put into any bin, because all bins are "</span>
+                <span class=s2>"full; the part was placed into the 'overstock', meaning "</span>
+                <span class=s2>"that it is just lying around somewhere."</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=OverstockOut>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockOut>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>OverstockOut</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Retrieve part from the overstock."""</span>
+
+<div class=viewcode-block id=OverstockOut.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockOut.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"overstock_out"</span></div>
+
+
+<div class=viewcode-block id=OverstockOut.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.OverstockOut.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"a certain amount of a part was taken from the overstock:"</span>
+                <span class=s2>" this part was not in any bin, because all bins were "</span>
+                <span class=s2>"occupied; so it was just lying around."</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=Understock>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.Understock>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>Understock</span><span class=p>(</span><span class=n>StorageEvent</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""Not enough part was available to satisfy a request."""</span>
+
+<div class=viewcode-block id=Understock.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.Understock.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"understock"</span></div>
+
+
+<div class=viewcode-block id=Understock.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.storage.Understock.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"there was not enough part in the "</span>
+                <span class=s2>"warehouse to satisfy a warehouse_demand request."</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.storage</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>

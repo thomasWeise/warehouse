@@ -1,0 +1,128 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.event.time — warehouse 0.8.3 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=7f96dc5e"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/event/time.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.time</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.event.time</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>The start and end events of the simulation.</span>
+
+<span class=sd>>>> ev1 = StartEvent(time=1500000000000, priority=0)</span>
+<span class=sd>>>> ev1</span>
+<span class=sd>StartEvent(time=1500000000000, priority=0)</span>
+
+<span class=sd>>>> ev2 = EndEvent(time=1750000000000, priority=1)</span>
+<span class=sd>>>> ev2</span>
+<span class=sd>EndEvent(time=1750000000000, priority=1)</span>
+
+<span class=sd>>>> csv = list(Event.to_csv((ev1, ev2)))</span>
+<span class=sd>>>> for row in csv[1:]:</span>
+<span class=sd>...     if not str.startswith(row, "#"):</span>
+<span class=sd>...         print(row)</span>
+<span class=sd>2017-07-14 10:40;start</span>
+<span class=sd>2025-06-15 23:06:40;end</span>
+
+<span class=sd>>>> ev3, ev4 = list(Event.from_csv(csv))</span>
+<span class=sd>>>> print(ev3)</span>
+<span class=sd>StartEvent(time=1500000000000, priority=0)</span>
+<span class=sd>>>> print(ev4)</span>
+<span class=sd>EndEvent(time=1750000000000, priority=0)</span>
+
+<span class=sd>>>> hash(ev3)</span>
+<span class=sd>8959993608719704182</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.event</span><span class=w> </span><span class=kn>import</span> <span class=n>Event</span>
+
+
+<div class=viewcode-block id=StartEvent>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.StartEvent>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>StartEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The simulation begins."""</span>
+
+<div class=viewcode-block id=StartEvent.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.StartEvent.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"start"</span></div>
+
+
+<div class=viewcode-block id=StartEvent.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.StartEvent.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"the time when the simulation begins"</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=EndEvent>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.EndEvent>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>EndEvent</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The simulation ends or is aborted."""</span>
+
+<div class=viewcode-block id=EndEvent.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.EndEvent.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"end"</span></div>
+
+
+<div class=viewcode-block id=EndEvent.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.EndEvent.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"the time when the simulation ends, or, alternatively, after "</span>
+                <span class=s2>"which it should be aborted and all other events still in "</span>
+                <span class=s2>"the queue are discarded"</span><span class=p>)</span></div>
+</div>
+
+
+
+<div class=viewcode-block id=InitializationComplete>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.InitializationComplete>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>InitializationComplete</span><span class=p>(</span><span class=n>Event</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""The initialization of the simulation is complete."""</span>
+
+<div class=viewcode-block id=InitializationComplete.eventclass_get_csv_type>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.InitializationComplete.eventclass_get_csv_type>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_csv_type</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the csv type of the event.</span>
+
+<span class=sd>        :return: the csv type</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=s2>"initialization_complete"</span></div>
+
+
+<div class=viewcode-block id=InitializationComplete.eventclass_get_event_desc>
+<a class=viewcode-back href=../../../warehouse.event.html#warehouse.event.time.InitializationComplete.eventclass_get_event_desc>[docs]</a>
+    <span class=nd>@classmethod</span>
+    <span class=k>def</span><span class=w> </span><span class=nf>eventclass_get_event_desc</span><span class=p>(</span><span class=bp>cls</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span> <span class=o>|</span> <span class=kc>None</span><span class=p>:</span>
+<span class=w>        </span><span class=sd>"""</span>
+<span class=sd>        Get the event description.</span>
+
+<span class=sd>        :return: the event description, if any</span>
+<span class=sd>        """</span>
+        <span class=k>return</span> <span class=p>(</span><span class=s2>"this event is triggered automatically after all the events"</span>
+                <span class=s2>" that come at the beginning of the simulation at the same "</span>
+                <span class=s2>"time as the start event."</span><span class=p>)</span></div>
+</div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.event.time</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
