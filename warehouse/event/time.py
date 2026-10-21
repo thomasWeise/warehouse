@@ -73,3 +73,27 @@ class EndEvent(Event):
         return ("the time when the simulation ends, or, alternatively, after "
                 "which it should be aborted and all other events still in "
                 "the queue are discarded")
+
+
+class InitializationComplete(Event):
+    """The initialization of the simulation is complete."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "initialization_complete"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return ("this event is triggered automatically after all the events"
+                " that come at the beginning of the simulation at the same "
+                "time as the start event.")

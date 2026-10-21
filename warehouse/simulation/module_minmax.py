@@ -7,6 +7,7 @@ from warehouse.event.storage import (
     WarehouseDemand,
     WarehouseIn,
 )
+from warehouse.event.time import InitializationComplete
 from warehouse.instance.instance import Instance
 from warehouse.instance.part import Part
 from warehouse.rule.min_rule import MinRule
@@ -24,7 +25,7 @@ class MinMaxModule(StorageModule):
         """
         super().__init__(instance)
 
-        n_parts: Final[int] = tuple.__len__(instance.parts)
+        n_parts: Final[int] = tuple.__len__(self._parts)
 
         #: the parts already ordered by the min/max rules
         self.__mm_on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
@@ -40,6 +41,32 @@ class MinMaxModule(StorageModule):
         super()._start()
         for queue in self.__mm_on_the_way:
             list.clear(queue)
+
+    def _handle_initizalization_complete(
+            self, event: InitializationComplete) -> None:
+        """
+        Handle the event denoting the completion of the initialization.
+
+        :param event: the event
+        """
+        time: int = event.time
+
+        for part in self._parts:
+            part_key = part.key
+            min_rule: MinRule | None = self.__mm_min[part_key]
+
+            if min_rule is not None:
+                otw: list[WarehouseIn] = self.__mm_on_the_way[part_key]
+                remaining: int = self.available_units(part)
+                trigger: int = min_rule.minimum - remaining
+                if trigger > 0:
+                    self.enqueue(RuleTriggeredEvent(
+                        time, self._priority(), min_rule, part, trigger))
+                    request: WarehouseIn = WarehouseIn(
+                        time + min_rule.effect_delay, self._priority(),
+                        part, trigger)
+                    self.enqueue(request)
+                    _put_one_the_way(otw, request)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """

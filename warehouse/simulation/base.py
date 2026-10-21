@@ -15,10 +15,7 @@ from warehouse.event.storage import (
     WarehouseDemand,
     WarehouseIn,
 )
-from warehouse.event.time import (
-    EndEvent,
-    StartEvent,
-)
+from warehouse.event.time import EndEvent, InitializationComplete, StartEvent
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
 from warehouse.instance.part import Part
@@ -39,7 +36,7 @@ class BaseModule:
         #: the internal queue
         self.__queue: Final[list[Event]] = []
         #: the start priority
-        self.__max_priority: Final[int] = 1 + max(
+        self.__max_priority: Final[int] = 2 + max(
             ev.priority for ev in instance.events)
         #: the next priority value
         self.__priority: int = 0
@@ -154,6 +151,14 @@ class BaseModule:
         :param event: the event
         """
 
+    def _handle_initizalization_complete(
+            self, event: InitializationComplete) -> None:
+        """
+        Handle the event denoting the completion of the initialization.
+
+        :param event: the event
+        """
+
     def available_units(self, part: Part) -> int:
         """
         Get the available units of the given part.
@@ -174,15 +179,25 @@ class BaseModule:
         """
         self._start()
 
-        first: Event
+        event: Event
         queue: Final[list[Event]] = self.__queue
+        start_time: int = EARLIEST_START
         if list.__len__(queue) <= 0:
-            first = StartEvent(EARLIEST_START, 0)
-            self.enqueue(first)
+            event = StartEvent(EARLIEST_START, 0)
+            heappush(queue, event)
         else:
-            first = queue[0]
-            if first.__class__ is not StartEvent:
-                self.enqueue(StartEvent(first.time, first.priority - 1))
+            event = queue[0]
+            start_time = event.time
+            if event.__class__ is not StartEvent:
+                heappush(queue, StartEvent(start_time, event.priority - 1))
+
+        needs_init: bool = True
+        for event in queue:
+            if isinstance(event, InitializationComplete):
+                needs_init = False
+                break
+            if event.time > start_time:
+                break
 
         router: Final = self._create_event_router()
         quitter = _QUIT
@@ -190,9 +205,18 @@ class BaseModule:
         time: int = EARLIEST_START
         end_time: int = LATEST_END
         while queue:
-            event: Event = heappop(queue)
+            event = queue[0]
             time = event.time
-            eid = id(event.__class__)
+            eid: int = id(event.__class__)
+
+            if needs_init and ((time > start_time) or (eid == quitter)):
+                event = InitializationComplete(start_time, event.priority - 1)
+                needs_init = False
+                time = start_time
+                eid = id(event.__class__)
+            else:
+                heappop(queue)
+
             if eid == quitter:
                 if end_event is not None:
                     raise ValueError(
@@ -250,6 +274,8 @@ class BaseModule:
             self._handle_rule_triggered,  # type: ignore
             id(CheckpointEvent):  # type: ignore
             self._handle_checkpoint,  # type: ignore
+            id(InitializationComplete):  # type: ignore
+            self._handle_initizalization_complete,  # type: ignore
         }.__getitem__
 
 

@@ -1,16 +1,16 @@
 time;type;part;amount;bin_type;checkpoint;product;rule
 
 2026-10-15 08:00;start
-
-2026-10-15 08:15;warehouse_in;A;20
-2026-10-15 08:15;warehouse_in;B;25
-2026-10-15 08:15;warehouse_in;C;30
-2026-10-15 08:15;warehouse_in;D;35
-2026-10-15 08:15;bin_in;A;20;rack_1
-2026-10-15 08:15;bin_in;B;25;rack_1
-2026-10-15 08:15;bin_in;C;30;rack_1
-2026-10-15 08:15;bin_in;D;25;rack_1
-2026-10-15 08:15;overstock_in;D;10
+2026-10-15 08:00;warehouse_in;A;20
+2026-10-15 08:00;warehouse_in;B;25
+2026-10-15 08:00;warehouse_in;C;30
+2026-10-15 08:00;warehouse_in;D;35
+2026-10-15 08:00;bin_in;A;20;rack_1
+2026-10-15 08:00;bin_in;B;25;rack_1
+2026-10-15 08:00;bin_in;C;30;rack_1
+2026-10-15 08:00;bin_in;D;25;rack_1
+2026-10-15 08:00;overstock_in;D;10
+2026-10-15 08:00;initialization_complete
 
 2026-10-15 08:20;checkpoint;;1;;M1;jacket
 

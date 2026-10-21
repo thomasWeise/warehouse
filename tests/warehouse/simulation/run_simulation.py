@@ -4,7 +4,7 @@ from typing import Final, Iterable
 
 from pycommons.io.path import Path, directory_path
 
-from warehouse.event.time import EndEvent, StartEvent
+from warehouse.event.time import EndEvent, InitializationComplete, StartEvent
 from warehouse.instance.element import context
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
@@ -64,6 +64,7 @@ def __check_events(events: Iterable[Event]) -> None:
     time: int = -1
     first_event: Event | None = None
     last_event: Event | None = None
+    init_complete: Event | None = None
     for event in events:
         assert isinstance(event, Event)
         new_time = event.time
@@ -73,11 +74,21 @@ def __check_events(events: Iterable[Event]) -> None:
             assert isinstance(first_event, StartEvent)
         else:
             assert not isinstance(event, StartEvent)
+        if isinstance(event, InitializationComplete):
+            assert init_complete is None
+            init_complete = event
+            assert first_event is not None
+            assert first_event is not init_complete
+            assert first_event.time == init_complete.time
+
         assert not isinstance(last_event, EndEvent)
         last_event = event
 
     assert first_event is not None
+    assert init_complete is not None
+    assert last_event is not None
     assert isinstance(first_event, StartEvent)
+    assert isinstance(init_complete, InitializationComplete)
     assert isinstance(last_event, EndEvent)
 
 
