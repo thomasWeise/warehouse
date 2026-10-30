@@ -1,0 +1,1945 @@
+# National Holidays and Work-Free Days in China from 2016 to 2040
+# Dates after 2026 are extrapolated.
+#
+# Format: YYYY-MM-DD; WD
+#         where WD=F means holiday and WD=T means work day.
+2016-01-01;F  # New Year's Day
+2016-01-02;F  # New Year's Day (weekend adjacent)
+2016-01-03;F  # New Year's Day (weekend adjacent)
+2016-02-06;T  # Makeup workday for Spring Festival
+2016-02-07;F  # Spring Festival (Lunar New Year Eve)
+2016-02-08;F  # Spring Festival (Lunar New Year Day 1)
+2016-02-09;F  # Spring Festival (Lunar New Year Day 2)
+2016-02-10;F  # Spring Festival (Lunar New Year Day 3)
+2016-02-11;F  # Spring Festival (compensated leave)
+2016-02-12;F  # Spring Festival (compensated leave)
+2016-02-13;F  # Spring Festival (compensated leave)
+2016-02-14;T  # Makeup workday for Spring Festival
+2016-04-02;F  # Qingming Festival (weekend adjacent)
+2016-04-03;F  # Qingming Festival (weekend adjacent)
+2016-04-04;F  # Qingming Festival
+2016-04-30;F  # Labor Day (weekend adjacent)
+2016-05-01;F  # Labor Day
+2016-05-02;F  # Labor Day (compensated leave)
+2016-06-09;F  # Dragon Boat Festival
+2016-06-10;F  # Dragon Boat Festival (weekend adjacent)
+2016-06-11;F  # Dragon Boat Festival (compensated leave)
+2016-06-12;T  # Makeup workday for Dragon Boat Festival
+2016-09-15;F  # Mid-Autumn Festival
+2016-09-16;F  # Mid-Autumn Festival (weekend adjacent)
+2016-09-17;F  # Mid-Autumn Festival (compensated leave)
+2016-09-18;T  # Makeup workday for Mid-Autumn Festival
+2016-10-01;F  # National Day
+2016-10-02;F  # National Day
+2016-10-03;F  # National Day
+2016-10-04;F  # National Day (compensated leave)
+2016-10-05;F  # National Day (compensated leave)
+2016-10-06;F  # National Day (compensated leave)
+2016-10-07;F  # National Day (compensated leave)
+2016-10-08;T  # Makeup workday for National Day
+2016-10-09;T  # Makeup workday for National Day
+2017-01-01;F  # New Year's Day
+2017-01-02;F  # New Year's Day (compensated leave)
+2017-01-22;T  # Makeup workday for Spring Festival
+2017-01-27;F  # Spring Festival (Lunar New Year Eve)
+2017-01-28;F  # Spring Festival (Lunar New Year Day 1)
+2017-01-29;F  # Spring Festival (Lunar New Year Day 2)
+2017-01-30;F  # Spring Festival (Lunar New Year Day 3)
+2017-01-31;F  # Spring Festival (compensated leave)
+2017-02-01;F  # Spring Festival (compensated leave)
+2017-02-02;F  # Spring Festival (compensated leave)
+2017-02-04;T  # Makeup workday for Spring Festival
+2017-04-01;T  # Makeup workday for Qingming Festival
+2017-04-02;F  # Qingming Festival (compensated leave)
+2017-04-03;F  # Qingming Festival (weekend adjacent)
+2017-04-04;F  # Qingming Festival
+2017-05-01;F  # Labor Day
+2017-05-27;T  # Makeup workday for Dragon Boat Festival
+2017-05-28;F  # Dragon Boat Festival (compensated leave)
+2017-05-29;F  # Dragon Boat Festival
+2017-05-30;F  # Dragon Boat Festival
+2017-09-30;T  # Makeup workday for National Day/Mid-Autumn Festival
+2017-10-01;F  # National Day
+2017-10-02;F  # National Day
+2017-10-03;F  # National Day
+2017-10-04;F  # Mid-Autumn Festival
+2017-10-05;F  # National Day (compensated leave)
+2017-10-06;F  # National Day (compensated leave)
+2017-10-07;F  # National Day (compensated leave)
+2017-10-08;F  # National Day (compensated leave)
+2018-01-01;F  # New Year's Day
+2018-02-11;T  # Makeup workday for Spring Festival
+2018-02-15;F  # Spring Festival (Lunar New Year Eve)
+2018-02-16;F  # Spring Festival (Lunar New Year Day 1)
+2018-02-17;F  # Spring Festival (Lunar New Year Day 2)
+2018-02-18;F  # Spring Festival (Lunar New Year Day 3)
+2018-02-19;F  # Spring Festival (compensated leave)
+2018-02-20;F  # Spring Festival (compensated leave)
+2018-02-21;F  # Spring Festival (compensated leave)
+2018-02-24;T  # Makeup workday for Spring Festival
+2018-04-05;F  # Qingming Festival
+2018-04-06;F  # Qingming Festival (weekend adjacent)
+2018-04-07;F  # Qingming Festival (weekend adjacent)
+2018-04-08;T  # Makeup workday for Qingming Festival
+2018-04-28;T  # Makeup workday for Labor Day
+2018-04-29;F  # Labor Day (compensated leave)
+2018-04-30;F  # Labor Day (weekend adjacent)
+2018-05-01;F  # Labor Day
+2018-06-16;F  # Dragon Boat Festival (compensated leave)
+2018-06-17;F  # Dragon Boat Festival (weekend adjacent)
+2018-06-18;F  # Dragon Boat Festival
+2018-09-22;F  # Mid-Autumn Festival (compensated leave)
+2018-09-23;F  # Mid-Autumn Festival (weekend adjacent)
+2018-09-24;F  # Mid-Autumn Festival
+2018-09-29;T  # Makeup workday for National Day
+2018-10-01;F  # National Day
+2018-10-02;F  # National Day
+2018-10-03;F  # National Day
+2018-10-04;F  # National Day (compensated leave)
+2018-10-05;F  # National Day (compensated leave)
+2018-10-06;T  # Makeup workday for National Day
+2018-10-06;F  # National Day (compensated leave)
+2018-10-07;F  # National Day (compensated leave)
+2018-12-30;F  # New Year's Day (weekend adjacent)
+2018-12-31;F  # New Year's Day (weekend adjacent)
+2019-01-01;F  # New Year's Day
+2019-02-02;T  # Makeup workday for Spring Festival
+2019-02-03;T  # Makeup workday for Spring Festival
+2019-02-04;F  # Spring Festival (Lunar New Year Eve)
+2019-02-05;F  # Spring Festival (Lunar New Year Day 1)
+2019-02-06;F  # Spring Festival (Lunar New Year Day 2)
+2019-02-07;F  # Spring Festival (Lunar New Year Day 3)
+2019-02-08;F  # Spring Festival (compensated leave)
+2019-02-09;F  # Spring Festival (compensated leave)
+2019-02-10;F  # Spring Festival (compensated leave)
+2019-04-05;F  # Qingming Festival
+2019-04-06;F  # Qingming Festival (weekend adjacent)
+2019-04-07;F  # Qingming Festival (weekend adjacent)
+2019-04-28;T  # Makeup workday for Labor Day
+2019-05-01;F  # Labor Day
+2019-05-02;F  # Labor Day (compensated leave)
+2019-05-03;F  # Labor Day (compensated leave)
+2019-05-04;F  # Labor Day (compensated leave)
+2019-05-05;T  # Makeup workday for Labor Day
+2019-06-07;F  # Dragon Boat Festival
+2019-06-08;F  # Dragon Boat Festival (weekend adjacent)
+2019-06-09;F  # Dragon Boat Festival (weekend adjacent)
+2019-09-13;F  # Mid-Autumn Festival
+2019-09-14;F  # Mid-Autumn Festival (weekend adjacent)
+2019-09-15;F  # Mid-Autumn Festival (weekend adjacent)
+2019-09-29;T  # Makeup workday for National Day
+2019-10-01;F  # National Day
+2019-10-02;F  # National Day
+2019-10-03;F  # National Day
+2019-10-04;F  # National Day (compensated leave)
+2019-10-05;F  # National Day (compensated leave)
+2019-10-06;F  # National Day (compensated leave)
+2019-10-07;F  # National Day (compensated leave)
+2019-10-12;T  # Makeup workday for National Day
+2020-01-01;F  # New Year's Day
+2020-01-19;T  # Makeup workday for Spring Festival
+2020-01-24;F  # Spring Festival (Lunar New Year Eve)
+2020-01-25;F  # Spring Festival (Lunar New Year Day 1)
+2020-01-26;F  # Spring Festival (Lunar New Year Day 2)
+2020-01-27;F  # Spring Festival (Lunar New Year Day 3)
+2020-01-28;F  # Spring Festival (compensated leave)
+2020-01-29;F  # Spring Festival (compensated leave)
+2020-01-30;F  # Spring Festival (compensated leave)
+2020-04-04;F  # Qingming Festival
+2020-04-05;F  # Qingming Festival (weekend adjacent)
+2020-04-06;F  # Qingming Festival (compensated leave)
+2020-04-26;T  # Makeup workday for Labor Day
+2020-05-01;F  # Labor Day
+2020-05-02;F  # Labor Day (compensated leave)
+2020-05-03;F  # Labor Day (compensated leave)
+2020-05-04;F  # Labor Day (compensated leave)
+2020-05-05;F  # Labor Day (compensated leave)
+2020-05-09;T  # Makeup workday for Labor Day
+2020-06-25;F  # Dragon Boat Festival
+2020-06-26;F  # Dragon Boat Festival (weekend adjacent)
+2020-06-27;F  # Dragon Boat Festival (compensated leave)
+2020-06-28;T  # Makeup workday for Dragon Boat Festival
+2020-09-27;T  # Makeup workday for National Day/Mid-Autumn Festival
+2020-10-01;F  # National Day + Mid-Autumn Festival
+2020-10-02;F  # National Day
+2020-10-03;F  # National Day
+2020-10-04;F  # National Day (compensated leave)
+2020-10-05;F  # National Day (compensated leave)
+2020-10-06;F  # National Day (compensated leave)
+2020-10-07;F  # National Day (compensated leave)
+2020-10-10;T  # Makeup workday for National Day/Mid-Autumn Festival
+2021-01-01;F  # New Year's Day
+2021-02-07;T  # Makeup workday for Spring Festival
+2021-02-11;F  # Spring Festival (Lunar New Year Eve)
+2021-02-12;F  # Spring Festival (Lunar New Year Day 1)
+2021-02-13;F  # Spring Festival (Lunar New Year Day 2)
+2021-02-14;F  # Spring Festival (Lunar New Year Day 3)
+2021-02-15;F  # Spring Festival (compensated leave)
+2021-02-16;F  # Spring Festival (compensated leave)
+2021-02-17;F  # Spring Festival (compensated leave)
+2021-02-20;T  # Makeup workday for Spring Festival
+2021-04-03;F  # Qingming Festival (compensated leave)
+2021-04-04;F  # Qingming Festival
+2021-04-05;F  # Qingming Festival (weekend adjacent)
+2021-04-25;T  # Makeup workday for Labor Day
+2021-05-01;F  # Labor Day
+2021-05-02;F  # Labor Day (compensated leave)
+2021-05-03;F  # Labor Day (compensated leave)
+2021-05-04;F  # Labor Day (compensated leave)
+2021-05-05;F  # Labor Day (compensated leave)
+2021-05-08;T  # Makeup workday for Labor Day
+2021-06-12;F  # Dragon Boat Festival (compensated leave)
+2021-06-13;F  # Dragon Boat Festival (weekend adjacent)
+2021-06-14;F  # Dragon Boat Festival
+2021-09-18;T  # Makeup workday for Mid-Autumn Festival
+2021-09-19;F  # Mid-Autumn Festival (weekend adjacent)
+2021-09-20;F  # Mid-Autumn Festival (compensated leave)
+2021-09-21;F  # Mid-Autumn Festival
+2021-09-26;T  # Makeup workday for National Day
+2021-10-01;F  # National Day
+2021-10-02;F  # National Day
+2021-10-03;F  # National Day
+2021-10-04;F  # National Day (compensated leave)
+2021-10-05;F  # National Day (compensated leave)
+2021-10-06;F  # National Day (compensated leave)
+2021-10-07;F  # National Day (compensated leave)
+2021-10-09;T  # Makeup workday for National Day
+2022-01-01;F  # New Year's Day
+2022-01-02;F  # New Year's Day (weekend adjacent)
+2022-01-03;F  # New Year's Day (compensated leave)
+2022-01-29;T  # Makeup workday for Spring Festival
+2022-01-30;T  # Makeup workday for Spring Festival
+2022-01-31;F  # Spring Festival (Lunar New Year Eve)
+2022-02-01;F  # Spring Festival (Lunar New Year Day 1)
+2022-02-02;F  # Spring Festival (Lunar New Year Day 2)
+2022-02-03;F  # Spring Festival (Lunar New Year Day 3)
+2022-02-04;F  # Spring Festival (compensated leave)
+2022-02-05;F  # Spring Festival (compensated leave)
+2022-02-06;F  # Spring Festival (compensated leave)
+2022-04-02;T  # Makeup workday for Qingming Festival
+2022-04-03;F  # Qingming Festival (compensated leave)
+2022-04-04;F  # Qingming Festival
+2022-04-05;F  # Qingming Festival (weekend adjacent)
+2022-04-24;T  # Makeup workday for Labor Day
+2022-04-30;F  # Labor Day (compensated leave)
+2022-05-01;F  # Labor Day
+2022-05-02;F  # Labor Day (compensated leave)
+2022-05-03;F  # Labor Day (compensated leave)
+2022-05-04;F  # Labor Day (compensated leave)
+2022-05-07;T  # Makeup workday for Labor Day
+2022-06-03;F  # Dragon Boat Festival
+2022-06-04;F  # Dragon Boat Festival (weekend adjacent)
+2022-06-05;F  # Dragon Boat Festival (weekend adjacent)
+2022-09-10;F  # Mid-Autumn Festival
+2022-09-11;F  # Mid-Autumn Festival (weekend adjacent)
+2022-09-12;F  # Mid-Autumn Festival (weekend adjacent)
+2022-10-01;F  # National Day
+2022-10-02;F  # National Day
+2022-10-03;F  # National Day
+2022-10-04;F  # National Day (compensated leave)
+2022-10-05;F  # National Day (compensated leave)
+2022-10-06;F  # National Day (compensated leave)
+2022-10-07;F  # National Day (compensated leave)
+2022-10-08;T  # Makeup workday for National Day
+2022-10-09;T  # Makeup workday for National Day
+2022-12-30;T  # Makeup workday for New Year's Day 2023
+2022-12-31;F  # New Year's Day (weekend adjacent)
+2023-01-01;F  # New Year's Day
+2023-01-02;F  # New Year's Day (compensated leave)
+2023-01-21;F  # Spring Festival (Lunar New Year Eve)
+2023-01-22;F  # Spring Festival (Lunar New Year Day 1)
+2023-01-23;F  # Spring Festival (Lunar New Year Day 2)
+2023-01-24;F  # Spring Festival (Lunar New Year Day 3)
+2023-01-25;F  # Spring Festival (compensated leave)
+2023-01-26;F  # Spring Festival (compensated leave)
+2023-01-27;F  # Spring Festival (compensated leave)
+2023-01-28;T  # Makeup workday for Spring Festival
+2023-01-29;T  # Makeup workday for Spring Festival
+2023-04-05;F  # Qingming Festival
+2023-04-23;T  # Makeup workday for Labor Day
+2023-04-29;F  # Labor Day (compensated leave)
+2023-04-30;F  # Labor Day (weekend adjacent)
+2023-05-01;F  # Labor Day
+2023-05-02;F  # Labor Day (compensated leave)
+2023-05-03;F  # Labor Day (compensated leave)
+2023-05-06;T  # Makeup workday for Labor Day
+2023-06-22;F  # Dragon Boat Festival
+2023-06-23;F  # Dragon Boat Festival (compensated leave)
+2023-06-24;F  # Dragon Boat Festival (weekend adjacent)
+2023-06-25;T  # Makeup workday for Dragon Boat Festival
+2023-09-29;F  # Mid-Autumn Festival
+2023-09-30;F  # Mid-Autumn Festival (compensated leave)
+2023-10-01;F  # National Day
+2023-10-02;F  # National Day
+2023-10-03;F  # National Day
+2023-10-04;F  # National Day (compensated leave)
+2023-10-05;F  # National Day (compensated leave)
+2023-10-06;F  # National Day (compensated leave)
+2023-10-07;T  # Makeup workday for National Day/Mid-Autumn Festival
+2023-10-07;F  # National Day (compensated leave)
+2023-10-08;T  # Makeup workday for National Day/Mid-Autumn Festival
+2023-10-08;F  # National Day (compensated leave)
+2023-12-30;F  # New Year's Day (weekend adjacent)
+2023-12-31;F  # New Year's Day (weekend adjacent)
+2024-01-01;F  # New Year's Day
+2024-02-04;T  # Makeup workday for Spring Festival
+2024-02-10;F  # Spring Festival (Lunar New Year Day 1)
+2024-02-11;F  # Spring Festival (Lunar New Year Day 2)
+2024-02-12;F  # Spring Festival (Lunar New Year Day 3)
+2024-02-13;F  # Spring Festival (compensated leave)
+2024-02-14;F  # Spring Festival (compensated leave)
+2024-02-15;F  # Spring Festival (compensated leave)
+2024-02-16;F  # Spring Festival (compensated leave)
+2024-02-17;F  # Spring Festival (compensated leave)
+2024-02-18;T  # Makeup workday for Spring Festival
+2024-04-04;F  # Qingming Festival
+2024-04-05;F  # Qingming Festival (weekend adjacent)
+2024-04-06;F  # Qingming Festival (weekend adjacent)
+2024-04-07;T  # Makeup workday for Qingming Festival
+2024-04-28;T  # Makeup workday for Labor Day
+2024-05-01;F  # Labor Day
+2024-05-02;F  # Labor Day (compensated leave)
+2024-05-03;F  # Labor Day (compensated leave)
+2024-05-04;F  # Labor Day (compensated leave)
+2024-05-05;F  # Labor Day (compensated leave)
+2024-05-11;T  # Makeup workday for Labor Day
+2024-06-08;F  # Dragon Boat Festival
+2024-06-09;F  # Dragon Boat Festival (weekend adjacent)
+2024-06-10;F  # Dragon Boat Festival (compensated leave)
+2024-09-14;T  # Makeup workday for Mid-Autumn Festival
+2024-09-15;F  # Mid-Autumn Festival
+2024-09-16;F  # Mid-Autumn Festival (weekend adjacent)
+2024-09-17;F  # Mid-Autumn Festival (compensated leave)
+2024-09-29;T  # Makeup workday for National Day
+2024-10-01;F  # National Day
+2024-10-02;F  # National Day
+2024-10-03;F  # National Day
+2024-10-04;F  # National Day (compensated leave)
+2024-10-05;F  # National Day (compensated leave)
+2024-10-06;F  # National Day (compensated leave)
+2024-10-07;F  # National Day (compensated leave)
+2024-10-12;T  # Makeup workday for National Day
+2025-01-01;F  # New Year's Day
+2025-01-26;T  # Makeup workday for Spring Festival
+2025-01-28;F  # Spring Festival (Lunar New Year Eve)
+2025-01-29;F  # Spring Festival (Lunar New Year Day 1)
+2025-01-30;F  # Spring Festival (Lunar New Year Day 2)
+2025-01-31;F  # Spring Festival (Lunar New Year Day 3)
+2025-02-01;F  # Spring Festival (compensated leave)
+2025-02-02;F  # Spring Festival (compensated leave)
+2025-02-03;F  # Spring Festival (compensated leave)
+2025-02-04;F  # Spring Festival (compensated leave)
+2025-02-08;T  # Makeup workday for Spring Festival
+2025-04-04;F  # Qingming Festival
+2025-04-05;F  # Qingming Festival (weekend adjacent)
+2025-04-06;F  # Qingming Festival (weekend adjacent)
+2025-04-27;T  # Makeup workday for Labor Day
+2025-05-01;F  # Labor Day
+2025-05-02;F  # Labor Day
+2025-05-03;F  # Labor Day (weekend adjacent)
+2025-05-04;F  # Labor Day (weekend adjacent)
+2025-05-05;F  # Labor Day (compensated leave)
+2025-05-31;F  # Dragon Boat Festival
+2025-06-01;F  # Dragon Boat Festival (weekend adjacent)
+2025-06-02;F  # Dragon Boat Festival (compensated leave)
+2025-09-28;T  # Makeup workday for National Day/Mid-Autumn Festival
+2025-10-01;F  # National Day + Mid-Autumn Festival
+2025-10-02;F  # National Day
+2025-10-03;F  # National Day
+2025-10-04;F  # National Day (compensated leave)
+2025-10-05;F  # National Day (compensated leave)
+2025-10-06;F  # National Day (compensated leave)
+2025-10-07;F  # National Day (compensated leave)
+2025-10-08;F  # National Day (compensated leave)
+2025-10-11;T  # Makeup workday for National Day/Mid-Autumn Festival
+2026-01-01;F  # New Year's Day
+2026-01-02;F  # New Year's Day (compensated leave)
+2026-01-03;F  # New Year's Day (weekend adjacent)
+2026-01-04;T  # Makeup workday for New Year's Day
+2026-02-14;T  # Makeup workday for Spring Festival
+2026-02-15;F  # Spring Festival (Lunar New Year Eve)
+2026-02-16;F  # Spring Festival (Lunar New Year Day 1)
+2026-02-17;F  # Spring Festival (Lunar New Year Day 2)
+2026-02-18;F  # Spring Festival (Lunar New Year Day 3)
+2026-02-19;F  # Spring Festival (compensated leave)
+2026-02-20;F  # Spring Festival (compensated leave)
+2026-02-21;F  # Spring Festival (compensated leave)
+2026-02-22;F  # Spring Festival (compensated leave)
+2026-02-23;F  # Spring Festival (compensated leave)
+2026-02-28;T  # Makeup workday for Spring Festival
+2026-04-04;F  # Qingming Festival
+2026-04-05;F  # Qingming Festival (weekend adjacent)
+2026-04-06;F  # Qingming Festival (weekend adjacent)
+2026-05-01;F  # Labor Day
+2026-05-02;F  # Labor Day
+2026-05-03;F  # Labor Day (weekend adjacent)
+2026-05-04;F  # Labor Day (compensated leave)
+2026-05-05;F  # Labor Day (compensated leave)
+2026-05-09;T  # Makeup workday for Labor Day
+2026-06-19;F  # Dragon Boat Festival
+2026-06-20;F  # Dragon Boat Festival (weekend adjacent)
+2026-06-21;F  # Dragon Boat Festival (weekend adjacent)
+2026-09-20;T  # Makeup workday for National Day
+2026-09-25;F  # Mid-Autumn Festival
+2026-09-26;F  # Mid-Autumn Festival (weekend adjacent)
+2026-09-27;F  # Mid-Autumn Festival (weekend adjacent)
+2026-10-01;F  # National Day
+2026-10-02;F  # National Day
+2026-10-03;F  # National Day
+2026-10-04;F  # National Day (weekend adjacent)
+2026-10-05;F  # National Day (compensated leave)
+2026-10-06;F  # National Day (compensated leave)
+2026-10-07;F  # National Day (compensated leave)
+2026-10-10;T  # Makeup workday for National Day
+2027-01-01;F  # New Year's Day
+2027-01-02;F  # New Year's Day (weekend adjacent)
+2027-01-03;T  # Makeup workday for New Year's Day
+2027-01-03;F  # New Year's Day (weekend adjacent)
+2027-02-05;F  # Spring Festival (Lunar New Year Eve)
+2027-02-06;F  # Spring Festival (Lunar New Year Day 1)
+2027-02-07;F  # Spring Festival (Lunar New Year Day 2)
+2027-02-08;F  # Spring Festival (Lunar New Year Day 3)
+2027-02-09;F  # Spring Festival (compensated leave)
+2027-02-10;F  # Spring Festival (compensated leave)
+2027-02-11;F  # Spring Festival (compensated leave)
+2027-02-12;F  # Spring Festival (compensated leave)
+2027-02-13;F  # Spring Festival (compensated leave)
+2027-02-14;T  # Makeup workday for Spring Festival
+2027-02-20;T  # Makeup workday for Spring Festival
+2027-04-03;F  # Qingming Festival (compensated leave)
+2027-04-04;F  # Qingming Festival (weekend adjacent)
+2027-04-05;F  # Qingming Festival
+2027-04-25;T  # Makeup workday for Labor Day
+2027-05-01;F  # Labor Day
+2027-05-02;F  # Labor Day
+2027-05-03;F  # Labor Day (compensated leave)
+2027-05-04;F  # Labor Day (compensated leave)
+2027-05-05;F  # Labor Day (compensated leave)
+2027-05-08;T  # Makeup workday for Labor Day
+2027-06-09;F  # Dragon Boat Festival
+2027-06-10;F  # Dragon Boat Festival (weekend adjacent)
+2027-06-11;F  # Dragon Boat Festival (weekend adjacent)
+2027-09-15;F  # Mid-Autumn Festival
+2027-09-16;F  # Mid-Autumn Festival (weekend adjacent)
+2027-09-17;F  # Mid-Autumn Festival (weekend adjacent)
+2027-09-26;T  # Makeup workday for National Day
+2027-10-01;F  # National Day
+2027-10-02;F  # National Day
+2027-10-03;F  # National Day
+2027-10-04;F  # National Day (compensated leave)
+2027-10-05;F  # National Day (compensated leave)
+2027-10-06;F  # National Day (compensated leave)
+2027-10-07;F  # National Day (compensated leave)
+2027-10-09;T  # Makeup workday for National Day
+2028-01-01;F  # New Year's Day
+2028-01-02;T  # Makeup workday for New Year's Day
+2028-01-02;F  # New Year's Day (weekend adjacent)
+2028-01-03;F  # New Year's Day (compensated leave)
+2028-01-25;F  # Spring Festival (Lunar New Year Eve)
+2028-01-26;F  # Spring Festival (Lunar New Year Day 1)
+2028-01-27;F  # Spring Festival (Lunar New Year Day 2)
+2028-01-28;F  # Spring Festival (Lunar New Year Day 3)
+2028-01-29;F  # Spring Festival (compensated leave)
+2028-01-30;F  # Spring Festival (compensated leave)
+2028-01-31;F  # Spring Festival (compensated leave)
+2028-02-01;F  # Spring Festival (compensated leave)
+2028-02-05;T  # Makeup workday for Spring Festival
+2028-02-19;T  # Makeup workday for Spring Festival
+2028-04-02;F  # Qingming Festival (compensated leave)
+2028-04-03;F  # Qingming Festival (weekend adjacent)
+2028-04-04;F  # Qingming Festival
+2028-04-23;T  # Makeup workday for Labor Day
+2028-05-01;F  # Labor Day
+2028-05-02;F  # Labor Day
+2028-05-03;F  # Labor Day (compensated leave)
+2028-05-04;F  # Labor Day (compensated leave)
+2028-05-05;F  # Labor Day (compensated leave)
+2028-05-06;T  # Makeup workday for Labor Day
+2028-05-28;F  # Dragon Boat Festival
+2028-05-29;F  # Dragon Boat Festival (weekend adjacent)
+2028-05-30;F  # Dragon Boat Festival (compensated leave)
+2028-09-24;T  # Makeup workday for National Day/Mid-Autumn Festival
+2028-10-01;F  # National Day + Mid-Autumn Festival
+2028-10-02;F  # National Day
+2028-10-03;F  # National Day
+2028-10-04;F  # National Day (compensated leave)
+2028-10-05;F  # National Day (compensated leave)
+2028-10-06;F  # National Day (compensated leave)
+2028-10-07;F  # National Day (compensated leave)
+2028-10-08;T  # Makeup workday for National Day/Mid-Autumn Festival
+2028-10-08;F  # National Day (compensated leave)
+2029-01-01;F  # New Year's Day
+2029-02-10;T  # Makeup workday for Spring Festival
+2029-02-12;F  # Spring Festival (Lunar New Year Eve)
+2029-02-13;F  # Spring Festival (Lunar New Year Day 1)
+2029-02-14;F  # Spring Festival (Lunar New Year Day 2)
+2029-02-15;F  # Spring Festival (Lunar New Year Day 3)
+2029-02-16;F  # Spring Festival (compensated leave)
+2029-02-17;F  # Spring Festival (compensated leave)
+2029-02-18;F  # Spring Festival (compensated leave)
+2029-02-19;F  # Spring Festival (compensated leave)
+2029-02-24;T  # Makeup workday for Spring Festival
+2029-04-04;F  # Qingming Festival
+2029-04-05;F  # Qingming Festival (weekend adjacent)
+2029-04-06;F  # Qingming Festival (weekend adjacent)
+2029-04-29;T  # Makeup workday for Labor Day
+2029-05-01;F  # Labor Day
+2029-05-02;F  # Labor Day
+2029-05-03;F  # Labor Day (compensated leave)
+2029-05-04;F  # Labor Day (compensated leave)
+2029-05-05;F  # Labor Day (compensated leave)
+2029-05-06;T  # Makeup workday for Labor Day
+2029-06-16;F  # Dragon Boat Festival
+2029-06-17;F  # Dragon Boat Festival (weekend adjacent)
+2029-06-18;F  # Dragon Boat Festival (compensated leave)
+2029-09-22;F  # Mid-Autumn Festival
+2029-09-23;T  # Makeup workday for Mid-Autumn Festival
+2029-09-23;F  # Mid-Autumn Festival (weekend adjacent)
+2029-09-24;F  # Mid-Autumn Festival (compensated leave)
+2029-09-30;T  # Makeup workday for National Day
+2029-10-01;F  # National Day
+2029-10-02;F  # National Day
+2029-10-03;F  # National Day
+2029-10-04;F  # National Day (compensated leave)
+2029-10-05;F  # National Day (compensated leave)
+2029-10-06;F  # National Day (compensated leave)
+2029-10-07;F  # National Day (compensated leave)
+2029-10-13;T  # Makeup workday for National Day
+2030-01-01;F  # New Year's Day
+2030-02-02;T  # Makeup workday for Spring Festival
+2030-02-02;F  # Spring Festival (Lunar New Year Eve)
+2030-02-03;F  # Spring Festival (Lunar New Year Day 1)
+2030-02-04;F  # Spring Festival (Lunar New Year Day 2)
+2030-02-05;F  # Spring Festival (Lunar New Year Day 3)
+2030-02-06;F  # Spring Festival (compensated leave)
+2030-02-07;F  # Spring Festival (compensated leave)
+2030-02-08;F  # Spring Festival (compensated leave)
+2030-02-09;F  # Spring Festival (compensated leave)
+2030-02-16;T  # Makeup workday for Spring Festival
+2030-04-04;F  # Qingming Festival
+2030-04-05;F  # Qingming Festival (weekend adjacent)
+2030-04-06;F  # Qingming Festival (weekend adjacent)
+2030-04-28;T  # Makeup workday for Labor Day
+2030-05-01;F  # Labor Day
+2030-05-02;F  # Labor Day
+2030-05-03;F  # Labor Day (compensated leave)
+2030-05-04;F  # Labor Day (compensated leave)
+2030-05-05;T  # Makeup workday for Labor Day
+2030-05-05;F  # Labor Day (compensated leave)
+2030-06-05;F  # Dragon Boat Festival
+2030-06-06;F  # Dragon Boat Festival (weekend adjacent)
+2030-06-07;F  # Dragon Boat Festival (weekend adjacent)
+2030-09-12;F  # Mid-Autumn Festival
+2030-09-13;F  # Mid-Autumn Festival (weekend adjacent)
+2030-09-14;F  # Mid-Autumn Festival (weekend adjacent)
+2030-09-15;T  # Makeup workday for Mid-Autumn Festival
+2030-09-29;T  # Makeup workday for National Day
+2030-10-01;F  # National Day
+2030-10-02;F  # National Day
+2030-10-03;F  # National Day
+2030-10-04;F  # National Day (compensated leave)
+2030-10-05;F  # National Day (compensated leave)
+2030-10-06;F  # National Day (compensated leave)
+2030-10-07;F  # National Day (compensated leave)
+2030-10-12;T  # Makeup workday for National Day
+2031-01-01;F  # New Year's Day
+2031-01-05;T  # Makeup workday for New Year's Day
+2031-01-22;F  # Spring Festival (Lunar New Year Eve)
+2031-01-23;F  # Spring Festival (Lunar New Year Day 1)
+2031-01-24;F  # Spring Festival (Lunar New Year Day 2)
+2031-01-25;F  # Spring Festival (Lunar New Year Day 3)
+2031-01-26;F  # Spring Festival (compensated leave)
+2031-01-27;F  # Spring Festival (compensated leave)
+2031-01-28;F  # Spring Festival (compensated leave)
+2031-01-29;F  # Spring Festival (compensated leave)
+2031-02-08;T  # Makeup workday for Spring Festival
+2031-02-22;T  # Makeup workday for Spring Festival
+2031-04-05;F  # Qingming Festival
+2031-04-06;F  # Qingming Festival (weekend adjacent)
+2031-04-07;F  # Qingming Festival (compensated leave)
+2031-04-27;T  # Makeup workday for Labor Day
+2031-05-01;F  # Labor Day
+2031-05-02;F  # Labor Day
+2031-05-03;F  # Labor Day (weekend adjacent)
+2031-05-04;F  # Labor Day (compensated leave)
+2031-05-05;F  # Labor Day (compensated leave)
+2031-05-10;T  # Makeup workday for Labor Day
+2031-06-24;F  # Dragon Boat Festival
+2031-06-25;F  # Dragon Boat Festival (weekend adjacent)
+2031-06-26;F  # Dragon Boat Festival (weekend adjacent)
+2031-09-01;F  # Mid-Autumn Festival
+2031-09-02;F  # Mid-Autumn Festival (weekend adjacent)
+2031-09-03;F  # Mid-Autumn Festival (compensated leave)
+2031-09-07;T  # Makeup workday for Mid-Autumn Festival
+2031-09-28;T  # Makeup workday for National Day
+2031-10-01;F  # National Day
+2031-10-01;F  # National Day
+2031-10-02;F  # National Day
+2031-10-02;F  # National Day
+2031-10-03;F  # National Day
+2031-10-03;F  # National Day
+2031-10-04;F  # National Day (weekend adjacent)
+2031-10-04;F  # National Day (weekend adjacent)
+2031-10-05;F  # National Day (compensated leave)
+2031-10-05;F  # National Day (compensated leave)
+2031-10-06;F  # National Day (compensated leave)
+2031-10-06;F  # National Day (compensated leave)
+2031-10-07;F  # National Day (compensated leave)
+2031-10-07;F  # National Day (compensated leave)
+2031-10-11;T  # Makeup workday for National Day
+2032-01-01;F  # New Year's Day
+2032-02-07;T  # Makeup workday for Spring Festival
+2032-02-10;F  # Spring Festival (Lunar New Year Eve)
+2032-02-11;F  # Spring Festival (Lunar New Year Day 1)
+2032-02-12;F  # Spring Festival (Lunar New Year Day 2)
+2032-02-13;F  # Spring Festival (Lunar New Year Day 3)
+2032-02-14;F  # Spring Festival (compensated leave)
+2032-02-15;F  # Spring Festival (compensated leave)
+2032-02-16;F  # Spring Festival (compensated leave)
+2032-02-17;F  # Spring Festival (compensated leave)
+2032-02-21;T  # Makeup workday for Spring Festival
+2032-04-03;F  # Qingming Festival (weekend adjacent)
+2032-04-04;F  # Qingming Festival
+2032-04-05;F  # Qingming Festival (compensated leave)
+2032-04-25;T  # Makeup workday for Labor Day
+2032-05-01;F  # Labor Day
+2032-05-02;F  # Labor Day
+2032-05-03;F  # Labor Day (compensated leave)
+2032-05-04;F  # Labor Day (compensated leave)
+2032-05-05;F  # Labor Day (compensated leave)
+2032-05-08;T  # Makeup workday for Labor Day
+2032-06-12;F  # Dragon Boat Festival
+2032-06-13;F  # Dragon Boat Festival (weekend adjacent)
+2032-06-14;F  # Dragon Boat Festival (compensated leave)
+2032-09-18;T  # Makeup workday for Mid-Autumn Festival
+2032-09-19;F  # Mid-Autumn Festival
+2032-09-20;F  # Mid-Autumn Festival (compensated leave)
+2032-09-21;F  # Mid-Autumn Festival (weekend adjacent)
+2032-09-26;T  # Makeup workday for National Day
+2032-10-01;F  # National Day
+2032-10-02;F  # National Day
+2032-10-03;F  # National Day
+2032-10-04;F  # National Day (compensated leave)
+2032-10-05;F  # National Day (compensated leave)
+2032-10-06;F  # National Day (compensated leave)
+2032-10-07;F  # National Day (compensated leave)
+2032-10-09;T  # Makeup workday for National Day
+2033-01-01;F  # New Year's Day
+2033-01-01;F  # New Year's Day
+2033-01-02;T  # Makeup workday for New Year's Day
+2033-01-02;F  # New Year's Day (weekend adjacent)
+2033-01-03;F  # New Year's Day (compensated leave)
+2033-01-29;T  # Makeup workday for Spring Festival
+2033-01-30;F  # Spring Festival (Lunar New Year Eve)
+2033-01-30;F  # Spring Festival (Lunar New Year Eve)
+2033-01-31;F  # Spring Festival (Lunar New Year Day 1)
+2033-02-01;F  # Spring Festival (Lunar New Year Day 2)
+2033-02-02;F  # Spring Festival (Lunar New Year Day 3)
+2033-02-03;F  # Spring Festival (compensated leave)
+2033-02-04;F  # Spring Festival (compensated leave)
+2033-02-05;F  # Spring Festival (compensated leave)
+2033-02-06;F  # Spring Festival (compensated leave)
+2033-02-12;T  # Makeup workday for Spring Festival
+2033-04-04;F  # Qingming Festival
+2033-04-05;F  # Qingming Festival (weekend adjacent)
+2033-04-06;F  # Qingming Festival (compensated leave)
+2033-04-24;T  # Makeup workday for Labor Day
+2033-05-01;F  # Labor Day
+2033-05-02;F  # Labor Day
+2033-05-03;F  # Labor Day (compensated leave)
+2033-05-04;F  # Labor Day (compensated leave)
+2033-05-05;F  # Labor Day (compensated leave)
+2033-05-07;T  # Makeup workday for Labor Day
+2033-06-01;F  # Dragon Boat Festival
+2033-06-02;F  # Dragon Boat Festival (weekend adjacent)
+2033-06-03;F  # Dragon Boat Festival (weekend adjacent)
+2033-09-08;F  # Mid-Autumn Festival
+2033-09-09;F  # Mid-Autumn Festival (weekend adjacent)
+2033-09-10;F  # Mid-Autumn Festival (weekend adjacent)
+2033-09-25;T  # Makeup workday for National Day
+2033-10-01;F  # National Day
+2033-10-02;F  # National Day
+2033-10-03;F  # National Day
+2033-10-04;F  # National Day (compensated leave)
+2033-10-05;F  # National Day (compensated leave)
+2033-10-06;F  # National Day (compensated leave)
+2033-10-07;F  # National Day (compensated leave)
+2033-10-08;T  # Makeup workday for National Day
+2034-01-01;F  # New Year's Day
+2034-02-11;T  # Makeup workday for Spring Festival
+2034-02-18;F  # Spring Festival (Lunar New Year Eve)
+2034-02-19;F  # Spring Festival (Lunar New Year Day 1)
+2034-02-20;F  # Spring Festival (Lunar New Year Day 2)
+2034-02-21;F  # Spring Festival (Lunar New Year Day 3)
+2034-02-22;F  # Spring Festival (compensated leave)
+2034-02-23;F  # Spring Festival (compensated leave)
+2034-02-24;F  # Spring Festival (compensated leave)
+2034-02-25;T  # Makeup workday for Spring Festival
+2034-02-25;F  # Spring Festival (compensated leave)
+2034-04-03;F  # Qingming Festival (compensated leave)
+2034-04-04;F  # Qingming Festival (weekend adjacent)
+2034-04-05;F  # Qingming Festival
+2034-04-23;T  # Makeup workday for Labor Day
+2034-05-01;F  # Labor Day
+2034-05-02;F  # Labor Day
+2034-05-03;F  # Labor Day (compensated leave)
+2034-05-04;F  # Labor Day (compensated leave)
+2034-05-05;F  # Labor Day (compensated leave)
+2034-05-06;T  # Makeup workday for Labor Day
+2034-06-20;F  # Dragon Boat Festival
+2034-06-21;F  # Dragon Boat Festival (weekend adjacent)
+2034-06-22;F  # Dragon Boat Festival (weekend adjacent)
+2034-09-23;T  # Makeup workday for Mid-Autumn Festival
+2034-09-27;F  # Mid-Autumn Festival
+2034-09-28;F  # Mid-Autumn Festival (weekend adjacent)
+2034-09-29;F  # Mid-Autumn Festival (compensated leave)
+2034-09-30;T  # Makeup workday for National Day
+2034-10-01;F  # National Day
+2034-10-02;F  # National Day
+2034-10-03;F  # National Day
+2034-10-04;F  # National Day (compensated leave)
+2034-10-05;F  # National Day (compensated leave)
+2034-10-06;F  # National Day (compensated leave)
+2034-10-07;F  # National Day (compensated leave)
+2034-10-08;T  # Makeup workday for National Day
+2035-01-01;F  # New Year's Day
+2035-02-03;T  # Makeup workday for Spring Festival
+2035-02-07;F  # Spring Festival (Lunar New Year Eve)
+2035-02-08;F  # Spring Festival (Lunar New Year Day 1)
+2035-02-09;F  # Spring Festival (Lunar New Year Day 2)
+2035-02-10;F  # Spring Festival (Lunar New Year Day 3)
+2035-02-11;F  # Spring Festival (compensated leave)
+2035-02-12;F  # Spring Festival (compensated leave)
+2035-02-13;F  # Spring Festival (compensated leave)
+2035-02-14;F  # Spring Festival (compensated leave)
+2035-02-17;T  # Makeup workday for Spring Festival
+2035-04-05;F  # Qingming Festival
+2035-04-06;F  # Qingming Festival (weekend adjacent)
+2035-04-07;F  # Qingming Festival (weekend adjacent)
+2035-04-28;T  # Makeup workday for Labor Day
+2035-05-01;F  # Labor Day
+2035-05-02;F  # Labor Day
+2035-05-03;F  # Labor Day (compensated leave)
+2035-05-04;F  # Labor Day (compensated leave)
+2035-05-05;T  # Makeup workday for Labor Day
+2035-05-05;F  # Labor Day (compensated leave)
+2035-06-09;F  # Dragon Boat Festival (compensated leave)
+2035-06-10;F  # Dragon Boat Festival
+2035-06-11;F  # Dragon Boat Festival (weekend adjacent)
+2035-09-14;T  # Makeup workday for Mid-Autumn Festival
+2035-09-15;F  # Mid-Autumn Festival (compensated leave)
+2035-09-16;F  # Mid-Autumn Festival
+2035-09-17;F  # Mid-Autumn Festival (weekend adjacent)
+2035-09-29;T  # Makeup workday for National Day
+2035-10-01;F  # National Day
+2035-10-02;F  # National Day
+2035-10-03;F  # National Day
+2035-10-04;F  # National Day (compensated leave)
+2035-10-05;F  # National Day (compensated leave)
+2035-10-06;F  # National Day (compensated leave)
+2035-10-07;F  # National Day (compensated leave)
+2035-10-12;T  # Makeup workday for National Day
+2036-01-01;F  # New Year's Day
+2036-01-05;T  # Makeup workday for New Year's Day
+2036-01-27;F  # Spring Festival (Lunar New Year Eve)
+2036-01-28;F  # Spring Festival (Lunar New Year Day 1)
+2036-01-29;F  # Spring Festival (Lunar New Year Day 2)
+2036-01-30;F  # Spring Festival (Lunar New Year Day 3)
+2036-01-31;F  # Spring Festival (compensated leave)
+2036-02-01;F  # Spring Festival (compensated leave)
+2036-02-02;F  # Spring Festival (compensated leave)
+2036-02-03;F  # Spring Festival (compensated leave)
+2036-02-09;T  # Makeup workday for Spring Festival
+2036-02-23;T  # Makeup workday for Spring Festival
+2036-04-04;F  # Qingming Festival
+2036-04-05;F  # Qingming Festival (weekend adjacent)
+2036-04-06;F  # Qingming Festival (weekend adjacent)
+2036-04-26;T  # Makeup workday for Labor Day
+2036-05-01;F  # Labor Day
+2036-05-02;F  # Labor Day
+2036-05-03;F  # Labor Day (compensated leave)
+2036-05-04;F  # Labor Day (compensated leave)
+2036-05-05;F  # Labor Day (compensated leave)
+2036-05-09;T  # Makeup workday for Labor Day
+2036-05-30;F  # Dragon Boat Festival
+2036-05-31;F  # Dragon Boat Festival (weekend adjacent)
+2036-06-01;F  # Dragon Boat Festival (weekend adjacent)
+2036-09-27;T  # Makeup workday for National Day/Mid-Autumn Festival
+2036-10-01;F  # National Day + Mid-Autumn Festival
+2036-10-02;F  # National Day
+2036-10-03;F  # National Day
+2036-10-04;F  # National Day (compensated leave)
+2036-10-05;F  # National Day (compensated leave)
+2036-10-06;F  # National Day (compensated leave)
+2036-10-07;F  # National Day (compensated leave)
+2036-10-08;F  # National Day (compensated leave)
+2036-10-11;T  # Makeup workday for National Day/Mid-Autumn Festival
+2037-01-01;F  # New Year's Day
+2037-02-07;T  # Makeup workday for Spring Festival
+2037-02-14;F  # Spring Festival (Lunar New Year Eve)
+2037-02-15;F  # Spring Festival (Lunar New Year Day 1)
+2037-02-16;F  # Spring Festival (Lunar New Year Day 2)
+2037-02-17;F  # Spring Festival (Lunar New Year Day 3)
+2037-02-18;F  # Spring Festival (compensated leave)
+2037-02-19;F  # Spring Festival (compensated leave)
+2037-02-20;F  # Spring Festival (compensated leave)
+2037-02-21;T  # Makeup workday for Spring Festival
+2037-02-21;F  # Spring Festival (compensated leave)
+2037-04-03;F  # Qingming Festival (compensated leave)
+2037-04-04;F  # Qingming Festival (weekend adjacent)
+2037-04-05;F  # Qingming Festival
+2037-04-25;T  # Makeup workday for Labor Day
+2037-05-01;F  # Labor Day
+2037-05-02;F  # Labor Day
+2037-05-03;F  # Labor Day (compensated leave)
+2037-05-04;F  # Labor Day (compensated leave)
+2037-05-05;F  # Labor Day (compensated leave)
+2037-05-08;T  # Makeup workday for Labor Day
+2037-06-18;F  # Dragon Boat Festival
+2037-06-19;F  # Dragon Boat Festival (weekend adjacent)
+2037-06-20;F  # Dragon Boat Festival (weekend adjacent)
+2037-09-24;F  # Mid-Autumn Festival
+2037-09-25;F  # Mid-Autumn Festival (weekend adjacent)
+2037-09-26;T  # Makeup workday for National Day
+2037-09-26;F  # Mid-Autumn Festival (weekend adjacent)
+2037-10-01;F  # National Day
+2037-10-02;F  # National Day
+2037-10-03;F  # National Day
+2037-10-04;F  # National Day (compensated leave)
+2037-10-05;F  # National Day (compensated leave)
+2037-10-06;F  # National Day (compensated leave)
+2037-10-07;F  # National Day (compensated leave)
+2037-10-10;T  # Makeup workday for National Day
+2038-01-01;F  # New Year's Day
+2038-02-03;F  # Spring Festival (Lunar New Year Eve)
+2038-02-04;F  # Spring Festival (Lunar New Year Day 1)
+2038-02-05;F  # Spring Festival (Lunar New Year Day 2)
+2038-02-06;T  # Makeup workday for Spring Festival
+2038-02-06;F  # Spring Festival (Lunar New Year Day 3)
+2038-02-07;F  # Spring Festival (compensated leave)
+2038-02-08;F  # Spring Festival (compensated leave)
+2038-02-09;F  # Spring Festival (compensated leave)
+2038-02-10;F  # Spring Festival (compensated leave)
+2038-02-20;T  # Makeup workday for Spring Festival
+2038-04-03;F  # Qingming Festival (compensated leave)
+2038-04-04;F  # Qingming Festival (weekend adjacent)
+2038-04-05;F  # Qingming Festival
+2038-04-24;T  # Makeup workday for Labor Day
+2038-05-01;F  # Labor Day
+2038-05-02;F  # Labor Day
+2038-05-03;F  # Labor Day (compensated leave)
+2038-05-04;F  # Labor Day (compensated leave)
+2038-05-05;F  # Labor Day (compensated leave)
+2038-05-07;T  # Makeup workday for Labor Day
+2038-06-06;F  # Dragon Boat Festival (compensated leave)
+2038-06-07;F  # Dragon Boat Festival
+2038-06-08;F  # Dragon Boat Festival (weekend adjacent)
+2038-09-11;T  # Makeup workday for Mid-Autumn Festival
+2038-09-12;F  # Mid-Autumn Festival (compensated leave)
+2038-09-13;F  # Mid-Autumn Festival
+2038-09-14;F  # Mid-Autumn Festival (weekend adjacent)
+2038-09-25;T  # Makeup workday for National Day
+2038-10-01;F  # National Day
+2038-10-02;F  # National Day
+2038-10-03;F  # National Day
+2038-10-04;F  # National Day (compensated leave)
+2038-10-05;F  # National Day (compensated leave)
+2038-10-06;F  # National Day (compensated leave)
+2038-10-07;F  # National Day (compensated leave)
+2038-10-09;T  # Makeup workday for National Day
+2039-01-01;F  # New Year's Day
+2039-01-23;F  # Spring Festival (Lunar New Year Eve)
+2039-01-24;F  # Spring Festival (Lunar New Year Day 1)
+2039-01-25;F  # Spring Festival (Lunar New Year Day 2)
+2039-01-26;F  # Spring Festival (Lunar New Year Day 3)
+2039-01-27;F  # Spring Festival (compensated leave)
+2039-01-28;F  # Spring Festival (compensated leave)
+2039-01-29;F  # Spring Festival (compensated leave)
+2039-01-30;F  # Spring Festival (compensated leave)
+2039-02-05;T  # Makeup workday for Spring Festival
+2039-02-19;T  # Makeup workday for Spring Festival
+2039-04-03;F  # Qingming Festival (compensated leave)
+2039-04-04;F  # Qingming Festival (weekend adjacent)
+2039-04-05;F  # Qingming Festival
+2039-04-23;T  # Makeup workday for Labor Day
+2039-05-01;F  # Labor Day
+2039-05-02;F  # Labor Day
+2039-05-03;F  # Labor Day (compensated leave)
+2039-05-04;F  # Labor Day (compensated leave)
+2039-05-05;F  # Labor Day (compensated leave)
+2039-05-06;T  # Makeup workday for Labor Day
+2039-06-25;F  # Dragon Boat Festival (compensated leave)
+2039-06-26;F  # Dragon Boat Festival
+2039-06-27;F  # Dragon Boat Festival (weekend adjacent)
+2039-09-24;T  # Makeup workday for Mid-Autumn Festival/National Day
+2039-10-01;F  # National Day
+2039-10-02;F  # Mid-Autumn Festival
+2039-10-03;F  # Mid-Autumn Festival (weekend adjacent)
+2039-10-04;F  # Mid-Autumn Festival (compensated leave)
+2039-10-05;F  # National Day (compensated leave)
+2039-10-06;F  # National Day (compensated leave)
+2039-10-07;F  # National Day (compensated leave)
+2039-10-08;F  # National Day (compensated leave)
+2039-10-09;T  # Makeup workday for National Day
+2040-01-01;F  # New Year's Day
+2040-02-10;T  # Makeup workday for Spring Festival
+2040-02-11;F  # Spring Festival (Lunar New Year Eve)
+2040-02-12;F  # Spring Festival (Lunar New Year Day 1)
+2040-02-13;F  # Spring Festival (Lunar New Year Day 2)
+2040-02-14;F  # Spring Festival (Lunar New Year Day 3)
+2040-02-15;F  # Spring Festival (compensated leave)
+2040-02-16;F  # Spring Festival (compensated leave)
+2040-02-17;F  # Spring Festival (compensated leave)
+2040-02-18;F  # Spring Festival (compensated leave)
+2040-02-24;T  # Makeup workday for Spring Festival
+2040-04-04;F  # Qingming Festival
+2040-04-05;F  # Qingming Festival (weekend adjacent)
+2040-04-06;F  # Qingming Festival (weekend adjacent)
+2040-04-28;T  # Makeup workday for Labor Day
+2040-05-01;F  # Labor Day
+2040-05-02;F  # Labor Day
+2040-05-03;F  # Labor Day (compensated leave)
+2040-05-04;F  # Labor Day (compensated leave)
+2040-05-05;T  # Makeup workday for Labor Day
+2040-05-05;F  # Labor Day (compensated leave)
+2040-06-14;F  # Dragon Boat Festival
+2040-06-15;F  # Dragon Boat Festival (weekend adjacent)
+2040-06-16;F  # Dragon Boat Festival (weekend adjacent)
+2040-09-20;F  # Mid-Autumn Festival
+2040-09-21;F  # Mid-Autumn Festival (weekend adjacent)
+2040-09-22;T  # Makeup workday for Mid-Autumn Festival
+2040-09-22;F  # Mid-Autumn Festival (weekend adjacent)
+2040-09-29;T  # Makeup workday for National Day
+2040-10-01;F  # National Day
+2040-10-02;F  # National Day
+2040-10-03;F  # National Day
+2040-10-04;F  # National Day (compensated leave)
+2040-10-05;F  # National Day (compensated leave)
+2040-10-06;F  # National Day (compensated leave)
+2040-10-07;F  # National Day (compensated leave)
+2040-10-12;T  # Makeup workday for National Day
+2041-01-01;F  # New Year's Day
+2041-01-31;F  # Spring Festival (Lunar New Year Eve)
+2041-02-01;F  # Spring Festival (Lunar New Year Day 1)
+2041-02-02;F  # Spring Festival (Lunar New Year Day 2)
+2041-02-03;F  # Spring Festival (Lunar New Year Day 3)
+2041-02-04;F  # Spring Festival (compensated leave)
+2041-02-05;F  # Spring Festival (compensated leave)
+2041-02-06;F  # Spring Festival (compensated leave)
+2041-02-07;F  # Spring Festival (compensated leave)
+2041-02-08;T  # Makeup workday for Spring Festival
+2041-02-22;T  # Makeup workday for Spring Festival
+2041-04-04;F  # Qingming Festival
+2041-04-05;F  # Qingming Festival (weekend adjacent)
+2041-04-06;F  # Qingming Festival (weekend adjacent)
+2041-04-27;T  # Makeup workday for Labor Day
+2041-05-01;F  # Labor Day
+2041-05-02;F  # Labor Day
+2041-05-03;F  # Labor Day (compensated leave)
+2041-05-04;F  # Labor Day (compensated leave)
+2041-05-05;F  # Labor Day (compensated leave)
+2041-05-10;T  # Makeup workday for Labor Day
+2041-06-02;F  # Dragon Boat Festival (compensated leave)
+2041-06-03;F  # Dragon Boat Festival
+2041-06-04;F  # Dragon Boat Festival (weekend adjacent)
+2041-09-07;T  # Makeup workday for Mid-Autumn Festival
+2041-09-08;F  # Mid-Autumn Festival (compensated leave)
+2041-09-09;F  # Mid-Autumn Festival
+2041-09-10;F  # Mid-Autumn Festival (weekend adjacent)
+2041-09-28;T  # Makeup workday for National Day
+2041-10-01;F  # National Day
+2041-10-02;F  # National Day
+2041-10-03;F  # National Day
+2041-10-04;F  # National Day (compensated leave)
+2041-10-05;F  # National Day (compensated leave)
+2041-10-06;F  # National Day (compensated leave)
+2041-10-07;F  # National Day (compensated leave)
+2041-10-11;T  # Makeup workday for National Day
+2042-01-01;F  # New Year's Day
+2042-02-14;T  # Makeup workday for Spring Festival
+2042-02-19;F  # Spring Festival (Lunar New Year Eve)
+2042-02-20;F  # Spring Festival (Lunar New Year Day 1)
+2042-02-21;F  # Spring Festival (Lunar New Year Day 2)
+2042-02-22;F  # Spring Festival (Lunar New Year Day 3)
+2042-02-23;F  # Spring Festival (compensated leave)
+2042-02-24;F  # Spring Festival (compensated leave)
+2042-02-25;F  # Spring Festival (compensated leave)
+2042-02-26;F  # Spring Festival (compensated leave)
+2042-02-28;T  # Makeup workday for Spring Festival
+2042-04-04;F  # Qingming Festival
+2042-04-05;F  # Qingming Festival (weekend adjacent)
+2042-04-06;F  # Qingming Festival (weekend adjacent)
+2042-04-26;T  # Makeup workday for Labor Day
+2042-05-01;F  # Labor Day
+2042-05-02;F  # Labor Day
+2042-05-03;F  # Labor Day (compensated leave)
+2042-05-04;F  # Labor Day (compensated leave)
+2042-05-05;F  # Labor Day (compensated leave)
+2042-05-09;T  # Makeup workday for Labor Day
+2042-06-21;F  # Dragon Boat Festival (compensated leave)
+2042-06-22;F  # Dragon Boat Festival
+2042-06-23;F  # Dragon Boat Festival (weekend adjacent)
+2042-09-27;T  # Makeup workday for Mid-Autumn Festival
+2042-09-27;F  # Mid-Autumn Festival (compensated leave)
+2042-09-28;T  # Makeup workday for National Day
+2042-09-28;F  # Mid-Autumn Festival
+2042-09-29;F  # Mid-Autumn Festival (weekend adjacent)
+2042-10-01;F  # National Day
+2042-10-02;F  # National Day
+2042-10-03;F  # National Day
+2042-10-04;F  # National Day (compensated leave)
+2042-10-05;F  # National Day (compensated leave)
+2042-10-06;F  # National Day (compensated leave)
+2042-10-07;F  # National Day (compensated leave)
+2042-10-11;T  # Makeup workday for National Day
+2043-01-01;F  # New Year's Day
+2043-02-07;T  # Makeup workday for Spring Festival
+2043-02-08;F  # Spring Festival (Lunar New Year Eve)
+2043-02-09;F  # Spring Festival (Lunar New Year Day 1)
+2043-02-10;F  # Spring Festival (Lunar New Year Day 2)
+2043-02-11;F  # Spring Festival (Lunar New Year Day 3)
+2043-02-12;F  # Spring Festival (compensated leave)
+2043-02-13;F  # Spring Festival (compensated leave)
+2043-02-14;F  # Spring Festival (compensated leave)
+2043-02-15;F  # Spring Festival (compensated leave)
+2043-02-21;T  # Makeup workday for Spring Festival
+2043-04-04;F  # Qingming Festival (weekend adjacent)
+2043-04-05;F  # Qingming Festival
+2043-04-06;F  # Qingming Festival (compensated leave)
+2043-04-25;T  # Makeup workday for Labor Day
+2043-05-01;F  # Labor Day
+2043-05-02;F  # Labor Day
+2043-05-03;F  # Labor Day (compensated leave)
+2043-05-04;F  # Labor Day (compensated leave)
+2043-05-05;F  # Labor Day (compensated leave)
+2043-05-08;T  # Makeup workday for Labor Day
+2043-06-11;F  # Dragon Boat Festival
+2043-06-12;F  # Dragon Boat Festival (weekend adjacent)
+2043-06-13;F  # Dragon Boat Festival (weekend adjacent)
+2043-09-17;F  # Mid-Autumn Festival
+2043-09-18;F  # Mid-Autumn Festival (weekend adjacent)
+2043-09-19;F  # Mid-Autumn Festival (weekend adjacent)
+2043-09-26;T  # Makeup workday for National Day
+2043-10-01;F  # National Day
+2043-10-02;F  # National Day
+2043-10-03;F  # National Day
+2043-10-04;F  # National Day (compensated leave)
+2043-10-05;F  # National Day (compensated leave)
+2043-10-06;F  # National Day (compensated leave)
+2043-10-07;F  # National Day (compensated leave)
+2043-10-10;T  # Makeup workday for National Day
+2044-01-01;F  # New Year's Day
+2044-01-29;F  # Spring Festival (Lunar New Year Eve)
+2044-01-30;F  # Spring Festival (Lunar New Year Day 1)
+2044-01-31;F  # Spring Festival (Lunar New Year Day 2)
+2044-02-01;F  # Spring Festival (Lunar New Year Day 3)
+2044-02-02;F  # Spring Festival (compensated leave)
+2044-02-03;F  # Spring Festival (compensated leave)
+2044-02-04;F  # Spring Festival (compensated leave)
+2044-02-05;F  # Spring Festival (compensated leave)
+2044-02-06;T  # Makeup workday for Spring Festival
+2044-02-20;T  # Makeup workday for Spring Festival
+2044-04-02;F  # Qingming Festival (compensated leave)
+2044-04-03;F  # Qingming Festival (weekend adjacent)
+2044-04-04;F  # Qingming Festival
+2044-04-23;T  # Makeup workday for Labor Day
+2044-05-01;F  # Labor Day
+2044-05-02;F  # Labor Day
+2044-05-03;F  # Labor Day (compensated leave)
+2044-05-04;F  # Labor Day (compensated leave)
+2044-05-05;F  # Labor Day (compensated leave)
+2044-05-06;T  # Makeup workday for Labor Day
+2044-05-31;F  # Dragon Boat Festival
+2044-06-01;F  # Dragon Boat Festival (weekend adjacent)
+2044-06-02;F  # Dragon Boat Festival (weekend adjacent)
+2044-09-25;T  # Makeup workday for National Day/Mid-Autumn Festival
+2044-10-01;F  # National Day + Mid-Autumn Festival
+2044-10-02;F  # National Day
+2044-10-03;F  # National Day
+2044-10-04;F  # National Day (compensated leave)
+2044-10-05;F  # National Day (compensated leave)
+2044-10-06;F  # National Day (compensated leave)
+2044-10-07;F  # National Day (compensated leave)
+2044-10-08;F  # National Day (compensated leave)
+2044-10-09;T  # Makeup workday for National Day/Mid-Autumn Festival
+2045-01-01;F  # New Year's Day
+2045-02-04;T  # Makeup workday for Spring Festival
+2045-02-16;F  # Spring Festival (Lunar New Year Eve)
+2045-02-17;F  # Spring Festival (Lunar New Year Day 1)
+2045-02-18;T  # Makeup workday for Spring Festival
+2045-02-18;F  # Spring Festival (Lunar New Year Day 2)
+2045-02-19;F  # Spring Festival (Lunar New Year Day 3)
+2045-02-20;F  # Spring Festival (compensated leave)
+2045-02-21;F  # Spring Festival (compensated leave)
+2045-02-22;F  # Spring Festival (compensated leave)
+2045-02-23;F  # Spring Festival (compensated leave)
+2045-04-04;F  # Qingming Festival
+2045-04-05;F  # Qingming Festival (weekend adjacent)
+2045-04-06;F  # Qingming Festival (weekend adjacent)
+2045-04-29;T  # Makeup workday for Labor Day
+2045-05-01;F  # Labor Day
+2045-05-02;F  # Labor Day
+2045-05-03;F  # Labor Day (compensated leave)
+2045-05-04;F  # Labor Day (compensated leave)
+2045-05-05;F  # Labor Day (compensated leave)
+2045-05-06;T  # Makeup workday for Labor Day
+2045-06-19;F  # Dragon Boat Festival (compensated leave)
+2045-06-20;F  # Dragon Boat Festival
+2045-06-21;F  # Dragon Boat Festival (weekend adjacent)
+2045-09-23;T  # Makeup workday for Mid-Autumn Festival
+2045-09-24;F  # Mid-Autumn Festival (compensated leave)
+2045-09-25;F  # Mid-Autumn Festival
+2045-09-26;F  # Mid-Autumn Festival (weekend adjacent)
+2045-09-30;T  # Makeup workday for National Day
+2045-10-01;F  # National Day
+2045-10-02;F  # National Day
+2045-10-03;F  # National Day
+2045-10-04;F  # National Day (compensated leave)
+2045-10-05;F  # National Day (compensated leave)
+2045-10-06;F  # National Day (compensated leave)
+2045-10-07;F  # National Day (compensated leave)
+2045-10-08;T  # Makeup workday for National Day
+2046-01-01;F  # New Year's Day
+2046-02-03;T  # Makeup workday for Spring Festival
+2046-02-05;F  # Spring Festival (Lunar New Year Eve)
+2046-02-06;F  # Spring Festival (Lunar New Year Day 1)
+2046-02-07;F  # Spring Festival (Lunar New Year Day 2)
+2046-02-08;F  # Spring Festival (Lunar New Year Day 3)
+2046-02-09;F  # Spring Festival (compensated leave)
+2046-02-10;F  # Spring Festival (compensated leave)
+2046-02-11;F  # Spring Festival (compensated leave)
+2046-02-12;F  # Spring Festival (compensated leave)
+2046-02-17;T  # Makeup workday for Spring Festival
+2046-04-04;F  # Qingming Festival (weekend adjacent)
+2046-04-05;F  # Qingming Festival
+2046-04-06;F  # Qingming Festival (compensated leave)
+2046-04-28;T  # Makeup workday for Labor Day
+2046-05-01;F  # Labor Day
+2046-05-02;F  # Labor Day
+2046-05-03;F  # Labor Day (compensated leave)
+2046-05-04;F  # Labor Day (compensated leave)
+2046-05-05;T  # Makeup workday for Labor Day
+2046-05-05;F  # Labor Day (compensated leave)
+2046-06-08;F  # Dragon Boat Festival (compensated leave)
+2046-06-09;F  # Dragon Boat Festival
+2046-06-10;F  # Dragon Boat Festival (weekend adjacent)
+2046-09-14;F  # Mid-Autumn Festival (compensated leave)
+2046-09-15;F  # Mid-Autumn Festival
+2046-09-16;T  # Makeup workday for Mid-Autumn Festival
+2046-09-16;F  # Mid-Autumn Festival (weekend adjacent)
+2046-09-29;T  # Makeup workday for National Day
+2046-10-01;F  # National Day
+2046-10-02;F  # National Day
+2046-10-03;F  # National Day
+2046-10-04;F  # National Day (compensated leave)
+2046-10-05;F  # National Day (compensated leave)
+2046-10-06;F  # National Day (compensated leave)
+2046-10-07;F  # National Day (compensated leave)
+2046-10-12;T  # Makeup workday for National Day
+2047-01-01;F  # New Year's Day
+2047-01-05;T  # Makeup workday for New Year's Day
+2047-01-25;F  # Spring Festival (Lunar New Year Eve)
+2047-01-26;F  # Spring Festival (Lunar New Year Day 1)
+2047-01-27;F  # Spring Festival (Lunar New Year Day 2)
+2047-01-28;F  # Spring Festival (Lunar New Year Day 3)
+2047-01-29;F  # Spring Festival (compensated leave)
+2047-01-30;F  # Spring Festival (compensated leave)
+2047-01-31;F  # Spring Festival (compensated leave)
+2047-02-01;F  # Spring Festival (compensated leave)
+2047-02-09;T  # Makeup workday for Spring Festival
+2047-02-23;T  # Makeup workday for Spring Festival
+2047-04-05;F  # Qingming Festival
+2047-04-06;F  # Qingming Festival (weekend adjacent)
+2047-04-07;F  # Qingming Festival (weekend adjacent)
+2047-04-27;T  # Makeup workday for Labor Day
+2047-05-01;F  # Labor Day
+2047-05-02;F  # Labor Day
+2047-05-03;F  # Labor Day (compensated leave)
+2047-05-04;F  # Labor Day (compensated leave)
+2047-05-05;F  # Labor Day (compensated leave)
+2047-05-10;T  # Makeup workday for Labor Day
+2047-06-28;F  # Dragon Boat Festival
+2047-06-29;F  # Dragon Boat Festival (weekend adjacent)
+2047-06-30;F  # Dragon Boat Festival (compensated leave)
+2047-09-28;T  # Makeup workday for Mid-Autumn Festival/National Day
+2047-10-01;F  # National Day
+2047-10-02;F  # National Day
+2047-10-03;F  # National Day
+2047-10-04;F  # Mid-Autumn Festival
+2047-10-05;F  # Mid-Autumn Festival (weekend adjacent)
+2047-10-06;F  # Mid-Autumn Festival (compensated leave)
+2047-10-07;F  # National Day (compensated leave)
+2047-10-08;F  # National Day (compensated leave)
+2047-10-11;T  # Makeup workday for National Day
+2048-01-01;F  # New Year's Day
+2048-02-08;T  # Makeup workday for Spring Festival
+2048-02-13;F  # Spring Festival (Lunar New Year Eve)
+2048-02-14;F  # Spring Festival (Lunar New Year Day 1)
+2048-02-15;F  # Spring Festival (Lunar New Year Day 2)
+2048-02-16;F  # Spring Festival (Lunar New Year Day 3)
+2048-02-17;F  # Spring Festival (compensated leave)
+2048-02-18;F  # Spring Festival (compensated leave)
+2048-02-19;F  # Spring Festival (compensated leave)
+2048-02-20;F  # Spring Festival (compensated leave)
+2048-02-22;T  # Makeup workday for Spring Festival
+2048-04-04;F  # Qingming Festival
+2048-04-05;F  # Qingming Festival (weekend adjacent)
+2048-04-06;F  # Qingming Festival (compensated leave)
+2048-04-26;T  # Makeup workday for Labor Day
+2048-05-01;F  # Labor Day
+2048-05-02;F  # Labor Day
+2048-05-03;F  # Labor Day (compensated leave)
+2048-05-04;F  # Labor Day (compensated leave)
+2048-05-05;F  # Labor Day (compensated leave)
+2048-05-09;T  # Makeup workday for Labor Day
+2048-06-15;F  # Dragon Boat Festival (compensated leave)
+2048-06-16;F  # Dragon Boat Festival (weekend adjacent)
+2048-06-17;F  # Dragon Boat Festival
+2048-09-20;T  # Makeup workday for Mid-Autumn Festival
+2048-09-21;F  # Mid-Autumn Festival (compensated leave)
+2048-09-22;F  # Mid-Autumn Festival
+2048-09-23;F  # Mid-Autumn Festival (weekend adjacent)
+2048-09-27;T  # Makeup workday for National Day
+2048-10-01;F  # National Day
+2048-10-02;F  # National Day
+2048-10-03;F  # National Day
+2048-10-04;F  # National Day (compensated leave)
+2048-10-05;F  # National Day (compensated leave)
+2048-10-06;F  # National Day (compensated leave)
+2048-10-07;F  # National Day (compensated leave)
+2048-10-10;T  # Makeup workday for National Day
+2049-01-01;F  # New Year's Day
+2049-02-01;F  # Spring Festival (Lunar New Year Eve)
+2049-02-02;F  # Spring Festival (Lunar New Year Day 1)
+2049-02-03;F  # Spring Festival (Lunar New Year Day 2)
+2049-02-04;F  # Spring Festival (Lunar New Year Day 3)
+2049-02-05;F  # Spring Festival (compensated leave)
+2049-02-06;F  # Spring Festival (compensated leave)
+2049-02-07;T  # Makeup workday for Spring Festival
+2049-02-07;F  # Spring Festival (compensated leave)
+2049-02-08;F  # Spring Festival (compensated leave)
+2049-02-21;T  # Makeup workday for Spring Festival
+2049-04-03;F  # Qingming Festival (compensated leave)
+2049-04-04;F  # Qingming Festival
+2049-04-05;F  # Qingming Festival (weekend adjacent)
+2049-04-25;T  # Makeup workday for Labor Day
+2049-05-01;F  # Labor Day
+2049-05-02;F  # Labor Day
+2049-05-03;F  # Labor Day (compensated leave)
+2049-05-04;F  # Labor Day (compensated leave)
+2049-05-05;F  # Labor Day (compensated leave)
+2049-05-08;T  # Makeup workday for Labor Day
+2049-06-05;F  # Dragon Boat Festival (compensated leave)
+2049-06-06;F  # Dragon Boat Festival
+2049-06-07;F  # Dragon Boat Festival (weekend adjacent)
+2049-09-11;F  # Mid-Autumn Festival
+2049-09-12;T  # Makeup workday for Mid-Autumn Festival
+2049-09-12;F  # Mid-Autumn Festival (weekend adjacent)
+2049-09-13;F  # Mid-Autumn Festival (compensated leave)
+2049-09-26;T  # Makeup workday for National Day
+2049-10-01;F  # National Day
+2049-10-02;F  # National Day
+2049-10-03;F  # National Day
+2049-10-04;F  # National Day (compensated leave)
+2049-10-05;F  # National Day (compensated leave)
+2049-10-06;F  # National Day (compensated leave)
+2049-10-07;F  # National Day (compensated leave)
+2049-10-09;T  # Makeup workday for National Day
+2050-01-01;F  # New Year's Day
+2050-02-12;T  # Makeup workday for Spring Festival
+2050-02-20;F  # Spring Festival (Lunar New Year Eve)
+2050-02-21;F  # Spring Festival (Lunar New Year Day 1)
+2050-02-22;F  # Spring Festival (Lunar New Year Day 2)
+2050-02-23;F  # Spring Festival (Lunar New Year Day 3)
+2050-02-24;F  # Spring Festival (compensated leave)
+2050-02-25;F  # Spring Festival (compensated leave)
+2050-02-26;T  # Makeup workday for Spring Festival
+2050-02-26;F  # Spring Festival (compensated leave)
+2050-02-27;F  # Spring Festival (compensated leave)
+2050-04-03;F  # Qingming Festival (compensated leave)
+2050-04-04;F  # Qingming Festival (weekend adjacent)
+2050-04-05;F  # Qingming Festival
+2050-04-24;T  # Makeup workday for Labor Day
+2050-05-01;F  # Labor Day
+2050-05-02;F  # Labor Day
+2050-05-03;F  # Labor Day (compensated leave)
+2050-05-04;F  # Labor Day (compensated leave)
+2050-05-05;F  # Labor Day (compensated leave)
+2050-05-07;T  # Makeup workday for Labor Day
+2050-06-24;F  # Dragon Boat Festival
+2050-06-25;F  # Dragon Boat Festival (weekend adjacent)
+2050-06-26;F  # Dragon Boat Festival (weekend adjacent)
+2050-09-25;T  # Makeup workday for Mid-Autumn Festival/National Day
+2050-09-30;F  # Mid-Autumn Festival
+2050-10-01;F  # National Day
+2050-10-02;F  # National Day
+2050-10-03;F  # National Day
+2050-10-04;F  # National Day (compensated leave)
+2050-10-05;F  # National Day (compensated leave)
+2050-10-06;F  # National Day (compensated leave)
+2050-10-07;F  # National Day (compensated leave)
+2050-10-08;T  # Makeup workday for National Day
+2050-10-08;F  # National Day (compensated leave)
+2051-01-01;F  # New Year's Day
+2051-02-04;T  # Makeup workday for Spring Festival
+2051-02-09;F  # Spring Festival (Lunar New Year Eve)
+2051-02-10;F  # Spring Festival (Lunar New Year Day 1)
+2051-02-11;F  # Spring Festival (Lunar New Year Day 2)
+2051-02-12;F  # Spring Festival (Lunar New Year Day 3)
+2051-02-13;F  # Spring Festival (compensated leave)
+2051-02-14;F  # Spring Festival (compensated leave)
+2051-02-15;F  # Spring Festival (compensated leave)
+2051-02-16;F  # Spring Festival (compensated leave)
+2051-02-18;T  # Makeup workday for Spring Festival
+2051-04-03;F  # Qingming Festival (compensated leave)
+2051-04-04;F  # Qingming Festival (weekend adjacent)
+2051-04-05;F  # Qingming Festival
+2051-04-23;T  # Makeup workday for Labor Day
+2051-05-01;F  # Labor Day
+2051-05-02;F  # Labor Day
+2051-05-03;F  # Labor Day (compensated leave)
+2051-05-04;F  # Labor Day (compensated leave)
+2051-05-05;F  # Labor Day (compensated leave)
+2051-05-06;T  # Makeup workday for Labor Day
+2051-06-12;F  # Dragon Boat Festival (compensated leave)
+2051-06-13;F  # Dragon Boat Festival
+2051-06-14;F  # Dragon Boat Festival (weekend adjacent)
+2051-09-17;T  # Makeup workday for Mid-Autumn Festival
+2051-09-18;F  # Mid-Autumn Festival (compensated leave)
+2051-09-19;F  # Mid-Autumn Festival
+2051-09-20;F  # Mid-Autumn Festival (weekend adjacent)
+2051-09-24;T  # Makeup workday for National Day
+2051-10-01;F  # National Day
+2051-10-02;F  # National Day
+2051-10-03;F  # National Day
+2051-10-04;F  # National Day (compensated leave)
+2051-10-05;F  # National Day (compensated leave)
+2051-10-06;F  # National Day (compensated leave)
+2051-10-07;F  # National Day (compensated leave)
+2051-10-08;T  # Makeup workday for National Day
+2052-01-01;F  # New Year's Day
+2052-01-29;F  # Spring Festival (Lunar New Year Eve)
+2052-01-30;F  # Spring Festival (Lunar New Year Day 1)
+2052-01-31;F  # Spring Festival (Lunar New Year Day 2)
+2052-02-01;F  # Spring Festival (Lunar New Year Day 3)
+2052-02-02;F  # Spring Festival (compensated leave)
+2052-02-03;T  # Makeup workday for Spring Festival
+2052-02-03;F  # Spring Festival (compensated leave)
+2052-02-04;F  # Spring Festival (compensated leave)
+2052-02-05;F  # Spring Festival (compensated leave)
+2052-02-17;T  # Makeup workday for Spring Festival
+2052-04-04;F  # Qingming Festival
+2052-04-05;F  # Qingming Festival (weekend adjacent)
+2052-04-06;F  # Qingming Festival (weekend adjacent)
+2052-04-28;T  # Makeup workday for Labor Day
+2052-05-01;F  # Labor Day
+2052-05-02;F  # Labor Day
+2052-05-03;F  # Labor Day (compensated leave)
+2052-05-04;F  # Labor Day (compensated leave)
+2052-05-05;T  # Makeup workday for Labor Day
+2052-05-05;F  # Labor Day (compensated leave)
+2052-06-01;F  # Dragon Boat Festival
+2052-06-02;F  # Dragon Boat Festival (weekend adjacent)
+2052-06-03;F  # Dragon Boat Festival (compensated leave)
+2052-09-29;T  # Makeup workday for National Day/Mid-Autumn Festival
+2052-10-01;F  # National Day
+2052-10-02;F  # National Day
+2052-10-03;F  # National Day
+2052-10-04;F  # National Day (compensated leave)
+2052-10-05;F  # National Day (compensated leave)
+2052-10-06;F  # National Day (compensated leave)
+2052-10-07;F  # Mid-Autumn Festival
+2052-10-08;F  # National Day (compensated leave)
+2052-10-12;T  # Makeup workday for National Day/Mid-Autumn Festival
+2053-01-01;F  # New Year's Day
+2053-01-05;T  # Makeup workday for New Year's Day
+2053-02-08;T  # Makeup workday for Spring Festival
+2053-02-17;F  # Spring Festival (Lunar New Year Eve)
+2053-02-18;F  # Spring Festival (Lunar New Year Day 1)
+2053-02-19;F  # Spring Festival (Lunar New Year Day 2)
+2053-02-20;F  # Spring Festival (Lunar New Year Day 3)
+2053-02-21;F  # Spring Festival (compensated leave)
+2053-02-22;T  # Makeup workday for Spring Festival
+2053-02-22;F  # Spring Festival (compensated leave)
+2053-02-23;F  # Spring Festival (compensated leave)
+2053-02-24;F  # Spring Festival (compensated leave)
+2053-04-04;F  # Qingming Festival
+2053-04-05;F  # Qingming Festival (weekend adjacent)
+2053-04-06;F  # Qingming Festival (weekend adjacent)
+2053-04-27;T  # Makeup workday for Labor Day
+2053-05-01;F  # Labor Day
+2053-05-02;F  # Labor Day
+2053-05-03;F  # Labor Day (compensated leave)
+2053-05-04;F  # Labor Day (compensated leave)
+2053-05-05;F  # Labor Day (compensated leave)
+2053-05-10;T  # Makeup workday for Labor Day
+2053-06-20;F  # Dragon Boat Festival
+2053-06-21;F  # Dragon Boat Festival (weekend adjacent)
+2053-06-22;F  # Dragon Boat Festival (weekend adjacent)
+2053-09-26;F  # Mid-Autumn Festival
+2053-09-27;F  # Mid-Autumn Festival (weekend adjacent)
+2053-09-28;T  # Makeup workday for Mid-Autumn Festival
+2053-09-28;F  # Mid-Autumn Festival (compensated leave)
+2053-09-29;T  # Makeup workday for National Day
+2053-10-01;F  # National Day
+2053-10-02;F  # National Day
+2053-10-03;F  # National Day
+2053-10-04;F  # National Day (compensated leave)
+2053-10-05;F  # National Day (compensated leave)
+2053-10-06;F  # National Day (compensated leave)
+2053-10-07;F  # National Day (compensated leave)
+2053-10-12;T  # Makeup workday for National Day
+2054-01-01;F  # New Year's Day
+2054-02-07;T  # Makeup workday for Spring Festival
+2054-02-07;F  # Spring Festival (Lunar New Year Eve)
+2054-02-08;F  # Spring Festival (Lunar New Year Day 1)
+2054-02-09;F  # Spring Festival (Lunar New Year Day 2)
+2054-02-10;F  # Spring Festival (Lunar New Year Day 3)
+2054-02-11;F  # Spring Festival (compensated leave)
+2054-02-12;F  # Spring Festival (compensated leave)
+2054-02-13;F  # Spring Festival (compensated leave)
+2054-02-14;F  # Spring Festival (compensated leave)
+2054-02-21;T  # Makeup workday for Spring Festival
+2054-04-04;F  # Qingming Festival (weekend adjacent)
+2054-04-05;F  # Qingming Festival
+2054-04-06;F  # Qingming Festival (compensated leave)
+2054-04-26;T  # Makeup workday for Labor Day
+2054-05-01;F  # Labor Day
+2054-05-02;F  # Labor Day
+2054-05-03;F  # Labor Day (compensated leave)
+2054-05-04;F  # Labor Day (compensated leave)
+2054-05-05;F  # Labor Day (compensated leave)
+2054-05-09;T  # Makeup workday for Labor Day
+2054-06-08;F  # Dragon Boat Festival (compensated leave)
+2054-06-09;F  # Dragon Boat Festival (weekend adjacent)
+2054-06-10;F  # Dragon Boat Festival
+2054-09-13;T  # Makeup workday for Mid-Autumn Festival
+2054-09-14;F  # Mid-Autumn Festival (compensated leave)
+2054-09-15;F  # Mid-Autumn Festival (weekend adjacent)
+2054-09-16;F  # Mid-Autumn Festival
+2054-09-27;T  # Makeup workday for National Day
+2054-10-01;F  # National Day
+2054-10-02;F  # National Day
+2054-10-03;F  # National Day
+2054-10-04;F  # National Day (compensated leave)
+2054-10-05;F  # National Day (compensated leave)
+2054-10-06;F  # National Day (compensated leave)
+2054-10-07;F  # National Day (compensated leave)
+2054-10-11;T  # Makeup workday for National Day
+2055-01-01;F  # New Year's Day
+2055-01-27;F  # Spring Festival (Lunar New Year Eve)
+2055-01-28;F  # Spring Festival (Lunar New Year Day 1)
+2055-01-29;F  # Spring Festival (Lunar New Year Day 2)
+2055-01-30;F  # Spring Festival (Lunar New Year Day 3)
+2055-01-31;F  # Spring Festival (compensated leave)
+2055-02-01;F  # Spring Festival (compensated leave)
+2055-02-02;F  # Spring Festival (compensated leave)
+2055-02-03;F  # Spring Festival (compensated leave)
+2055-02-06;T  # Makeup workday for Spring Festival
+2055-02-20;T  # Makeup workday for Spring Festival
+2055-04-04;F  # Qingming Festival
+2055-04-05;F  # Qingming Festival (weekend adjacent)
+2055-04-06;F  # Qingming Festival (compensated leave)
+2055-04-25;T  # Makeup workday for Labor Day
+2055-05-01;F  # Labor Day
+2055-05-02;F  # Labor Day
+2055-05-03;F  # Labor Day (compensated leave)
+2055-05-04;F  # Labor Day (compensated leave)
+2055-05-05;F  # Labor Day (compensated leave)
+2055-05-08;T  # Makeup workday for Labor Day
+2055-05-30;F  # Dragon Boat Festival
+2055-05-31;F  # Dragon Boat Festival (weekend adjacent)
+2055-06-01;F  # Dragon Boat Festival (weekend adjacent)
+2055-09-25;T  # Makeup workday for National Day/Mid-Autumn Festival
+2055-10-01;F  # National Day
+2055-10-02;F  # National Day
+2055-10-03;F  # National Day
+2055-10-04;F  # National Day (compensated leave)
+2055-10-05;F  # Mid-Autumn Festival
+2055-10-06;F  # National Day (compensated leave)
+2055-10-07;F  # National Day (compensated leave)
+2055-10-08;F  # National Day (compensated leave)
+2055-10-09;T  # Makeup workday for National Day/Mid-Autumn Festival
+2056-01-01;F  # New Year's Day
+2056-02-05;T  # Makeup workday for Spring Festival
+2056-02-14;F  # Spring Festival (Lunar New Year Eve)
+2056-02-15;F  # Spring Festival (Lunar New Year Day 1)
+2056-02-16;F  # Spring Festival (Lunar New Year Day 2)
+2056-02-17;F  # Spring Festival (Lunar New Year Day 3)
+2056-02-18;F  # Spring Festival (compensated leave)
+2056-02-19;T  # Makeup workday for Spring Festival
+2056-02-19;F  # Spring Festival (compensated leave)
+2056-02-20;F  # Spring Festival (compensated leave)
+2056-02-21;F  # Spring Festival (compensated leave)
+2056-04-02;F  # Qingming Festival (compensated leave)
+2056-04-03;F  # Qingming Festival (weekend adjacent)
+2056-04-04;F  # Qingming Festival
+2056-04-23;T  # Makeup workday for Labor Day
+2056-05-01;F  # Labor Day
+2056-05-02;F  # Labor Day
+2056-05-03;F  # Labor Day (compensated leave)
+2056-05-04;F  # Labor Day (compensated leave)
+2056-05-05;F  # Labor Day (compensated leave)
+2056-05-06;T  # Makeup workday for Labor Day
+2056-06-17;F  # Dragon Boat Festival (compensated leave)
+2056-06-18;F  # Dragon Boat Festival
+2056-06-19;F  # Dragon Boat Festival (weekend adjacent)
+2056-09-23;T  # Makeup workday for Mid-Autumn Festival
+2056-09-23;F  # Mid-Autumn Festival (compensated leave)
+2056-09-24;F  # Mid-Autumn Festival
+2056-09-25;F  # Mid-Autumn Festival (weekend adjacent)
+2056-09-30;T  # Makeup workday for National Day
+2056-10-01;F  # National Day
+2056-10-02;F  # National Day
+2056-10-03;F  # National Day
+2056-10-04;F  # National Day (compensated leave)
+2056-10-05;F  # National Day (compensated leave)
+2056-10-06;F  # National Day (compensated leave)
+2056-10-07;F  # National Day (compensated leave)
+2056-10-13;T  # Makeup workday for National Day
+2057-01-01;F  # New Year's Day
+2057-01-05;T  # Makeup workday for New Year's Day
+2057-02-03;F  # Spring Festival (Lunar New Year Eve)
+2057-02-04;T  # Makeup workday for Spring Festival
+2057-02-04;F  # Spring Festival (Lunar New Year Day 1)
+2057-02-05;F  # Spring Festival (Lunar New Year Day 2)
+2057-02-06;F  # Spring Festival (Lunar New Year Day 3)
+2057-02-07;F  # Spring Festival (compensated leave)
+2057-02-08;F  # Spring Festival (compensated leave)
+2057-02-09;F  # Spring Festival (compensated leave)
+2057-02-10;F  # Spring Festival (compensated leave)
+2057-02-18;T  # Makeup workday for Spring Festival
+2057-04-04;F  # Qingming Festival (weekend adjacent)
+2057-04-05;F  # Qingming Festival
+2057-04-06;F  # Qingming Festival (compensated leave)
+2057-04-28;T  # Makeup workday for Labor Day
+2057-05-01;F  # Labor Day
+2057-05-02;F  # Labor Day
+2057-05-03;F  # Labor Day (compensated leave)
+2057-05-04;F  # Labor Day (compensated leave)
+2057-05-05;T  # Makeup workday for Labor Day
+2057-05-05;F  # Labor Day (compensated leave)
+2057-06-06;F  # Dragon Boat Festival (compensated leave)
+2057-06-07;F  # Dragon Boat Festival
+2057-06-08;F  # Dragon Boat Festival (weekend adjacent)
+2057-09-12;F  # Mid-Autumn Festival (compensated leave)
+2057-09-13;F  # Mid-Autumn Festival
+2057-09-14;F  # Mid-Autumn Festival (weekend adjacent)
+2057-09-15;T  # Makeup workday for Mid-Autumn Festival
+2057-09-29;T  # Makeup workday for National Day
+2057-10-01;F  # National Day
+2057-10-02;F  # National Day
+2057-10-03;F  # National Day
+2057-10-04;F  # National Day (compensated leave)
+2057-10-05;F  # National Day (compensated leave)
+2057-10-06;F  # National Day (compensated leave)
+2057-10-07;F  # National Day (compensated leave)
+2057-10-12;T  # Makeup workday for National Day
+2058-01-01;F  # New Year's Day
+2058-02-10;T  # Makeup workday for Spring Festival
+2058-02-23;F  # Spring Festival (Lunar New Year Eve)
+2058-02-24;T  # Makeup workday for Spring Festival
+2058-02-24;F  # Spring Festival (Lunar New Year Day 1)
+2058-02-25;F  # Spring Festival (Lunar New Year Day 2)
+2058-02-26;F  # Spring Festival (Lunar New Year Day 3)
+2058-02-27;F  # Spring Festival (compensated leave)
+2058-02-28;F  # Spring Festival (compensated leave)
+2058-03-01;F  # Spring Festival (compensated leave)
+2058-03-02;F  # Spring Festival (compensated leave)
+2058-04-05;F  # Qingming Festival
+2058-04-06;F  # Qingming Festival (weekend adjacent)
+2058-04-07;F  # Qingming Festival (weekend adjacent)
+2058-04-27;T  # Makeup workday for Labor Day
+2058-05-01;F  # Labor Day
+2058-05-02;F  # Labor Day
+2058-05-03;F  # Labor Day (compensated leave)
+2058-05-04;F  # Labor Day (compensated leave)
+2058-05-05;F  # Labor Day (compensated leave)
+2058-05-10;T  # Makeup workday for Labor Day
+2058-06-27;F  # Dragon Boat Festival
+2058-06-28;F  # Dragon Boat Festival (weekend adjacent)
+2058-06-29;F  # Dragon Boat Festival (weekend adjacent)
+2058-09-27;T  # Makeup workday for Mid-Autumn Festival/National Day
+2058-10-01;F  # National Day
+2058-10-02;F  # Mid-Autumn Festival
+2058-10-02;F  # National Day
+2058-10-03;F  # National Day
+2058-10-04;F  # National Day (compensated leave)
+2058-10-05;F  # National Day (compensated leave)
+2058-10-06;F  # National Day (compensated leave)
+2058-10-07;F  # National Day (compensated leave)
+2058-10-11;T  # Makeup workday for National Day
+2059-01-01;F  # New Year's Day
+2059-02-09;T  # Makeup workday for Spring Festival
+2059-02-11;F  # Spring Festival (Lunar New Year Eve)
+2059-02-12;F  # Spring Festival (Lunar New Year Day 1)
+2059-02-13;F  # Spring Festival (Lunar New Year Day 2)
+2059-02-14;F  # Spring Festival (Lunar New Year Day 3)
+2059-02-15;F  # Spring Festival (compensated leave)
+2059-02-16;F  # Spring Festival (compensated leave)
+2059-02-17;F  # Spring Festival (compensated leave)
+2059-02-18;F  # Spring Festival (compensated leave)
+2059-02-23;T  # Makeup workday for Spring Festival
+2059-04-05;F  # Qingming Festival
+2059-04-06;F  # Qingming Festival (weekend adjacent)
+2059-04-07;F  # Qingming Festival (compensated leave)
+2059-04-26;T  # Makeup workday for Labor Day
+2059-05-01;F  # Labor Day
+2059-05-02;F  # Labor Day
+2059-05-03;F  # Labor Day (compensated leave)
+2059-05-04;F  # Labor Day (compensated leave)
+2059-05-05;F  # Labor Day (compensated leave)
+2059-05-09;T  # Makeup workday for Labor Day
+2059-06-15;F  # Dragon Boat Festival (compensated leave)
+2059-06-16;F  # Dragon Boat Festival
+2059-06-17;F  # Dragon Boat Festival (weekend adjacent)
+2059-09-19;T  # Makeup workday for Mid-Autumn Festival
+2059-09-21;F  # Mid-Autumn Festival (compensated leave)
+2059-09-22;F  # Mid-Autumn Festival
+2059-09-23;F  # Mid-Autumn Festival (weekend adjacent)
+2059-09-27;T  # Makeup workday for National Day
+2059-10-01;F  # National Day
+2059-10-02;F  # National Day
+2059-10-03;F  # National Day
+2059-10-04;F  # National Day (compensated leave)
+2059-10-05;F  # National Day (compensated leave)
+2059-10-06;F  # National Day (compensated leave)
+2059-10-07;F  # National Day (compensated leave)
+2059-10-10;T  # Makeup workday for National Day
+2060-01-01;F  # New Year's Day
+2060-02-01;F  # Spring Festival (Lunar New Year Eve)
+2060-02-02;F  # Spring Festival (Lunar New Year Day 1)
+2060-02-03;F  # Spring Festival (Lunar New Year Day 2)
+2060-02-04;F  # Spring Festival (Lunar New Year Day 3)
+2060-02-05;F  # Spring Festival (compensated leave)
+2060-02-06;F  # Spring Festival (compensated leave)
+2060-02-07;F  # Spring Festival (compensated leave)
+2060-02-08;T  # Makeup workday for Spring Festival
+2060-02-08;F  # Spring Festival (compensated leave)
+2060-02-22;T  # Makeup workday for Spring Festival
+2060-04-03;F  # Qingming Festival (compensated leave)
+2060-04-04;F  # Qingming Festival
+2060-04-05;F  # Qingming Festival (weekend adjacent)
+2060-04-24;T  # Makeup workday for Labor Day
+2060-05-01;F  # Labor Day
+2060-05-02;F  # Labor Day
+2060-05-03;F  # Labor Day (compensated leave)
+2060-05-04;F  # Labor Day (compensated leave)
+2060-05-05;F  # Labor Day (compensated leave)
+2060-05-07;T  # Makeup workday for Labor Day
+2060-06-04;F  # Dragon Boat Festival
+2060-06-05;F  # Dragon Boat Festival (weekend adjacent)
+2060-06-06;F  # Dragon Boat Festival (weekend adjacent)
+2060-09-09;F  # Mid-Autumn Festival
+2060-09-10;T  # Makeup workday for Mid-Autumn Festival
+2060-09-10;F  # Mid-Autumn Festival (weekend adjacent)
+2060-09-11;F  # Mid-Autumn Festival (weekend adjacent)
+2060-09-26;T  # Makeup workday for National Day
+2060-10-01;F  # National Day
+2060-10-02;F  # National Day
+2060-10-03;F  # National Day
+2060-10-04;F  # National Day (compensated leave)
+2060-10-05;F  # National Day (compensated leave)
+2060-10-06;F  # National Day (compensated leave)
+2060-10-07;F  # National Day (compensated leave)
+2060-10-09;T  # Makeup workday for National Day
+2061-01-01;F  # New Year's Day
+2061-02-07;T  # Makeup workday for Spring Festival
+2061-02-20;F  # Spring Festival (Lunar New Year Eve)
+2061-02-21;T  # Makeup workday for Spring Festival
+2061-02-21;F  # Spring Festival (Lunar New Year Day 1)
+2061-02-22;F  # Spring Festival (Lunar New Year Day 2)
+2061-02-23;F  # Spring Festival (Lunar New Year Day 3)
+2061-02-24;F  # Spring Festival (compensated leave)
+2061-02-25;F  # Spring Festival (compensated leave)
+2061-02-26;F  # Spring Festival (compensated leave)
+2061-02-27;F  # Spring Festival (compensated leave)
+2061-04-04;F  # Qingming Festival
+2061-04-05;F  # Qingming Festival (weekend adjacent)
+2061-04-06;F  # Qingming Festival (compensated leave)
+2061-04-23;T  # Makeup workday for Labor Day
+2061-05-01;F  # Labor Day
+2061-05-02;F  # Labor Day
+2061-05-03;F  # Labor Day (compensated leave)
+2061-05-04;F  # Labor Day (compensated leave)
+2061-05-05;F  # Labor Day (compensated leave)
+2061-05-06;T  # Makeup workday for Labor Day
+2061-06-23;F  # Dragon Boat Festival
+2061-06-24;F  # Dragon Boat Festival (weekend adjacent)
+2061-06-25;F  # Dragon Boat Festival (weekend adjacent)
+2061-09-29;F  # Mid-Autumn Festival
+2061-09-30;T  # Makeup workday for Mid-Autumn Festival
+2061-09-30;F  # Mid-Autumn Festival (weekend adjacent)
+2061-10-01;F  # National Day
+2061-10-02;F  # National Day
+2061-10-03;F  # National Day
+2061-10-04;F  # National Day (compensated leave)
+2061-10-05;F  # National Day (compensated leave)
+2061-10-06;F  # National Day (compensated leave)
+2061-10-07;F  # National Day (compensated leave)
+2061-10-09;T  # Makeup workday for National Day
+2061-10-12;T  # Makeup workday for National Day
+2062-01-01;F  # New Year's Day
+2062-01-03;T  # Makeup workday for New Year's Day
+2062-02-06;T  # Makeup workday for Spring Festival
+2062-02-08;F  # Spring Festival (Lunar New Year Eve)
+2062-02-09;F  # Spring Festival (Lunar New Year Day 1)
+2062-02-10;F  # Spring Festival (Lunar New Year Day 2)
+2062-02-11;F  # Spring Festival (Lunar New Year Day 3)
+2062-02-12;F  # Spring Festival (compensated leave)
+2062-02-13;F  # Spring Festival (compensated leave)
+2062-02-14;F  # Spring Festival (compensated leave)
+2062-02-15;F  # Spring Festival (compensated leave)
+2062-02-20;T  # Makeup workday for Spring Festival
+2062-04-03;F  # Qingming Festival (compensated leave)
+2062-04-04;F  # Qingming Festival (weekend adjacent)
+2062-04-05;F  # Qingming Festival
+2062-04-29;T  # Makeup workday for Labor Day
+2062-05-01;F  # Labor Day
+2062-05-02;F  # Labor Day
+2062-05-03;F  # Labor Day (compensated leave)
+2062-05-04;F  # Labor Day (compensated leave)
+2062-05-05;F  # Labor Day (compensated leave)
+2062-05-06;T  # Makeup workday for Labor Day
+2062-06-11;F  # Dragon Boat Festival (compensated leave)
+2062-06-12;F  # Dragon Boat Festival
+2062-06-13;F  # Dragon Boat Festival (weekend adjacent)
+2062-09-17;F  # Mid-Autumn Festival (compensated leave)
+2062-09-18;T  # Makeup workday for Mid-Autumn Festival
+2062-09-18;F  # Mid-Autumn Festival
+2062-09-19;F  # Mid-Autumn Festival (weekend adjacent)
+2062-09-25;T  # Makeup workday for National Day
+2062-10-01;F  # National Day
+2062-10-02;F  # National Day
+2062-10-03;F  # National Day
+2062-10-04;F  # National Day (compensated leave)
+2062-10-05;F  # National Day (compensated leave)
+2062-10-06;F  # National Day (compensated leave)
+2062-10-07;F  # National Day (compensated leave)
+2062-10-09;T  # Makeup workday for National Day
+2063-01-01;F  # New Year's Day
+2063-01-28;F  # Spring Festival (Lunar New Year Eve)
+2063-01-29;F  # Spring Festival (Lunar New Year Day 1)
+2063-01-30;F  # Spring Festival (Lunar New Year Day 2)
+2063-01-31;F  # Spring Festival (Lunar New Year Day 3)
+2063-02-01;F  # Spring Festival (compensated leave)
+2063-02-02;F  # Spring Festival (compensated leave)
+2063-02-03;F  # Spring Festival (compensated leave)
+2063-02-04;F  # Spring Festival (compensated leave)
+2063-02-05;T  # Makeup workday for Spring Festival
+2063-02-19;T  # Makeup workday for Spring Festival
+2063-04-04;F  # Qingming Festival (weekend adjacent)
+2063-04-05;F  # Qingming Festival
+2063-04-06;F  # Qingming Festival (compensated leave)
+2063-04-28;T  # Makeup workday for Labor Day
+2063-05-01;F  # Labor Day
+2063-05-02;F  # Labor Day
+2063-05-03;F  # Labor Day (compensated leave)
+2063-05-04;F  # Labor Day (compensated leave)
+2063-05-05;T  # Makeup workday for Labor Day
+2063-05-05;F  # Labor Day (compensated leave)
+2063-06-01;F  # Dragon Boat Festival
+2063-06-02;F  # Dragon Boat Festival (weekend adjacent)
+2063-06-03;F  # Dragon Boat Festival (weekend adjacent)
+2063-09-29;T  # Makeup workday for National Day/Mid-Autumn Festival
+2063-10-01;F  # National Day
+2063-10-02;F  # National Day
+2063-10-03;F  # National Day
+2063-10-04;F  # National Day (compensated leave)
+2063-10-05;F  # National Day (compensated leave)
+2063-10-06;F  # National Day (compensated leave)
+2063-10-07;F  # Mid-Autumn Festival
+2063-10-08;F  # National Day (compensated leave)
+2063-10-12;T  # Makeup workday for National Day/Mid-Autumn Festival
+2064-01-01;F  # New Year's Day
+2064-02-04;T  # Makeup workday for Spring Festival
+2064-02-16;F  # Spring Festival (Lunar New Year Eve)
+2064-02-17;F  # Spring Festival (Lunar New Year Day 1)
+2064-02-18;T  # Makeup workday for Spring Festival
+2064-02-18;F  # Spring Festival (Lunar New Year Day 2)
+2064-02-19;F  # Spring Festival (Lunar New Year Day 3)
+2064-02-20;F  # Spring Festival (compensated leave)
+2064-02-21;F  # Spring Festival (compensated leave)
+2064-02-22;F  # Spring Festival (compensated leave)
+2064-02-23;F  # Spring Festival (compensated leave)
+2064-04-04;F  # Qingming Festival
+2064-04-05;F  # Qingming Festival (weekend adjacent)
+2064-04-06;F  # Qingming Festival (weekend adjacent)
+2064-04-26;T  # Makeup workday for Labor Day
+2064-05-01;F  # Labor Day
+2064-05-02;F  # Labor Day
+2064-05-03;F  # Labor Day (compensated leave)
+2064-05-04;F  # Labor Day (compensated leave)
+2064-05-05;F  # Labor Day (compensated leave)
+2064-05-09;T  # Makeup workday for Labor Day
+2064-06-20;F  # Dragon Boat Festival
+2064-06-21;F  # Dragon Boat Festival (weekend adjacent)
+2064-06-22;F  # Dragon Boat Festival (weekend adjacent)
+2064-09-25;F  # Mid-Autumn Festival
+2064-09-26;F  # Mid-Autumn Festival (weekend adjacent)
+2064-09-27;T  # Makeup workday for Mid-Autumn Festival
+2064-09-27;F  # Mid-Autumn Festival (compensated leave)
+2064-10-01;F  # National Day
+2064-10-02;F  # National Day
+2064-10-03;F  # National Day
+2064-10-04;T  # Makeup workday for National Day
+2064-10-04;F  # National Day (compensated leave)
+2064-10-05;F  # National Day (compensated leave)
+2064-10-06;F  # National Day (compensated leave)
+2064-10-07;F  # National Day (compensated leave)
+2064-10-11;T  # Makeup workday for National Day
+2065-01-01;F  # New Year's Day
+2065-02-03;T  # Makeup workday for Spring Festival
+2065-02-04;F  # Spring Festival (Lunar New Year Eve)
+2065-02-05;F  # Spring Festival (Lunar New Year Day 1)
+2065-02-06;F  # Spring Festival (Lunar New Year Day 2)
+2065-02-07;F  # Spring Festival (Lunar New Year Day 3)
+2065-02-08;F  # Spring Festival (compensated leave)
+2065-02-09;F  # Spring Festival (compensated leave)
+2065-02-10;F  # Spring Festival (compensated leave)
+2065-02-11;F  # Spring Festival (compensated leave)
+2065-02-17;T  # Makeup workday for Spring Festival
+2065-04-04;F  # Qingming Festival (weekend adjacent)
+2065-04-05;F  # Qingming Festival
+2065-04-06;F  # Qingming Festival (compensated leave)
+2065-04-25;T  # Makeup workday for Labor Day
+2065-05-01;F  # Labor Day
+2065-05-02;F  # Labor Day
+2065-05-03;F  # Labor Day (compensated leave)
+2065-05-04;F  # Labor Day (compensated leave)
+2065-05-05;F  # Labor Day (compensated leave)
+2065-05-08;T  # Makeup workday for Labor Day
+2065-06-08;F  # Dragon Boat Festival (compensated leave)
+2065-06-09;F  # Dragon Boat Festival
+2065-06-10;F  # Dragon Boat Festival (weekend adjacent)
+2065-09-12;T  # Makeup workday for Mid-Autumn Festival
+2065-09-13;F  # Mid-Autumn Festival (compensated leave)
+2065-09-14;F  # Mid-Autumn Festival
+2065-09-15;F  # Mid-Autumn Festival (weekend adjacent)
+2065-09-26;T  # Makeup workday for National Day
+2065-10-01;F  # National Day
+2065-10-02;F  # National Day
+2065-10-03;F  # National Day
+2065-10-04;F  # National Day (compensated leave)
+2065-10-05;F  # National Day (compensated leave)
+2065-10-10;T  # Makeup workday for National Day
+2066-01-02;T  # Makeup workday for New Year's Day
+2066-02-09;T  # Makeup workday for Spring Festival
+2066-02-22;T  # Makeup workday for Spring Festival
+2066-04-24;T  # Makeup workday for Labor Day
+2066-05-07;T  # Makeup workday for Labor Day
+2066-09-21;T  # Makeup workday for Mid-Autumn Festival
+2066-09-25;T  # Makeup workday for National Day
+2066-10-08;T  # Makeup workday for National Day
+2067-01-08;T  # Makeup workday for New Year's Day
+2067-02-01;T  # Makeup workday for Spring Festival
+2067-02-14;T  # Makeup workday for Spring Festival
+2067-04-23;T  # Makeup workday for Labor Day
+2067-05-06;T  # Makeup workday for Labor Day
+2067-09-10;T  # Makeup workday for Mid-Autumn Festival
+2067-09-24;T  # Makeup workday for National Day
+2067-10-07;T  # Makeup workday for National Day
+2068-01-07;T  # Makeup workday for New Year's Day
+2068-02-07;T  # Makeup workday for Spring Festival
+2068-02-21;T  # Makeup workday for Spring Festival
+2068-04-28;T  # Makeup workday for Labor Day
+2068-05-05;T  # Makeup workday for Labor Day
+2068-09-28;T  # Makeup workday for Mid-Autumn Festival
+2068-10-03;T  # Makeup workday for National Day
+2068-10-10;T  # Makeup workday for National Day
+2069-01-06;T  # Makeup workday for New Year's Day
+2069-02-06;T  # Makeup workday for Spring Festival
+2069-02-19;T  # Makeup workday for Spring Festival
+2069-04-27;T  # Makeup workday for Labor Day
+2069-05-10;T  # Makeup workday for Labor Day
+2069-09-20;T  # Makeup workday for Mid-Autumn Festival
+2069-10-02;T  # Makeup workday for National Day
+2069-10-11;T  # Makeup workday for National Day
+2070-01-05;T  # Makeup workday for New Year's Day
+2070-02-05;T  # Makeup workday for Spring Festival
+2070-02-18;T  # Makeup workday for Spring Festival
+2070-04-26;T  # Makeup workday for Labor Day
+2070-05-09;T  # Makeup workday for Labor Day
+2070-09-12;T  # Makeup workday for Mid-Autumn Festival
+2070-10-01;T  # Makeup workday for National Day
+2070-10-08;T  # Makeup workday for National Day
+2071-01-04;T  # Makeup workday for New Year's Day
+2071-01-31;T  # Makeup workday for Spring Festival
+2071-02-13;T  # Makeup workday for Spring Festival
+2071-04-25;T  # Makeup workday for Labor Day
+2071-05-08;T  # Makeup workday for Labor Day
+2071-09-21;T  # Makeup workday for Mid-Autumn Festival
+2071-09-30;T  # Makeup workday for National Day
+2071-10-11;T  # Makeup workday for National Day
+2072-01-03;T  # Makeup workday for New Year's Day
+2072-02-12;T  # Makeup workday for Spring Festival
+2072-02-25;T  # Makeup workday for Spring Festival
+2072-04-23;T  # Makeup workday for Labor Day
+2072-05-06;T  # Makeup workday for Labor Day
+2072-09-24;T  # Makeup workday for Mid-Autumn Festival
+2072-10-03;T  # Makeup workday for National Day
+2072-10-09;T  # Makeup workday for National Day
+2073-01-08;T  # Makeup workday for New Year's Day
+2073-02-10;T  # Makeup workday for Spring Festival
+2073-02-23;T  # Makeup workday for Spring Festival
+2073-04-22;T  # Makeup workday for Labor Day
+2073-05-05;T  # Makeup workday for Labor Day
+2073-09-16;T  # Makeup workday for Mid-Autumn Festival
+2073-09-29;T  # Makeup workday for National Day
+2073-10-12;T  # Makeup workday for National Day
+2074-01-07;T  # Makeup workday for New Year's Day
+2074-01-30;T  # Makeup workday for Spring Festival
+2074-02-12;T  # Makeup workday for Spring Festival
+2074-04-28;T  # Makeup workday for Labor Day
+2074-05-05;T  # Makeup workday for Labor Day
+2074-09-08;T  # Makeup workday for Mid-Autumn Festival
+2074-09-28;T  # Makeup workday for National Day
+2074-10-11;T  # Makeup workday for National Day
+2075-01-06;T  # Makeup workday for New Year's Day
+2075-02-08;T  # Makeup workday for Spring Festival
+2075-02-21;T  # Makeup workday for Spring Festival
+2075-04-27;T  # Makeup workday for Labor Day
+2075-05-10;T  # Makeup workday for Labor Day
+2075-09-20;T  # Makeup workday for Mid-Autumn Festival
+2075-09-27;T  # Makeup workday for National Day
+2075-10-10;T  # Makeup workday for National Day
+2076-01-05;T  # Makeup workday for New Year's Day
+2076-01-28;T  # Makeup workday for Spring Festival
+2076-02-10;T  # Makeup workday for Spring Festival
+2076-04-25;T  # Makeup workday for Labor Day
+2076-05-08;T  # Makeup workday for Labor Day
+2076-09-25;T  # Makeup workday for Mid-Autumn Festival
+2076-10-03;T  # Makeup workday for National Day
+2076-10-09;T  # Makeup workday for National Day
+2077-01-04;T  # Makeup workday for New Year's Day
+2077-02-06;T  # Makeup workday for Spring Festival
+2077-02-19;T  # Makeup workday for Spring Festival
+2077-04-24;T  # Makeup workday for Labor Day
+2077-05-07;T  # Makeup workday for Labor Day
+2077-09-17;T  # Makeup workday for Mid-Autumn Festival
+2077-10-02;T  # Makeup workday for National Day
+2077-10-08;T  # Makeup workday for National Day
+2078-01-03;T  # Makeup workday for New Year's Day
+2078-01-29;T  # Makeup workday for Spring Festival
+2078-02-11;T  # Makeup workday for Spring Festival
+2078-04-23;T  # Makeup workday for Labor Day
+2078-05-06;T  # Makeup workday for Labor Day
+2078-09-09;T  # Makeup workday for Mid-Autumn Festival
+2078-10-01;T  # Makeup workday for National Day
+2078-10-07;T  # Makeup workday for National Day
+2079-01-07;T  # Makeup workday for New Year's Day
+2079-02-04;T  # Makeup workday for Spring Festival
+2079-02-17;T  # Makeup workday for Spring Festival
+2079-04-22;T  # Makeup workday for Labor Day
+2079-05-05;T  # Makeup workday for Labor Day
+2079-09-14;T  # Makeup workday for Mid-Autumn Festival
+2079-09-30;T  # Makeup workday for National Day
+2079-10-06;T  # Makeup workday for National Day
+2080-01-06;T  # Makeup workday for New Year's Day
+2080-02-03;T  # Makeup workday for Spring Festival
+2080-02-16;T  # Makeup workday for Spring Festival
+2080-04-27;T  # Makeup workday for Labor Day
+2080-05-03;T  # Makeup workday for Labor Day
+2080-09-18;T  # Makeup workday for Mid-Autumn Festival
+2080-09-28;T  # Makeup workday for National Day
+2080-10-11;T  # Makeup workday for National Day
