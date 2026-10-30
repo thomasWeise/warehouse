@@ -19,6 +19,7 @@ from warehouse.event.time import EndEvent, InitializationComplete, StartEvent
 from warehouse.instance.event import Event
 from warehouse.instance.instance import Instance
 from warehouse.instance.part import Part
+from warehouse.instance.rule import Rule
 from warehouse.instance.time import EARLIEST_START, LATEST_END
 
 
@@ -40,14 +41,11 @@ class BaseModule:
             ev.priority for ev in instance.events)
         #: the next priority value
         self.__priority: int = 0
-
-    def enqueue(self, event: Event) -> None:
-        """
-        Add an event to the simulation's event queue.
-
-        :param event: the event to add
-        """
-        heappush(self.__queue, event)
+        #: the internal timestamp
+        self.__time: int = EARLIEST_START
+        #: the time adjustment function
+        self.__end_of_job: Final[Callable[[int, int, bool], int]] = (
+            instance.end_of_job)
 
     def _start(self) -> None:
         """Begin the simulation."""
@@ -57,15 +55,7 @@ class BaseModule:
         queue.clear()
         queue.extend(self.instance.events)
         self.__priority = self.__max_priority
-
-    def _priority(self) -> int:
-        """
-        Get the next priority value.
-
-        :return: the next priority value
-        """
-        self.__priority += 1
-        return self.__priority
+        self.__time = EARLIEST_START
 
     def _handle_start_event(self, event: StartEvent) -> None:
         """
@@ -81,12 +71,46 @@ class BaseModule:
         :param event: the end event
         """
 
+    def _warehouse_in(self, delta: int,
+                      part: Part,
+                      amount: int) -> WarehouseIn:
+        """
+        Enqueue a warehouse-in event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[WarehouseIn] = WarehouseIn(
+            self.__end_of_job(self.__time, delta, True), p, part, amount)
+        heappush(self.__queue, res)
+        return res
+
     def _handle_warehouse_in(self, event: WarehouseIn) -> None:
         """
         Handle a warehouse-in event.
 
         :param event: the warehouse-in event.
         """
+
+    def _warehouse_demand(self, delta: int,
+                          part: Part,
+                          amount: int) -> WarehouseDemand:
+        """
+        Enqueue a warehouse-demand event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[WarehouseDemand] = WarehouseDemand(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
@@ -95,12 +119,46 @@ class BaseModule:
         :param event: the warehouse-demand event.
         """
 
+    def _warehouse_delivers(self, delta: int,
+                            part: Part,
+                            amount: int) -> WarehouseDelivers:
+        """
+        Enqueue a warehouse-delivers event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[WarehouseDelivers] = WarehouseDelivers(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
+
     def _handle_warehouse_delivers(self, event: WarehouseDelivers) -> None:
         """
         Handle a warehouse-delivers event.
 
         :param event: the warehouse-delivers event.
         """
+
+    def _overstock_in(self, delta: int,
+                      part: Part,
+                      amount: int) -> OverstockIn:
+        """
+        Enqueue an overstock-in event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[OverstockIn] = OverstockIn(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
 
     def _handle_overstock_in(self, event: OverstockIn) -> None:
         """
@@ -109,12 +167,45 @@ class BaseModule:
         :param event: the overstock-in event.
         """
 
+    def _overstock_out(self, delta: int,
+                       part: Part,
+                       amount: int) -> OverstockOut:
+        """
+        Enqueue an overstock-out event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[OverstockOut] = OverstockOut(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
+
     def _handle_overstock_out(self, event: OverstockOut) -> None:
         """
         Handle an overstock-out event.
 
         :param event: the overstock-out event.
         """
+
+    def _bin_in(self, delta: int,
+                part: Part, amount) -> BinIn:
+        """
+        Enqueue a bin-in event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[BinIn] = BinIn(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
 
     def _handle_bin_in(self, event: BinIn) -> None:
         """
@@ -123,6 +214,22 @@ class BaseModule:
         :param event: the bin-in event.
         """
 
+    def _bin_out(self, delta: int,
+                 part: Part, amount) -> BinOut:
+        """
+        Enqueue a bin-out event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[BinOut] = BinOut(
+            self.__end_of_job(self.__time, delta, False), p, part, amount)
+        heappush(self.__queue, res)
+        return res
+
     def _handle_bin_out(self, event: BinOut) -> None:
         """
         Handle a bin-out event.
@@ -130,12 +237,48 @@ class BaseModule:
         :param event: the bin-out event.
         """
 
+    def _understock(self, delta: int,
+                    part: Part,
+                    amount: int) -> Understock:
+        """
+        Enqueue an understock event.
+
+        :param delta: the time delta from now
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[Understock] = Understock(
+            self.__end_of_job(self.__time, delta, True), p, part, amount)
+        heappush(self.__queue, res)
+        return res
+
     def _handle_understock(self, event: Understock) -> None:
         """
         Handle an understock event.
 
         :param event: the understock event.
         """
+
+    def _rule_triggered(self, delta: int,
+                        rule: Rule,
+                        part: Part,
+                        amount: int) -> RuleTriggeredEvent:
+        """
+        Enqueue a rule-triggered event.
+
+        :param delta: the time delta from now
+        :param rule: the rule that was triggered
+        :param part: the part to enter the warehouse
+        :param amount: the amount of the part
+        :return: the event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[RuleTriggeredEvent] = RuleTriggeredEvent(
+            self.__end_of_job(self.__time, delta, True), p, rule, part, amount)
+        heappush(self.__queue, res)
+        return res
 
     def _handle_rule_triggered(self, event: RuleTriggeredEvent) -> None:
         """
@@ -202,11 +345,11 @@ class BaseModule:
         router: Final = self._create_event_router()
         quitter = _QUIT
         end_event: Event | None = None
-        time: int = EARLIEST_START
+        self.__time = time = EARLIEST_START
         end_time: int = LATEST_END
         while queue:
             event = queue[0]
-            time = event.time
+            self.__time = time = event.time
             eid: int = id(event.__class__)
 
             if needs_init and ((time > start_time) or (eid == quitter)):
@@ -231,7 +374,7 @@ class BaseModule:
 
         queue.clear()
         if end_event is None:
-            end_event = EndEvent(time, self._priority())
+            end_event = EndEvent(time, self.__priority + 1)
             self._handle_end_event(end_event)
             yield end_event
 

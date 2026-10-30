@@ -2,9 +2,6 @@
 from typing import Any, Callable, Final
 
 from warehouse.event.checkpoint import CheckpointEvent
-from warehouse.event.storage import (
-    WarehouseDemand,
-)
 from warehouse.instance.demand import Demand
 from warehouse.instance.instance import Instance
 from warehouse.simulation.module_minmax import MinMaxModule
@@ -40,11 +37,8 @@ class DemandModule(MinMaxModule):
 
         :param event: the event
         """
-        time: Final[int] = event.time
         for demand in self.__demands(event.checkpoint.key)(event.product.key):
-            self.enqueue(WarehouseDemand(
-                time + demand.delay, self._priority(), demand.part,
-                demand.amount))
+            self._warehouse_demand(demand.delay, demand.part, demand.amount)
 
 
 def __empty(_: Any) -> tuple:

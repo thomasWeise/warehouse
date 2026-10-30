@@ -11,7 +11,7 @@ Events regarding rules.
 ...     Part(None, "shoe", "random_small")
 ...     Part(None, "trousers", "random_large")
 ...     MinRule(None, "min_hat", "hat", 10, 100)
-...     ev01 = RuleTriggeredEvent.create(1500000000000, 0, "min_hat",
+...     ev01 = RuleTriggeredEvent.create(1500000000, 0, "min_hat",
 ...                                      "hat", 1200)
 ...
 ...     events_1 = (ev01, )
@@ -47,7 +47,7 @@ amount=500, is_random=True))
 MinRule(key=0, name='min_hat', effect_delay=100, part=Part(key=0, \
 name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
 is_random=False)), minimum=10)
-RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
+RuleTriggeredEvent(time=1500000000, priority=0, rule=MinRule(key=0, \
 name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
@@ -59,14 +59,14 @@ name='hat_bins', amount=30, is_random=False)), amount=1200)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-RuleTriggeredEvent(time=1500000000000, priority=0, rule=MinRule(key=0, \
+RuleTriggeredEvent(time=1500000000, priority=0, rule=MinRule(key=0, \
 name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
 minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
 name='hat_bins', amount=30, is_random=False)), amount=1200)
 
 >>> hash(ev01)
--5537349579310125602
+19115592861312599
 """
 from dataclasses import dataclass, field
 from typing import Final

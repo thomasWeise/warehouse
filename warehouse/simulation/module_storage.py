@@ -12,12 +12,7 @@ part, the consumption of part at the assembly line, or anything else.
 from collections import Counter
 from typing import Final
 
-from warehouse.event.bins import BinIn, BinOut
 from warehouse.event.storage import (
-    OverstockIn,
-    OverstockOut,
-    Understock,
-    WarehouseDelivers,
     WarehouseDemand,
     WarehouseIn,
 )
@@ -97,14 +92,13 @@ class StorageModule(BaseModule):
         bin_key: Final[int] = bin_type.key
         amount: int = event.amount
         empty_bins: Final[list[int]] = self.__empty_bins
-        time: Final[int] = event.time
 
         # First, we check if there is a prior pending request for the
         # parts. If yes, we directly satisfy it without putting the
         # material in any stock.
         use: int = min(self.__in_understock[part_key], amount)
         if use > 0:
-            self.enqueue(WarehouseDelivers(time, self._priority(), part, use))
+            self._warehouse_delivers(0, part, use)
             self.__in_understock[part_key] -= use
             amount -= use
             if amount <= 0:
@@ -115,7 +109,7 @@ class StorageModule(BaseModule):
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][part_key] += use
-            self.enqueue(BinIn(time, self._priority(), part, use))
+            self._bin_in(0, part, use)
             amount -= use
             if amount <= 0:
                 return
@@ -123,7 +117,7 @@ class StorageModule(BaseModule):
         # Finally, all remaining parts go into the overstock.
         self.__in_overstock[part_key] += amount
         self.__overstock_queue[bin_key].append([part_key, amount])
-        self.enqueue(OverstockIn(time, self._priority(), part, amount))
+        self._overstock_in(0, part, amount)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
@@ -136,7 +130,6 @@ class StorageModule(BaseModule):
         bin_type: Final[BinType] = part.bin_type
         bin_key: Final[int] = bin_type.key
         amount: int = event.amount
-        time: Final[int] = event.time
 
         in_bin: Final[Counter[int]] = self.__in_bin[bin_key]
         in_overstock: Final[list[int]] = self.__in_overstock
@@ -151,7 +144,7 @@ class StorageModule(BaseModule):
             # first.
             under: int = amount - use
             self.__in_understock[part_key] += under
-            self.enqueue(Understock(time, self._priority(), part, under))
+            self._understock(0, part, under)
             if use <= 0:
                 return
 
@@ -172,7 +165,7 @@ class StorageModule(BaseModule):
                 in_bin[part_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
-                self.enqueue(BinOut(time, self._priority(), part, use))
+                self._bin_out(0, part, use)
 
             use = min(in_overstock[part_key], amount)
             if use > 0:
@@ -180,15 +173,14 @@ class StorageModule(BaseModule):
                 amount -= use
                 in_overstock[part_key] -= use
                 _over_unqueue(self.__overstock_queue[bin_key], part_key, use)
-                self.enqueue(OverstockOut(time, self._priority(), part, use))
+                self._overstock_out(0, part, use)
 
         if amount > 0:
             raise ValueError("Huh?")
 
         # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
-        self.enqueue(WarehouseDelivers(
-            time, self._priority(), part, deliver_amount))
+        self._warehouse_delivers(0, part, deliver_amount)
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
@@ -198,14 +190,13 @@ class StorageModule(BaseModule):
                 use = min(bin_type_empty, other_amount)
                 use_part = self._parts[other_part]
                 _over_unqueue(over_queue, other_part, use)
-                self.enqueue(OverstockOut(
-                    time, self._priority(), use_part, use))
+                self._overstock_out(0, use_part, use)
 
                 bin_type_empty -= use
                 empty_bins[bin_key] = bin_type_empty
                 in_bin[other_part] += use
                 in_overstock[other_part] -= use
-                self.enqueue(BinIn(time, self._priority(), use_part, use))
+                self._bin_in(0, use_part, use)
 
                 if bin_type_empty <= 0:
                     break

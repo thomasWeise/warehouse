@@ -2,7 +2,6 @@
 from typing import Callable, Final
 
 from warehouse.event.checkpoint import CheckpointEvent
-from warehouse.event.rules import RuleTriggeredEvent
 from warehouse.event.storage import (
     WarehouseIn,
 )
@@ -56,7 +55,6 @@ class JitModule(DemandModule):
 
         :param event: the event
         """
-        time: Final[int] = event.time
         for jit_rule in self.__jit(event.checkpoint.key)(event.product.key):
             part: Part = jit_rule.part
             part_key: int = jit_rule.part.key
@@ -64,13 +62,9 @@ class JitModule(DemandModule):
             remaining: int = self.available_units(part) + _get_on_the_way(otw)
             trigger: int = jit_rule.minimum - remaining
             if trigger > 0:
-                self.enqueue(RuleTriggeredEvent(
-                    time, self._priority(), jit_rule, part, trigger))
-                request: WarehouseIn = WarehouseIn(
-                    time + jit_rule.effect_delay, self._priority(),
-                    part, trigger)
-                self.enqueue(request)
-                _put_one_the_way(otw, request)
+                self._rule_triggered(0, jit_rule, part, trigger)
+                _put_one_the_way(otw, self._warehouse_in(
+                    jit_rule.effect_delay, part, trigger))
 
         super()._handle_checkpoint(event)
 

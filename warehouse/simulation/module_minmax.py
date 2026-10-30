@@ -2,7 +2,6 @@
 from heapq import heapify, heappop, heappush
 from typing import Callable, Final
 
-from warehouse.event.rules import RuleTriggeredEvent
 from warehouse.event.storage import (
     WarehouseDemand,
     WarehouseIn,
@@ -49,8 +48,6 @@ class MinMaxModule(StorageModule):
 
         :param event: the event
         """
-        time: int = event.time
-
         for part in self._parts:
             part_key = part.key
             min_rule: MinRule | None = self.__mm_min[part_key]
@@ -60,13 +57,9 @@ class MinMaxModule(StorageModule):
                 remaining: int = self.available_units(part)
                 trigger: int = min_rule.minimum - remaining
                 if trigger > 0:
-                    self.enqueue(RuleTriggeredEvent(
-                        time, self._priority(), min_rule, part, trigger))
-                    request: WarehouseIn = WarehouseIn(
-                        time + min_rule.effect_delay, self._priority(),
-                        part, trigger)
-                    self.enqueue(request)
-                    _put_one_the_way(otw, request)
+                    self._rule_triggered(0, min_rule, part, trigger)
+                    _put_one_the_way(otw, self._warehouse_in(
+                        min_rule.effect_delay, part, trigger))
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
@@ -84,14 +77,9 @@ class MinMaxModule(StorageModule):
                 part) + _get_on_the_way(otw) - event.amount
             trigger: Final[int] = min_rule.minimum - remaining
             if trigger > 0:
-                time: Final[int] = event.time
-                self.enqueue(RuleTriggeredEvent(
-                    time, self._priority(), min_rule, part, trigger))
-                request: Final[WarehouseIn] = WarehouseIn(
-                    time + min_rule.effect_delay, self._priority(),
-                    part, trigger)
-                self.enqueue(request)
-                _put_one_the_way(otw, request)
+                self._rule_triggered(0, min_rule, part, trigger)
+                _put_one_the_way(otw, self._warehouse_in(
+                    min_rule.effect_delay, part, trigger))
 
         super()._handle_warehouse_demand(event)
 

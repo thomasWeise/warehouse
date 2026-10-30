@@ -11,8 +11,8 @@ A warehouse setup.
 ...     m2 = Part(1, "Hat", "wardrobe")
 ...     m3 = Part(2, "Skirt", "random_large")
 ...     m4 = Part(None, "T-Shirt", "drawer")
-...     e1 = StartEvent(1005000000000, 0)
-...     e2 = EndEvent(1007000000000, 0)
+...     e1 = StartEvent(1005000000, 0)
+...     e2 = EndEvent(1007000000, 0)
 ...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))
 
 >>> instance.parts
@@ -33,8 +33,8 @@ BinType(key=3, name='drawer', amount=55, is_random=False), \
 BinType(key=4, name='shed', amount=76, is_random=False))
 
 >>> instance.events
-(StartEvent(time=1005000000000, priority=0), \
-EndEvent(time=1007000000000, priority=0))
+(StartEvent(time=1005000000, priority=0), \
+EndEvent(time=1007000000, priority=0))
 
 >>> from pycommons.io.temp import temp_dir
 >>> with temp_dir() as td:
@@ -59,8 +59,8 @@ BinType(key=3, name='drawer', amount=55, is_random=False), \
 BinType(key=4, name='shed', amount=76, is_random=False))
 
 >>> instance_2.events
-(StartEvent(time=1005000000000, priority=0), \
-EndEvent(time=1007000000000, priority=0))
+(StartEvent(time=1005000000, priority=0), \
+EndEvent(time=1007000000, priority=0))
 """
 
 from dataclasses import dataclass, field
@@ -86,6 +86,7 @@ from warehouse.instance.product import Product
 from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
+    end_of_job,
 )
 from warehouse.rule.jit_rule import JitRule
 from warehouse.rule.min_rule import MinRule
@@ -166,6 +167,19 @@ class Instance:
         object.__setattr__(self, "jit_rules", _load_jit_rules(
             jit_rules, names, self.parts, self.checkpoints, self.products))
         object.__setattr__(self, "events", _load_events(events))
+
+    def end_of_job(self, start: int, worktime: int,
+                   can_wrap: bool = False) -> int:
+        """
+        Adjust work time based on this instance.
+
+        :param start: the time stamp of the start of the work
+        :param worktime: the amount of time needed
+        :param can_wrap: whether the job can be split over multiple work days
+            or whether it needs to be done as one
+        :return: the adjusted time stamp
+        """
+        return end_of_job(start, worktime, can_wrap)
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
