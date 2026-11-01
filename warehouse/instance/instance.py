@@ -8,8 +8,8 @@ A warehouse setup.
 ...     b4 = BinType(None, "drawer", 55)
 ...     b5 = BinType(4, "shed", 76)
 ...     m1 = Part(None, "Shoe", "random_small")
-...     m2 = Part(1, "Hat", "wardrobe")
-...     m3 = Part(2, "Skirt", "random_large")
+...     m2 = Part(1, "Hat", "wardrobe", units_per_package=3)
+...     m3 = Part(2, "Skirt", "random_large", units_per_package=9)
 ...     m4 = Part(None, "T-Shirt", "drawer")
 ...     e1 = StartEvent(1005000000, 0)
 ...     e2 = EndEvent(1007000000, 0)
@@ -17,13 +17,13 @@ A warehouse setup.
 
 >>> instance.parts
 (Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50, is_random=True)), \
+amount=50, is_random=True), units_per_package=1), \
 Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30, is_random=False)), \
+amount=30, is_random=False), units_per_package=3), \
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100, is_random=True)), \
+amount=100, is_random=True), units_per_package=9), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55, is_random=False)))
+amount=55, is_random=False), units_per_package=1))
 
 >>> instance.bin_types
 (BinType(key=0, name='random_small', amount=50, is_random=True), \
@@ -43,13 +43,13 @@ EndEvent(time=1007000000, priority=0))
 
 >>> instance_2.parts
 (Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50, is_random=True)), \
+amount=50, is_random=True), units_per_package=1), \
 Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30, is_random=False)), \
+amount=30, is_random=False), units_per_package=3), \
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100, is_random=True)), \
+amount=100, is_random=True), units_per_package=9), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55, is_random=False)))
+amount=55, is_random=False), units_per_package=1))
 
 >>> instance_2.bin_types
 (BinType(key=0, name='random_small', amount=50, is_random=True), \

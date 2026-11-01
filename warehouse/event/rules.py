@@ -4,24 +4,17 @@ Events regarding rules.
 >>> from warehouse.instance.bin_type import BinType
 >>> from warehouse.rule.minmax_rule import MinMaxRule
 >>> with context():
-...     BinType(None, "random_small", 1000, is_random=True)
-...     BinType(None, "random_large", 500, is_random=True)
-...     BinType(None, "hat_bins", 30)
-...     Part(None, "hat", "hat_bins")
-...     Part(None, "shoe", "random_small")
-...     Part(None, "trousers", "random_large")
-...     MinMaxRule(None, "min_hat", "hat", 10, 100)
+...     _ = BinType(None, "random_small", 1000, is_random=True)
+...     _ = BinType(None, "random_large", 500, is_random=True)
+...     _ = BinType(None, "hat_bins", 30)
+...     _ = Part(None, "hat", "hat_bins")
+...     _ = Part(None, "shoe", "random_small")
+...     _ = Part(None, "trousers", "random_large")
+...     _ = MinMaxRule(None, "min_hat", "hat", 10, 100)
 ...     ev01 = RuleTriggeredEvent.create(1500000000, 0, "min_hat",
 ...                                      "hat", 1200)
 ...
 ...     events_1 = (ev01, )
-...
-...     for ev in events_1:
-...         print(ev)
-...
-...     print()
-...     print("===================")
-...     print()
 ...
 ...     csv = list(Event.to_csv(events_1))
 ...     for row in csv[1:]:
@@ -33,37 +26,13 @@ Events regarding rules.
 ...     print()
 ...
 ...     events_2 = tuple(Event.from_csv(csv))
-...     for ev in events_2:
-...         print(ev)
-BinType(key=0, name='random_small', amount=1000, is_random=True)
-BinType(key=1, name='random_large', amount=500, is_random=True)
-BinType(key=2, name='hat_bins', amount=30, is_random=False)
-Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False))
-Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
-amount=1000, is_random=True))
-Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
-amount=500, is_random=True))
-MinMaxRule(key=0, name='min_hat', effect_delay=9000, part=Part(key=0, \
-name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), minimum=10, maximum=100)
-RuleTriggeredEvent(time=1500000000, priority=0, rule=MinMaxRule(key=0, \
-name='min_hat', effect_delay=9000, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-minimum=10, maximum=100), part=Part(key=0, name='hat', bin_type=BinType(\
-key=2, name='hat_bins', amount=30, is_random=False)), amount=1200)
-<BLANKLINE>
-===================
-<BLANKLINE>
+...     for i, ev in enumerate(events_2):
+...         print(ev == events_1[i])
 2017-07-14 10:40;rule_triggered;hat;1200;;;;min_hat
 <BLANKLINE>
 ===================
 <BLANKLINE>
-RuleTriggeredEvent(time=1500000000, priority=0, rule=MinMaxRule(key=0, \
-name='min_hat', effect_delay=9000, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-minimum=10, maximum=100), part=Part(key=0, name='hat', bin_type=BinType(\
-key=2, name='hat_bins', amount=30, is_random=False)), amount=1200)
+True
 
 >>> hash(ev01)
 19115592861312599

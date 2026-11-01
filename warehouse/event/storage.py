@@ -3,12 +3,12 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 
 >>> from warehouse.instance.bin_type import BinType
 >>> with context():
-...     BinType(None, "random_small", 1000, is_random=True)
-...     BinType(None, "random_large", 500, is_random=True)
-...     BinType(None, "hat_bins", 30)
-...     Part(None, "hat", "hat_bins")
-...     Part(None, "shoe", "random_small")
-...     Part(None, "trousers", "random_large")
+...     _ = BinType(None, "random_small", 1000, is_random=True)
+...     _ = BinType(None, "random_large", 500, is_random=True)
+...     _ = BinType(None, "hat_bins", 30)
+...     _ = Part(None, "hat", "hat_bins")
+...     _ = Part(None, "shoe", "random_small")
+...     _ = Part(None, "trousers", "random_large")
 ...     ev01 = WarehouseIn.create(1500000000, 0, "hat", 1200)
 ...     ev02 = WarehouseIn.create(1500000020, 0, "shoe", 40)
 ...     ev03 = WarehouseIn.create(1500007020, 0, "trousers", 750)
@@ -25,13 +25,6 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06, ev07,
 ...                 ev08, ev09, ev10, ev11, ev12)
 ...
-...     for ev in events_1:
-...         print(ev)
-...
-...     print()
-...     print("===================")
-...     print()
-...
 ...     csv = list(Event.to_csv(events_1))
 ...     for row in csv[1:]:
 ...         if not str.startswith(row, "#"):
@@ -42,56 +35,8 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 ...     print()
 ...
 ...     events_2 = tuple(Event.from_csv(csv))
-...     for ev in events_2:
-...         print(ev)
-BinType(key=0, name='random_small', amount=1000, is_random=True)
-BinType(key=1, name='random_large', amount=500, is_random=True)
-BinType(key=2, name='hat_bins', amount=30, is_random=False)
-Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False))
-Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
-amount=1000, is_random=True))
-Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
-amount=500, is_random=True))
-WarehouseIn(time=1500000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=1200)
-WarehouseIn(time=1500000020, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=40)
-WarehouseIn(time=1500007020, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=750)
-OverstockIn(time=1500009000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=200)
-OverstockIn(time=1500009500, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=10)
-OverstockIn(time=1500029500, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', \
-amount=500, is_random=True)), amount=250)
-OverstockOut(time=1500039000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=200)
-OverstockOut(time=1500049500, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=10)
-OverstockOut(time=1500051500, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=250)
-WarehouseDemand(time=1600000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=1200)
-WarehouseDemand(time=1600000020, priority=0, part=Part(key=1, \
-name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=40)
-WarehouseDemand(time=1600007020, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=750)
-<BLANKLINE>
-===================
-<BLANKLINE>
+...     for i, ev in enumerate(events_2):
+...         print(ev == events_1[i])
 2017-07-14 10:40;warehouse_in;hat;1200
 2017-07-14 10:40:20;warehouse_in;shoe;40
 2017-07-14 12:37;warehouse_in;trousers;750
@@ -107,42 +52,18 @@ is_random=True)), amount=750)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-WarehouseIn(time=1500000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=1200)
-WarehouseIn(time=1500000020, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=40)
-WarehouseIn(time=1500007020, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=750)
-OverstockIn(time=1500009000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=200)
-OverstockIn(time=1500009500, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=10)
-OverstockIn(time=1500029500, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', \
-amount=500, is_random=True)), amount=250)
-OverstockOut(time=1500039000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=200)
-OverstockOut(time=1500049500, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=10)
-OverstockOut(time=1500051500, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=250)
-WarehouseDemand(time=1600000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), amount=1200)
-WarehouseDemand(time=1600000020, priority=0, part=Part(key=1, \
-name='shoe', bin_type=BinType(key=0, name='random_small', amount=1000, \
-is_random=True)), amount=40)
-WarehouseDemand(time=1600007020, priority=0, part=Part(key=2, \
-name='trousers', bin_type=BinType(key=1, name='random_large', amount=500, \
-is_random=True)), amount=750)
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
 
 >>> hash(ev02)
 3841917936908533283

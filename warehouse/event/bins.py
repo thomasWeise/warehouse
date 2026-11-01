@@ -3,12 +3,12 @@ Events regarding the storage and retrieval of part to and from bins.
 
 >>> from warehouse.instance.bin_type import BinType
 >>> with context():
-...     BinType(None, "random_small", 1000, True)
-...     BinType(None, "random_large", 500, True)
-...     BinType(None, "hat_bins", 30, False)
-...     Part(None, "hat", "hat_bins")
-...     Part(None, "shoe", "random_small")
-...     Part(None, "trousers", "random_large")
+...     _ = BinType(None, "random_small", 1000, True)
+...     _ = BinType(None, "random_large", 500, True)
+...     _ = BinType(None, "hat_bins", 30, False)
+...     _ = Part(None, "hat", "hat_bins")
+...     _ = Part(None, "shoe", "random_small")
+...     _ = Part(None, "trousers", "random_large")
 ...     ev01 = BinIn.create(1500000000, 0, "hat", 10, "hat_bins")
 ...     ev02 = BinIn.create(1700000000, 0, "shoe", 15, "random_small")
 ...     ev03 = BinIn.create(1800000000, 0, "trousers", 7)
@@ -17,13 +17,6 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     ev06 = BinOut.create(2100000000, 0, "trousers", 3)
 ...
 ...     events_1 = (ev01, ev02, ev03, ev04, ev05, ev06)
-...
-...     for ev in events_1:
-...         print(ev)
-...
-...     print()
-...     print("===================")
-...     print()
 ...
 ...     csv = list(BinEvent.to_csv(events_1))
 ...     for row in csv:
@@ -35,38 +28,8 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     print()
 ...
 ...     events_2 = tuple(BinEvent.from_csv(csv))
-...     for ev in events_2:
-...         print(ev)
-BinType(key=0, name='random_small', amount=1000, is_random=True)
-BinType(key=1, name='random_large', amount=500, is_random=True)
-BinType(key=2, name='hat_bins', amount=30, is_random=False)
-Part(key=0, name='hat', bin_type=BinType(key=2, name='hat_bins', \
-amount=30, is_random=False))
-Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
-amount=1000, is_random=True))
-Part(key=2, name='trousers', bin_type=BinType(key=1, \
-name='random_large', amount=500, is_random=True))
-BinIn(time=1500000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=10)
-BinIn(time=1700000000, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=15)
-BinIn(time=1800000000, priority=0, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=7)
-BinOut(time=1900000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=9)
-BinOut(time=2000000000, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=8)
-BinOut(time=2100000000, priority=0, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=3)
-<BLANKLINE>
-===================
-<BLANKLINE>
+...     for i, ev in enumerate(events_2):
+...         print(ev == events_1[i])
 time;type;part;amount;bin_type;checkpoint;product;rule
 2017-07-14 10:40;bin_in;hat;10;hat_bins
 2023-11-15 06:13:20;bin_in;shoe;15;random_small
@@ -77,24 +40,12 @@ time;type;part;amount;bin_type;checkpoint;product;rule
 <BLANKLINE>
 ===================
 <BLANKLINE>
-BinIn(time=1500000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=10)
-BinIn(time=1700000000, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=15)
-BinIn(time=1800000000, priority=0, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=7)
-BinOut(time=1900000000, priority=0, part=Part(key=0, name='hat', \
-bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-amount=9)
-BinOut(time=2000000000, priority=0, part=Part(key=1, name='shoe', \
-bin_type=BinType(key=0, name='random_small', amount=1000, is_random=True)), \
-amount=8)
-BinOut(time=2100000000, priority=0, part=Part(key=2, name='trousers', \
-bin_type=BinType(key=1, name='random_large', amount=500, is_random=True)), \
-amount=3)
+True
+True
+True
+True
+True
+True
 
 >>> hash(ev06)
 2959454362458544758

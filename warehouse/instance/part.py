@@ -13,8 +13,8 @@ which it can be stored.
 ...     b2 = BinType(None, "random_large", 10, True)
 ...     b3 = BinType(None, "shoe_bin", 5)
 ...     m1 = Part(None, "Shoe", b3)
-...     m2 = Part(1, "Hat", "random_small")
-...     m3 = Part(2, "Skirt", "random_large")
+...     m2 = Part(1, "Hat", "random_small", units_per_package=7)
+...     m3 = Part(2, "Skirt", "random_large", units_per_package=121)
 
 >>> str(m1)
 'Part0'
@@ -25,22 +25,22 @@ which it can be stored.
 
 >>> repr(m1)
 "Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5, is_random=False))"
+amount=5, is_random=False), units_per_package=1)"
 >>> repr(m2)
 "Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10, is_random=True))"
+amount=10, is_random=True), units_per_package=7)"
 >>> repr(m3)
 "Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10, is_random=True))"
+amount=10, is_random=True), units_per_package=121)"
 
 >>> csv1 = list(Part.to_csv((m1, m2, m3)))
 >>> for row in csv1:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
-key;name;bin_type
-0;Shoe;shoe_bin
-1;Hat;random_small
-2;Skirt;random_large
+key;name;bin_type;units_per_package
+0;Shoe;shoe_bin;1
+1;Hat;random_small;7
+2;Skirt;random_large;121
 
 >>> with context():
 ...     _ = BinType(None, "random_small", 10, True)
@@ -49,11 +49,11 @@ key;name;bin_type
 ...     for mat in Part.from_csv(csv1):
 ...         print(repr(mat))
 Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5, is_random=False))
+amount=5, is_random=False), units_per_package=1)
 Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10, is_random=True))
+amount=10, is_random=True), units_per_package=7)
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10, is_random=True))
+amount=10, is_random=True), units_per_package=121)
 """
 
 from dataclasses import dataclass
@@ -61,6 +61,7 @@ from typing import Final, Iterable, TypeVar, cast
 
 from pycommons.io.csv import (
     csv_column,
+    csv_column_or_none,
     csv_scope,
     csv_val_or_none,
 )
@@ -68,10 +69,12 @@ from pycommons.io.csv import (
 from warehouse.instance.bin_type import COLUMN_BIN_TYPE, BinType
 from warehouse.instance.element import CsvReader as CsvReaderBase
 from warehouse.instance.element import CsvWriter as CsvWriterBase
-from warehouse.instance.element import Element, context
+from warehouse.instance.element import Element, check_to_amount, context
 
 #: the CSV column for parts
 COLUMN_PART: Final[str] = "part"
+#: the CSV column for units per package
+COLUMN_UNITS_PER_PACKAGE: Final[str] = "units_per_package"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -80,20 +83,27 @@ class Part(Element):
 
     #: the bin type into which this part is stored
     bin_type: BinType
+    #: the number of units per package
+    units_per_package: int
 
     def __init__(self, key: int | None, name: str,
-                 bin_type: BinType | int | str) -> None:
+                 bin_type: BinType | int | str,
+                 units_per_package: int | str | None = 1) -> None:
         """
         Create a new part type.
 
         :param key: the part key
         :param name: the part name
         :param bin_type: the bin type to use
+        :param units_per_package: the number of units of the part per package
         """
         super().__init__(key, name)
         with context() as ctx:
             bin_type = ctx.resolve(BinType, bin_type)
         object.__setattr__(self, "bin_type", bin_type)
+        object.__setattr__(
+            self, "units_per_package", 1 if units_per_package is None
+            else check_to_amount(units_per_package))
 
     def __eq__(self, other) -> bool:
         """
@@ -104,7 +114,8 @@ class Part(Element):
         """
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
-            self.bin_type == other.bin_type)
+            self.bin_type == other.bin_type) and (
+            self.units_per_package == other.units_per_package)
 
     def __ne__(self, other) -> bool:
         """
@@ -115,7 +126,8 @@ class Part(Element):
         """
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
-            self.bin_type != other.bin_type)
+            self.bin_type != other.bin_type) or (
+            self.units_per_package != other.units_per_package)
 
     def __hash__(self) -> int:
         """
@@ -166,6 +178,9 @@ class CsvReader(CsvReaderBase[T]):
         #: the bin type key
         self.col_bin_type: Final[int] = csv_column(
             columns, COLUMN_BIN_TYPE, True)
+        #: the column for units per package
+        self.col_units_per_package: Final[int | None] = csv_column_or_none(
+            columns, COLUMN_UNITS_PER_PACKAGE, True)
 
     def parse_row(self, data: list[str]) -> T:
         """
@@ -176,7 +191,9 @@ class CsvReader(CsvReaderBase[T]):
         """
         return self.clazz(key=csv_val_or_none(
             data, self.col_key, int), name=data[self.col_name],
-            bin_type=data[self.col_bin_type])
+            bin_type=data[self.col_bin_type],
+            units_per_package=csv_val_or_none(
+                data, self.col_units_per_package, int))
 
 
 class CsvWriter(CsvWriterBase[T]):
@@ -190,8 +207,18 @@ class CsvWriter(CsvWriterBase[T]):
         :param scope: the scope
         """
         super().__init__(data, scope)
+
+        needs_units: bool = False
+        for row in data:
+            if row.units_per_package != 1:
+                needs_units = True
+                break
+
         #: the bin type column
         self.col_bin_type: Final[str] = csv_scope(scope, COLUMN_BIN_TYPE)
+        #: the units per package
+        self.col_units_per_package: Final[str | None] = csv_scope(
+            scope, COLUMN_UNITS_PER_PACKAGE) if needs_units else None
 
     def get_column_titles(self) -> Iterable[str]:
         """
@@ -201,6 +228,8 @@ class CsvWriter(CsvWriterBase[T]):
         """
         yield from super().get_column_titles()
         yield self.col_bin_type
+        if self.col_units_per_package is not None:
+            yield self.col_units_per_package
 
     def get_row(self, data: T) -> Iterable[str]:
         """
@@ -211,6 +240,8 @@ class CsvWriter(CsvWriterBase[T]):
         """
         yield from super().get_row(data)
         yield data.bin_type.name
+        if self.col_units_per_package is not None:
+            yield str(data.units_per_package)
 
     def get_footer_comments(self) -> Iterable[str]:
         """
@@ -221,3 +252,8 @@ class CsvWriter(CsvWriterBase[T]):
         yield from super().get_footer_comments()
         yield (f"{self.col_bin_type}: the type of bin into which this "
                "part can be stored")
+        if self.col_units_per_package is not None:
+            yield (f"{self.col_units_per_package}: the part units per "
+                   f"package. Each package occupies one slot in the "
+                   f"warehouse. The package may contain multiple units "
+                   f"of the product.")

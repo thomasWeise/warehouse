@@ -217,7 +217,7 @@ class CsvWriter(CsvWriterBase[T]):
         yield from super().get_row(data)
         yield data.part.name
         yield str(data.minimum)
-        if data.maximum > data.minimum:
+        if self.col_max is not None:
             yield str(data.maximum)
         yield timedelta_to_str(data.effect_delay)
 
