@@ -442,6 +442,23 @@ def get_workday(day: int, dm=__load_day_map().__getitem__) -> int:
     return dm(day - __FIRST_ORDINAL)
 
 
+def __offset(stamp: datetime, days: int, seconds: int) -> int:
+    """
+    Create a time stamp with date offset by days and time defined by seconds.
+
+    :param stamp: the time stamp
+    :param days: the number of days to add to the date of `stamp`
+    :param seconds: the number of seconds after midnight on the new day
+    :return: the offset time stamp value
+
+    >>> time_to_str(__offset(datetime(2020, 10, 5, 2, 7, 8, tzinfo=TZ),
+    ...             3, 3600 * 6))
+    '2020-10-08 06:00'
+    """
+    return round((stamp.replace(hour=0, minute=0, second=0) + timedelta(
+        days=days, seconds=seconds % 86400)).timestamp())
+
+
 def end_of_job(start: int, worktime: int,
                can_wrap: bool = False,
                work_start_in_s: int = 7 * 3600,
@@ -458,7 +475,7 @@ def end_of_job(start: int, worktime: int,
         midnight
     :param work_end_in_s: the end time of the work, in seconds from midnight
     :param workday: a callable that receives a date ordinal and that returns
-        the earliest work day with an ordinal >= workday.
+        the earliest work day with an ordinal >= that date.
     :return: the adjusted time stamp
 
     >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 2))
@@ -521,9 +538,54 @@ def end_of_job(start: int, worktime: int,
         end_time = work_start_in_s + worktime
         end_day = workday(end_day + 1)
 
-    end_time %= 86400
-    hours, end_time = divmod(end_time, 3600)
-    minutes, seconds = divmod(end_time, 60)
-    return round((start_stamp.replace(hour=0, minute=0, second=0) + timedelta(
-        days=end_day - start_day, hours=hours, minutes=minutes,
-        seconds=seconds)).timestamp())
+    return __offset(start_stamp, end_day - start_day, end_time)
+
+
+def next_multiple_of(now: int, multiple_in_s: int,
+                     work_start_in_s: int = 7 * 3600,
+                     work_end_in_s: int = 18 * 3600,
+                     workday: Callable[[int], int] = get_workday) -> int:
+    """
+    Get the next time when a multiple of a certain amount of seconds elapses.
+
+    :param now: the current time
+    :param multiple_in_s: the multiple that needs to ellapse
+    :param work_start_in_s: the start time of the work, in seconds from
+        midnight
+    :param work_end_in_s: the end time of the work, in seconds from midnight
+    :param workday: a callable that receives a date ordinal and that returns
+        the earliest work day with an ordinal >= that date.
+    :return: the adjusted time stamp
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3600))
+    '2025-10-10 12:00'
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3))
+    '2025-10-10 12:00'
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 7))
+    '2025-10-10 12:00:04'
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 7))
+    '2025-10-10 17:59:59'
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 37))
+    '2025-10-11 07:00'
+    """
+    # Get the start day and start time.
+    start_stamp: datetime = __timestamp(now)
+    start_day: Final[int] = start_stamp.toordinal()
+    end_day: int = workday(start_day)
+    if end_day > start_day:
+        end_time = work_start_in_s
+    else:
+        start_time: int = max(work_start_in_s, start_stamp.second + 60 * (
+            start_stamp.minute + (60 * start_stamp.hour)))
+
+        d, m = divmod(start_time - work_start_in_s, multiple_in_s)
+        end_time = work_start_in_s + multiple_in_s * (d if m <= 0 else d + 1)
+        if end_time > work_end_in_s:
+            end_time = work_start_in_s
+            end_day = workday(end_day + 1)
+
+    return __offset(start_stamp, end_day - start_day, end_time)

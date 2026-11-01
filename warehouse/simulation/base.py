@@ -5,7 +5,11 @@ from typing import Callable, Final, Generator
 
 from warehouse.event.bins import BinEvent, BinIn, BinOut
 from warehouse.event.checkpoint import CheckpointEvent
-from warehouse.event.rules import RuleTriggeredEvent
+from warehouse.event.rules import (
+    JitRuleCheckEvent,
+    MinMaxRuleCheckEvent,
+    RuleTriggeredEvent,
+)
 from warehouse.event.storage import (
     OverstockIn,
     OverstockOut,
@@ -43,9 +47,12 @@ class BaseModule:
         self.__priority: int = 0
         #: the internal timestamp
         self.__time: int = EARLIEST_START
-        #: the time adjustment function
+        #: the time adjustment function for job lengths
         self.__end_of_job: Final[Callable[[int, int, bool], int]] = (
             instance.end_of_job)
+        #: the time adjustment function for next multiples
+        self.__next_multiple_of: Final[Callable[[int, int], int]] = (
+            instance.next_multiple_of)
 
     def _start(self) -> None:
         """Begin the simulation."""
@@ -69,6 +76,44 @@ class BaseModule:
         Handle a end event.
 
         :param event: the end event
+        """
+
+    def _minmax_check(self) -> MinMaxRuleCheckEvent:
+        """
+        Create a min/max rule check event.
+
+        :return: the min max rule check event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[MinMaxRuleCheckEvent] = MinMaxRuleCheckEvent(
+            self.__next_multiple_of(self.__time, 120), p)
+        heappush(self.__queue, res)
+        return res
+
+    def _handle_minmax_check(self, event: MinMaxRuleCheckEvent) -> None:
+        """
+        Handle the min/max rule checking event.
+
+        :param event: the event
+        """
+
+    def _jit_check(self) -> JitRuleCheckEvent:
+        """
+        Create a JIT rule check event.
+
+        :return: the JIT rule check event
+        """
+        self.__priority = p = self.__priority + 1
+        res: Final[JitRuleCheckEvent] = JitRuleCheckEvent(
+            self.__next_multiple_of(self.__time, 300), p)
+        heappush(self.__queue, res)
+        return res
+
+    def _handle_jit_check(self, event: JitRuleCheckEvent) -> None:
+        """
+        Handle the JIT rule checking event.
+
+        :param event: the event
         """
 
     def _warehouse_in(self, delta: int,
@@ -349,7 +394,7 @@ class BaseModule:
         end_time: int = LATEST_END
         while queue:
             event = queue[0]
-            self.__time = time = event.time
+            time = event.time
             eid: int = id(event.__class__)
 
             if needs_init and ((time > start_time) or (eid == quitter)):
@@ -359,6 +404,7 @@ class BaseModule:
                 eid = id(event.__class__)
             else:
                 heappop(queue)
+            self.__time = time
 
             if eid == quitter:
                 if end_event is not None:
@@ -419,6 +465,9 @@ class BaseModule:
             self._handle_checkpoint,  # type: ignore
             id(InitializationComplete):  # type: ignore
             self._handle_initizalization_complete,  # type: ignore
+            id(MinMaxRuleCheckEvent):
+            self._handle_minmax_check,  # type: ignore
+            id(JitRuleCheckEvent): self._handle_jit_check,  # type: ignore
         }.__getitem__
 
 

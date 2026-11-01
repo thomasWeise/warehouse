@@ -2,7 +2,7 @@
 Events regarding rules.
 
 >>> from warehouse.instance.bin_type import BinType
->>> from warehouse.rule.min_rule import MinRule
+>>> from warehouse.rule.minmax_rule import MinMaxRule
 >>> with context():
 ...     BinType(None, "random_small", 1000, is_random=True)
 ...     BinType(None, "random_large", 500, is_random=True)
@@ -10,7 +10,7 @@ Events regarding rules.
 ...     Part(None, "hat", "hat_bins")
 ...     Part(None, "shoe", "random_small")
 ...     Part(None, "trousers", "random_large")
-...     MinRule(None, "min_hat", "hat", 10, 100)
+...     MinMaxRule(None, "min_hat", "hat", 10, 100)
 ...     ev01 = RuleTriggeredEvent.create(1500000000, 0, "min_hat",
 ...                                      "hat", 1200)
 ...
@@ -44,14 +44,14 @@ Part(key=1, name='shoe', bin_type=BinType(key=0, name='random_small', \
 amount=1000, is_random=True))
 Part(key=2, name='trousers', bin_type=BinType(key=1, name='random_large', \
 amount=500, is_random=True))
-MinRule(key=0, name='min_hat', effect_delay=100, part=Part(key=0, \
+MinMaxRule(key=0, name='min_hat', effect_delay=9000, part=Part(key=0, \
 name='hat', bin_type=BinType(key=2, name='hat_bins', amount=30, \
-is_random=False)), minimum=10)
-RuleTriggeredEvent(time=1500000000, priority=0, rule=MinRule(key=0, \
-name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
+is_random=False)), minimum=10, maximum=100)
+RuleTriggeredEvent(time=1500000000, priority=0, rule=MinMaxRule(key=0, \
+name='min_hat', effect_delay=9000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30, is_random=False)), amount=1200)
+minimum=10, maximum=100), part=Part(key=0, name='hat', bin_type=BinType(\
+key=2, name='hat_bins', amount=30, is_random=False)), amount=1200)
 <BLANKLINE>
 ===================
 <BLANKLINE>
@@ -59,11 +59,11 @@ name='hat_bins', amount=30, is_random=False)), amount=1200)
 <BLANKLINE>
 ===================
 <BLANKLINE>
-RuleTriggeredEvent(time=1500000000, priority=0, rule=MinRule(key=0, \
-name='min_hat', effect_delay=100, part=Part(key=0, name='hat', \
+RuleTriggeredEvent(time=1500000000, priority=0, rule=MinMaxRule(key=0, \
+name='min_hat', effect_delay=9000, part=Part(key=0, name='hat', \
 bin_type=BinType(key=2, name='hat_bins', amount=30, is_random=False)), \
-minimum=10), part=Part(key=0, name='hat', bin_type=BinType(key=2, \
-name='hat_bins', amount=30, is_random=False)), amount=1200)
+minimum=10, maximum=100), part=Part(key=0, name='hat', bin_type=BinType(\
+key=2, name='hat_bins', amount=30, is_random=False)), amount=1200)
 
 >>> hash(ev01)
 19115592861312599
@@ -82,6 +82,50 @@ from warehouse.instance.rule import Rule
 
 #: the rule that was triggered, if any
 COLUMN_RULE: Final[str] = "rule"
+
+
+class MinMaxRuleCheckEvent(Event):
+    """Check the min/max rules."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "check_minmax"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "check the min/max rules"
+
+
+class JitRuleCheckEvent(Event):
+    """Check the jit rules."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "check_jit"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "check the jit rules"
 
 
 @dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)

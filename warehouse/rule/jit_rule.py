@@ -15,13 +15,13 @@ from warehouse.instance.element import (
 )
 from warehouse.instance.part import Part
 from warehouse.instance.product import COLUMN_PRODUCT, Product
-from warehouse.rule.min_rule import CsvReader as CsvReaderBase
-from warehouse.rule.min_rule import CsvWriter as CsvWriterBase
-from warehouse.rule.min_rule import MinRule
+from warehouse.rule.minmax_rule import CsvReader as CsvReaderBase
+from warehouse.rule.minmax_rule import CsvWriter as CsvWriterBase
+from warehouse.rule.minmax_rule import MinMaxRule
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
-class JitRule(MinRule):
+class JitRule(MinMaxRule):
     """A class for identifying a JIT rule."""
 
     #: the checkpoint at which the rule triggers
@@ -48,7 +48,8 @@ class JitRule(MinRule):
             material will arrive
         """
         with context() as ctx:
-            super().__init__(key, name, part, minimum, effect_delay)
+            super().__init__(key, name, part, minimum,
+                             effect_delay=effect_delay)
             checkpoint = ctx.resolve(Checkpoint, checkpoint)
             product = ctx.resolve(Product, product)
         object.__setattr__(self, "checkpoint", checkpoint)

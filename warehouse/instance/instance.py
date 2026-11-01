@@ -61,6 +61,9 @@ BinType(key=4, name='shed', amount=76, is_random=False))
 >>> instance_2.events
 (StartEvent(time=1005000000, priority=0), \
 EndEvent(time=1007000000, priority=0))
+
+>>> instance.next_multiple_of(1007000000, 32)
+1007000016
 """
 
 from dataclasses import dataclass, field
@@ -87,9 +90,10 @@ from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
     end_of_job,
+    next_multiple_of,
 )
 from warehouse.rule.jit_rule import JitRule
-from warehouse.rule.min_rule import MinRule
+from warehouse.rule.minmax_rule import MinMaxRule
 
 #: the bin types file
 FILE_BIN_TYPES: Final[str] = "bin_types.csv"
@@ -97,8 +101,8 @@ FILE_BIN_TYPES: Final[str] = "bin_types.csv"
 FILE_PARTS: Final[str] = "parts.csv"
 #: the events file
 FILE_EVENTS: Final[str] = "events.csv"
-#: the minimum rules file
-FILE_MIN_RULES: Final[str] = "min_rules.csv"
+#: the minmax rules file
+FILE_MINMAX_RULES: Final[str] = "minmax_rules.csv"
 #: the JIT rules file
 FILE_JIT_RULES: Final[str] = "jit_rules.csv"
 #: the products file
@@ -120,7 +124,7 @@ class Instance:
     #: the pre-defined events for the instance
     events: tuple[Event, ...] = field(hash=True, compare=True)
     #: the min rules holding for this warehouse
-    min_rules: tuple[MinRule, ...] = field(hash=True, compare=True)
+    minmax_rules: tuple[MinMaxRule, ...] = field(hash=True, compare=True)
     #: the JIT rules holding for this warehouse
     jit_rules: tuple[JitRule, ...] = field(hash=True, compare=True)
     #: the set of products
@@ -134,7 +138,7 @@ class Instance:
                  bin_types: Iterable[BinType] | None = None,
                  parts: Iterable[Part] | None = None,
                  events: Iterable[Event] | None = None,
-                 min_rules: Iterable[MinRule] | None = None,
+                 minmax_rules: Iterable[MinMaxRule] | None = None,
                  jit_rules: Iterable[JitRule] | None = None,
                  products: Iterable[Product] | None = None,
                  checkpoints: Iterable[Checkpoint] | None = None,
@@ -145,7 +149,7 @@ class Instance:
         :param bin_types: the bin types
         :param parts: the parts
         :param events: the events
-        :param min_rules: the minimum rules
+        :param minmax_rules: the minimum/maximum rules
         :param jit_rules: the JIT rules
         :param products: the products
         :param checkpoints: the checkpoints
@@ -156,8 +160,8 @@ class Instance:
             bin_types, BinType, names))
         object.__setattr__(self, "parts", _load_parts(
             parts, names, self.bin_types))
-        object.__setattr__(self, "min_rules", _load_min_rules(
-            min_rules, names, self.parts))
+        object.__setattr__(self, "minmax_rules", _load_minmax_rules(
+            minmax_rules, names, self.parts))
         object.__setattr__(self, "products", _load_type(
             products, Product, names))
         object.__setattr__(self, "checkpoints", _load_type(
@@ -167,6 +171,10 @@ class Instance:
         object.__setattr__(self, "jit_rules", _load_jit_rules(
             jit_rules, names, self.parts, self.checkpoints, self.products))
         object.__setattr__(self, "events", _load_events(events))
+
+        # shortcuts directly to time routines
+        object.__setattr__(self, "end_of_job", end_of_job)
+        object.__setattr__(self, "next_multiple_of", next_multiple_of)
 
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
@@ -180,6 +188,16 @@ class Instance:
         :return: the adjusted time stamp
         """
         return end_of_job(start, worktime, can_wrap)
+
+    def next_multiple_of(self, start: int, multiple_in_s: int) -> int:
+        """
+        Get the next multiple of the specified number of seconds.
+
+        :param start: the time stamp of the start of the work
+        :param multiple_in_s: the multiple in seconds
+        :return: the adjusted time stamp
+        """
+        return next_multiple_of(start, multiple_in_s)
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
@@ -197,8 +215,8 @@ class Instance:
                 FILE_BIN_TYPES), BinType)
             parts: tuple[Part, ...] = _load_csv(source.resolve_inside(
                 FILE_PARTS), Part)
-            min_rules: tuple[MinRule, ...] = _load_csv(
-                source.resolve_inside(FILE_MIN_RULES), MinRule)
+            minmax_rules: tuple[MinMaxRule, ...] = _load_csv(
+                source.resolve_inside(FILE_MINMAX_RULES), MinMaxRule)
             products: tuple[Product, ...] = _load_csv(
                 source.resolve_inside(FILE_PRODUCTS), Product)
             checkpoints: tuple[Checkpoint, ...] = _load_csv(
@@ -213,7 +231,7 @@ class Instance:
         result = Instance(bin_types=bin_types,
                           parts=parts,
                           events=events,
-                          min_rules=min_rules,
+                          minmax_rules=minmax_rules,
                           jit_rules=jit_rules,
                           products=products,
                           checkpoints=checkpoints,
@@ -235,8 +253,8 @@ class Instance:
                    self.bin_types)
         _write_csv(dest.resolve_inside(FILE_PARTS), Part, self.parts)
         _write_csv(dest.resolve_inside(FILE_EVENTS), Event, self.events)
-        _write_csv(dest.resolve_inside(FILE_MIN_RULES), MinRule,
-                   self.min_rules)
+        _write_csv(dest.resolve_inside(FILE_MINMAX_RULES), MinMaxRule,
+                   self.minmax_rules)
         _write_csv(dest.resolve_inside(FILE_JIT_RULES), JitRule,
                    self.jit_rules)
         _write_csv(dest.resolve_inside(FILE_PRODUCTS), Product,
@@ -365,22 +383,23 @@ def _load_parts(parts: Iterable[Part] | None,
     return result
 
 
-def _load_min_rules(min_rules: Iterable[MinRule] | None,
-                    names: dict[str, Element],
-                    parts: tuple[Part, ...]) -> tuple[MinRule, ...]:
+def _load_minmax_rules(minmax_rules: Iterable[MinMaxRule] | None,
+                       names: dict[str, Element],
+                       parts: tuple[Part, ...]) -> tuple[MinMaxRule, ...]:
     """
     Load the minimum rules.
 
-    :param min_rules: the minimum rules
+    :param minmax_rules: the minimum/maximum rules
     :param names: the names
     :param parts: the parts
     :return: the result
     """
-    result: Final[tuple[MinRule, ...]] = _load_type(min_rules, MinRule, names)
+    result: Final[tuple[MinMaxRule, ...]] = _load_type(
+        minmax_rules, MinMaxRule, names)
     if tuple.__len__(result) <= 0:
         return result
 
-    min_rule_dct: Final[dict[int, MinRule]] = {}
+    min_rule_dct: Final[dict[int, MinMaxRule]] = {}
     for min_rule in result:
         part = min_rule.part
         mrpk: int = part.key

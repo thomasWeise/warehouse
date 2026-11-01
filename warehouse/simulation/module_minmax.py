@@ -1,7 +1,8 @@
 """The warehouse min-max rule simulation."""
 from heapq import heapify, heappop, heappush
-from typing import Callable, Final
+from typing import Callable, Final, Iterable
 
+from warehouse.event.rules import MinMaxRuleCheckEvent
 from warehouse.event.storage import (
     WarehouseDemand,
     WarehouseIn,
@@ -9,7 +10,7 @@ from warehouse.event.storage import (
 from warehouse.event.time import InitializationComplete
 from warehouse.instance.instance import Instance
 from warehouse.instance.part import Part
-from warehouse.rule.min_rule import MinRule
+from warehouse.rule.minmax_rule import MinMaxRule
 from warehouse.simulation.module_storage import StorageModule
 
 
@@ -29,17 +30,43 @@ class MinMaxModule(StorageModule):
         #: the parts already ordered by the min/max rules
         self.__mm_on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
             [] for _ in range(n_parts))
-        rule_dict: dict[int, MinRule] = {
-            rule.part.key: rule for rule in instance.min_rules}
+        rule_dict: dict[int, MinMaxRule] = {
+            rule.part.key: rule for rule in instance.minmax_rules}
         #: the minimum rules
-        self.__mm_min: Final[tuple[MinRule | None, ...]] = tuple(
+        self.__mm_min: Final[tuple[MinMaxRule | None, ...]] = tuple(
             rule_dict.get(k) for k in range(n_parts))
+        #: has a rule check already been requested?
+        self.__check_requested: bool = False
+        #: the set of product IDs requiring rule checks
+        self.__check_rules: Final[set[int]] = set()
 
     def _start(self) -> None:
         """Begin the simulation."""
         super()._start()
+        self.__check_requested = False
+        self.__check_rules.clear()
         for queue in self.__mm_on_the_way:
             list.clear(queue)
+
+    def __check_min_max_rules(self, parts: Iterable[int]) -> None:
+        """
+        Check all the min-max rules for the given parts.
+
+        :param parts: the parts to check
+        """
+        pks: Final[tuple[Part, ...]] = self._parts
+        mm_min: Final[tuple[MinMaxRule | None, ...]] = self.__mm_min
+        for part_key in parts:
+            part = pks[part_key]
+            min_rule: MinMaxRule | None = mm_min[part_key]
+            if min_rule is not None:
+                otw: list[WarehouseIn] = self.__mm_on_the_way[part_key]
+                remaining: int = self.available_units(part)
+                if min_rule.minimum > remaining:
+                    trigger = min_rule.maximum - remaining
+                    self._rule_triggered(0, min_rule, part, trigger)
+                    _put_one_the_way(otw, self._warehouse_in(
+                        min_rule.effect_delay, part, trigger))
 
     def _handle_initizalization_complete(
             self, event: InitializationComplete) -> None:
@@ -48,18 +75,7 @@ class MinMaxModule(StorageModule):
 
         :param event: the event
         """
-        for part in self._parts:
-            part_key = part.key
-            min_rule: MinRule | None = self.__mm_min[part_key]
-
-            if min_rule is not None:
-                otw: list[WarehouseIn] = self.__mm_on_the_way[part_key]
-                remaining: int = self.available_units(part)
-                trigger: int = min_rule.minimum - remaining
-                if trigger > 0:
-                    self._rule_triggered(0, min_rule, part, trigger)
-                    _put_one_the_way(otw, self._warehouse_in(
-                        min_rule.effect_delay, part, trigger))
+        self.__check_min_max_rules(p.key for p in self._parts)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
@@ -69,7 +85,7 @@ class MinMaxModule(StorageModule):
         """
         part: Final[Part] = event.part
         part_key: Final[int] = part.key
-        min_rule: Final[MinRule | None] = self.__mm_min[part_key]
+        min_rule: Final[MinMaxRule | None] = self.__mm_min[part_key]
 
         if min_rule is not None:
             otw: Final[list[WarehouseIn]] = self.__mm_on_the_way[part_key]
@@ -77,11 +93,21 @@ class MinMaxModule(StorageModule):
                 part) + _get_on_the_way(otw) - event.amount
             trigger: Final[int] = min_rule.minimum - remaining
             if trigger > 0:
-                self._rule_triggered(0, min_rule, part, trigger)
-                _put_one_the_way(otw, self._warehouse_in(
-                    min_rule.effect_delay, part, trigger))
-
+                self.__check_rules.add(part_key)
+                if not self.__check_requested:
+                    self.__check_requested = True
+                    self._minmax_check()
         super()._handle_warehouse_demand(event)
+
+    def _handle_minmax_check(self, event: MinMaxRuleCheckEvent) -> None:
+        """
+        Handle the min/max rule checking event.
+
+        :param event: the event
+        """
+        self.__check_requested = False
+        self.__check_min_max_rules(sorted(self.__check_rules))
+        self.__check_rules.clear()
 
     def _handle_warehouse_in(self, event: WarehouseIn) -> None:
         """
