@@ -6,7 +6,8 @@ Usually, there are some part-specific bins.
 Additionally, there are small and large random bins that can house different
 types of part.
 Each bin type has an associated amount of bins (of that type).
-The :attr:`~BinType.amount` must be a positive integer number.
+The :attr:`~BinType.packages` must be a positive integer number.
+It represents how many packages of parts can be stored in the bin.
 
 >>> with context():
 ...     b1 = BinType(None, "shelf", 10, True)
@@ -16,21 +17,21 @@ The :attr:`~BinType.amount` must be a positive integer number.
 ...     b5 = BinType(4, "shed", 77, False)
 
 >>> repr(b1)
-"BinType(key=0, name='shelf', amount=10, is_random=True)"
+"BinType(key=0, name='shelf', packages=10, is_random=True)"
 >>> repr(b2)
-"BinType(key=1, name='cupboard', amount=7, is_random=False)"
+"BinType(key=1, name='cupboard', packages=7, is_random=False)"
 >>> repr(b3)
-"BinType(key=2, name='wardrobe', amount=33, is_random=True)"
+"BinType(key=2, name='wardrobe', packages=33, is_random=True)"
 >>> repr(b4)
-"BinType(key=3, name='drawer', amount=34, is_random=True)"
+"BinType(key=3, name='drawer', packages=34, is_random=True)"
 >>> repr(b5)
-"BinType(key=4, name='shed', amount=77, is_random=False)"
+"BinType(key=4, name='shed', packages=77, is_random=False)"
 
 >>> csv_1 = list(BinType.to_csv((b1, b2, b3, b4, b5)))
 >>> for row in csv_1:
 ...     if not str.startswith(row, "#"):
 ...         print(row)
-key;name;amount;is_random
+key;name;packages;is_random
 0;shelf;10;T
 1;cupboard;7;F
 2;wardrobe;33;T
@@ -40,11 +41,11 @@ key;name;amount;is_random
 >>> with context():
 ...     for xbin in BinType.from_csv(csv_1):
 ...         print(repr(xbin))
-BinType(key=0, name='shelf', amount=10, is_random=True)
-BinType(key=1, name='cupboard', amount=7, is_random=False)
-BinType(key=2, name='wardrobe', amount=33, is_random=True)
-BinType(key=3, name='drawer', amount=34, is_random=True)
-BinType(key=4, name='shed', amount=77, is_random=False)
+BinType(key=0, name='shelf', packages=10, is_random=True)
+BinType(key=1, name='cupboard', packages=7, is_random=False)
+BinType(key=2, name='wardrobe', packages=33, is_random=True)
+BinType(key=3, name='drawer', packages=34, is_random=True)
+BinType(key=4, name='shed', packages=77, is_random=False)
 """
 
 from dataclasses import dataclass
@@ -55,7 +56,7 @@ from pycommons.strings.string_conv import bool_to_str, str_to_bool
 from pycommons.types import type_error
 
 from warehouse.instance.element import (
-    COLUMN_AMOUNT,
+    COLUMN_PACKAGES,
     Element,
     check_to_amount,
     context,
@@ -74,26 +75,27 @@ COLUMN_BIN_TYPE: Final[str] = "bin_type"
 class BinType(Element):  # noqa: PLW1641
     """A class for describing bins."""
 
-    #: the amount of bins of this type that are available
-    amount: int
+    #: the amount of packages that can be stored in the type of this bin
+    packages: int
     #: is this a random bin type?
     is_random: bool
 
     def __init__(self, key: int | None, name: str,
-                 amount: int | str = 1,
+                 packages: int | str = 1,
                  is_random: bool = False) -> None:
         """
         Create a new bin type.
 
         :param key: the bin key
         :param name: the bin name
-        :param amount: the number of bins of this type
+        :param packages: the number of packages that can be stored in the bins
+            of this type
         :param is_random: is this a random bin?
         """
         super().__init__(key, name)
         if not isinstance(is_random, bool):
             raise type_error(is_random, "is_random", bool)
-        object.__setattr__(self, "amount", check_to_amount(amount))
+        object.__setattr__(self, "packages", check_to_amount(packages))
         object.__setattr__(self, "is_random", is_random)
 
     def __hash__(self) -> int:
@@ -113,7 +115,7 @@ class BinType(Element):  # noqa: PLW1641
         """
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
-            self.amount == other.amount)
+            self.packages == other.packages)
 
     def __ne__(self, other) -> bool:
         """
@@ -124,7 +126,7 @@ class BinType(Element):  # noqa: PLW1641
         """
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
-            self.amount != other.amount)
+            self.packages != other.packages)
 
     @classmethod
     def to_csv(cls, data: Iterable[  # type: ignore
@@ -164,9 +166,9 @@ class CsvReader(CsvReaderBase[T]):
         :param columns: the named object columns
         """
         super().__init__(columns, clazz)
-        #: the amount key
-        self.col_amount: Final[int] = csv_column(
-            columns, COLUMN_AMOUNT, True)
+        #: the packages key
+        self.col_packages: Final[int] = csv_column(
+            columns, COLUMN_PACKAGES, True)
         #: the is-random column
         self.col_is_random: Final[int] = csv_column(
             columns, COLUMN_IS_RANDOM, True)
@@ -180,7 +182,7 @@ class CsvReader(CsvReaderBase[T]):
         """
         return self.clazz(key=csv_val_or_none(
             data, self.col_key, int), name=data[self.col_name],
-            amount=data[self.col_amount],
+            packages=data[self.col_packages],
             is_random=str_to_bool(data[self.col_is_random]))
 
 
@@ -195,8 +197,8 @@ class CsvWriter(CsvWriterBase[T]):
         :param scope: the scope
         """
         super().__init__(data, scope)
-        #: the amount column
-        self.col_amount: Final[str] = csv_scope(scope, COLUMN_AMOUNT)
+        #: the packages column
+        self.col_packages: Final[str] = csv_scope(scope, COLUMN_PACKAGES)
         #: the is-random column
         self.col_is_random: Final[str] = csv_scope(scope, COLUMN_IS_RANDOM)
 
@@ -207,7 +209,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the column titles
         """
         yield from super().get_column_titles()
-        yield self.col_amount
+        yield self.col_packages
         yield self.col_is_random
 
     def get_row(self, data: T) -> Iterable[str]:
@@ -218,7 +220,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the row iterator
         """
         yield from super().get_row(data)
-        yield str(data.amount)
+        yield str(data.packages)
         yield bool_to_str(data.is_random)
 
     def get_footer_comments(self) -> Iterable[str]:
@@ -228,7 +230,9 @@ class CsvWriter(CsvWriterBase[T]):
         :return: the footer comments
         """
         yield from super().get_footer_comments()
-        yield f"{self.col_amount}: the number of bins of this type"
+        yield (f"{self.col_packages}: the number of bins of this type or, "
+               "alternatively, the number of packages that can be stored in "
+               "the bins of this type")
         yield (f"{self.col_is_random}: is this a random bin type, i.e., a bin"
                "type capable of holding multiple different parts? If yes,"
                f"the value is {bool_to_str(True)!r}, otherwise, it is"

@@ -1,2 +1,2 @@
-name;part;minimum;effect_delay
-min_A;A;30;00:150
+name;part;minimum_units;maximum_units;effect_delay
+min_A;A;90;120;00:150

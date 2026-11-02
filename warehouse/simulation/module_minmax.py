@@ -61,12 +61,15 @@ class MinMaxModule(StorageModule):
             min_rule: MinMaxRule | None = mm_min[part_key]
             if min_rule is not None:
                 otw: list[WarehouseIn] = self.__mm_on_the_way[part_key]
-                remaining: int = self.available_units(part)
-                if min_rule.minimum > remaining:
-                    trigger = min_rule.maximum - remaining
-                    self._rule_triggered(0, min_rule, part, trigger)
-                    _put_one_the_way(otw, self._warehouse_in(
-                        min_rule.effect_delay, part, trigger))
+                remaining: int = self.available_packages(
+                    part) * part.units_per_package
+                if min_rule.minimum_units > remaining:
+                    units = min_rule.maximum_units - remaining
+                    packages = units // part.units_per_package
+                    self._rule_triggered(0, min_rule, part, units, packages)
+                    if packages > 0:
+                        _put_one_the_way(otw, self._warehouse_in(
+                            min_rule.effect_delay, part, packages))
 
     def _handle_initizalization_complete(
             self, event: InitializationComplete) -> None:
@@ -89,9 +92,10 @@ class MinMaxModule(StorageModule):
 
         if min_rule is not None:
             otw: Final[list[WarehouseIn]] = self.__mm_on_the_way[part_key]
-            remaining: Final[int] = self.available_units(
-                part) + _get_on_the_way(otw) - event.amount
-            trigger: Final[int] = min_rule.minimum - remaining
+            remaining: Final[int] = ((self.available_packages(
+                part) + _get_on_the_way(otw) - event.packages)
+                * part.units_per_package)
+            trigger: Final[int] = min_rule.minimum_units - remaining
             if trigger > 0:
                 self.__check_rules.add(part_key)
                 if not self.__check_requested:
@@ -121,12 +125,12 @@ class MinMaxModule(StorageModule):
 
 def _get_on_the_way(otw: list[WarehouseIn]) -> int:
     """
-    Get the amount of parts on the way.
+    Get the packages of parts on the way.
 
     :param otw: the on-the-way list
-    :return: the amount of parts on the way
+    :return: the amount of packages of the part on the way
     """
-    return sum(ev.amount for ev in otw)
+    return sum(ev.packages for ev in otw)
 
 
 def _purge_on_the_way(otw: list[WarehouseIn],

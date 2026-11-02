@@ -1,4 +1,4 @@
-key;name;amount;is_random
+key;name;packages;is_random
 0;random_small;1000;T
 1;random_large;500;T
 2;hat_bins;300;F

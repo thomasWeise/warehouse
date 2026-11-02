@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 
 from warehouse.instance.checkpoint import COLUMN_CHECKPOINT, Checkpoint
-from warehouse.instance.element import COLUMN_AMOUNT, context
+from warehouse.instance.element import COLUMN_UNITS, context
 from warehouse.instance.event import Event
 from warehouse.instance.product import COLUMN_PRODUCT, Product
 
@@ -69,7 +69,7 @@ class CheckpointEvent(Event):  # noqa: PLW1641
             return self.checkpoint.name
         if column == COLUMN_PRODUCT:
             return self.product.name
-        if column == COLUMN_AMOUNT:
+        if column == COLUMN_UNITS:
             return "1"
         return ""
 

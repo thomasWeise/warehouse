@@ -28,20 +28,21 @@ Events regarding rules.
 ...     events_2 = tuple(Event.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-2017-07-14 10:40;rule_triggered;hat;1200;;;;min_hat
+2017-07-14 10:40;rule_triggered;hat;;;;;min_hat;1200
 <BLANKLINE>
 ===================
 <BLANKLINE>
 True
 
 >>> hash(ev01)
-19115592861312599
+8165531189212600284
 """
 from dataclasses import dataclass, field
 from typing import Final
 
 from warehouse.instance.element import (
-    COLUMN_AMOUNT,
+    COLUMN_PACKAGES,
+    COLUMN_UNITS,
     check_to_amount,
     context,
 )
@@ -104,9 +105,11 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
     #: the rule that was triggered
     rule: Rule = field(hash=True)
     #: the part concerning this rule triggering, or `None` if none is needed
-    part: Part | None = field(hash=True)
-    #: the amount involved in the triggering
-    amount: int | None = field(hash=True)
+    part: Part | None = field(hash=True, default=None)
+    #: the units amount of units involved in the triggering
+    units: int | None = field(hash=True, default=None)
+    #: the number of packages involved in the triggering
+    packages: int | None = field(hash=True, default=None)
 
     def __eq__(self, other) -> bool:
         """
@@ -120,7 +123,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             self.time == other.time) and (
             self.priority == other.priority) and (
             self.rule == other.rule) and (
-            self.amount == other.amount) and (
+            self.units == other.units) and (
+            self.packages == other.packages) and (
             self.part == other.part)
 
     def __ne__(self, other) -> bool:
@@ -135,7 +139,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             self.time != other.time) or (
             self.priority != other.priority) or (
             self.rule != other.rule) or (
-            self.amount != other.amount) or (
+            self.units != other.units) or (
+            self.packages != other.packages) or (
             self.part != other.part)
 
     @classmethod
@@ -150,8 +155,12 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             return "the name of the rule that was triggered"
         if col == COLUMN_PART:
             return "the part concerned by this rule, if any"
-        if col == COLUMN_AMOUNT:
-            return "the amount involved in triggering the rule, if any"
+        if col == COLUMN_UNITS:
+            return ("the amount of units involved in triggering the rule, "
+                    "if any")
+        if col == COLUMN_PACKAGES:
+            return ("the amount of packages that were involved in triggering "
+                    "the rule, if any")
         return None
 
     def event_get_csv_value(self, column: str) -> str:
@@ -165,8 +174,10 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             return self.rule.name
         if column == COLUMN_PART:
             return "" if self.part is None else self.part.name
-        if column == COLUMN_AMOUNT:
-            return "" if self.amount is None else str(self.amount)
+        if column == COLUMN_UNITS:
+            return "" if self.units is None else str(self.units)
+        if column == COLUMN_PACKAGES:
+            return "" if self.packages is None else str(self.packages)
         return ""
 
     @classmethod
@@ -176,14 +187,15 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
 
         :return: the csv columns
         """
-        return COLUMN_RULE, COLUMN_PART, COLUMN_AMOUNT
+        return COLUMN_RULE, COLUMN_PART, COLUMN_UNITS, COLUMN_PACKAGES
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, priority: int,
             rule: str | Rule,
             part: int | str | Part | None = None,
-            amount: int | str | None = None, **_) \
+            units: int | str | None = None,
+            packages: int | str | None = None, **_) \
             -> "RuleTriggeredEvent":  # type: ignore
         """
         Create the storage event.
@@ -192,7 +204,8 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         :param priority: the event priority
         :param rule: the rule involved
         :param part: the part concerned, if any
-        :param amount: the amount of the part to use
+        :param units: the units of the part to use, if any
+        :param packages: the packages concerned, if any
         :return: the storage event
         """
         with context() as ctx:
@@ -200,8 +213,10 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
             if part is not None:
                 part = ctx.resolve(Part, part)
         return cls(time, priority, rule,  # type: ignore
-                   part, None if amount is None else  # type: ignore
-                   check_to_amount(amount))  # type: ignore
+                   part, None if units is None else  # type: ignore
+                   check_to_amount(units),
+                   None if packages is None else  # type: ignore
+                   check_to_amount(packages))  # type: ignore
 
     @classmethod
     def eventclass_get_csv_type(cls) -> str:
@@ -221,4 +236,4 @@ class RuleTriggeredEvent(Event):  # noqa: PLW1641
         """
         return (f"The rule of the given {COLUMN_RULE} was triggered. "
                 f"It may be parameterized with the given {COLUMN_PART} and "
-                f"{COLUMN_AMOUNT}.")
+                f"{COLUMN_UNITS} and {COLUMN_PACKAGES}.")

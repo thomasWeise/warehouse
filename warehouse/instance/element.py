@@ -83,8 +83,10 @@ from pycommons.types import check_int_range, check_to_int_range, type_error
 COLUMN_KEY: Final[str] = "key"
 #: the CSV name column
 COLUMN_NAME: Final[str] = "name"
-#: the CSV column for everything concerning amounts
-COLUMN_AMOUNT: Final[str] = "amount"
+#: the CSV column for unit amounts
+COLUMN_UNITS: Final[str] = "units"
+#: the CSV column for package amounts
+COLUMN_PACKAGES: Final[str] = "packages"
 
 #: the multi-element separator
 MULTI_SEPARATOR: Final[str] = "," if CSV_SEPARATOR != "," else ";"

@@ -13,7 +13,7 @@ from warehouse.event.rules import (
 from warehouse.event.storage import (
     OverstockIn,
     OverstockOut,
-    StorageEvent,
+    StoragePackageEvent,
     Understock,
     WarehouseDelivers,
     WarehouseDemand,
@@ -117,19 +117,18 @@ class BaseModule:
         """
 
     def _warehouse_in(self, delta: int,
-                      part: Part,
-                      amount: int) -> WarehouseIn:
+                      part: Part, packages: int) -> WarehouseIn:
         """
         Enqueue a warehouse-in event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the amount of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[WarehouseIn] = WarehouseIn(
-            self.__end_of_job(self.__time, delta, True), p, part, amount)
+            self.__end_of_job(self.__time, delta, True), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -141,19 +140,18 @@ class BaseModule:
         """
 
     def _warehouse_demand(self, delta: int,
-                          part: Part,
-                          amount: int) -> WarehouseDemand:
+                          part: Part, units: int) -> WarehouseDemand:
         """
         Enqueue a warehouse-demand event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param units: the amount of the part units
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[WarehouseDemand] = WarehouseDemand(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, units)
         heappush(self.__queue, res)
         return res
 
@@ -165,19 +163,18 @@ class BaseModule:
         """
 
     def _warehouse_delivers(self, delta: int,
-                            part: Part,
-                            amount: int) -> WarehouseDelivers:
+                            part: Part, packages: int) -> WarehouseDelivers:
         """
         Enqueue a warehouse-delivers event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the amount of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[WarehouseDelivers] = WarehouseDelivers(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -189,19 +186,18 @@ class BaseModule:
         """
 
     def _overstock_in(self, delta: int,
-                      part: Part,
-                      amount: int) -> OverstockIn:
+                      part: Part, packages: int) -> OverstockIn:
         """
         Enqueue an overstock-in event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the amount of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[OverstockIn] = OverstockIn(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -213,19 +209,18 @@ class BaseModule:
         """
 
     def _overstock_out(self, delta: int,
-                       part: Part,
-                       amount: int) -> OverstockOut:
+                       part: Part, packages: int) -> OverstockOut:
         """
         Enqueue an overstock-out event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the packages of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[OverstockOut] = OverstockOut(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -237,18 +232,18 @@ class BaseModule:
         """
 
     def _bin_in(self, delta: int,
-                part: Part, amount) -> BinIn:
+                part: Part, packages: int) -> BinIn:
         """
         Enqueue a bin-in event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the packages of the part
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[BinIn] = BinIn(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -260,18 +255,18 @@ class BaseModule:
         """
 
     def _bin_out(self, delta: int,
-                 part: Part, amount) -> BinOut:
+                 part: Part, packages: int) -> BinOut:
         """
         Enqueue a bin-out event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the packages of the part
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[BinOut] = BinOut(
-            self.__end_of_job(self.__time, delta, False), p, part, amount)
+            self.__end_of_job(self.__time, delta, False), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -283,19 +278,18 @@ class BaseModule:
         """
 
     def _understock(self, delta: int,
-                    part: Part,
-                    amount: int) -> Understock:
+                    part: Part, packages: int) -> Understock:
         """
         Enqueue an understock event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param packages: the packages of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[Understock] = Understock(
-            self.__end_of_job(self.__time, delta, True), p, part, amount)
+            self.__end_of_job(self.__time, delta, True), p, part, packages)
         heappush(self.__queue, res)
         return res
 
@@ -306,22 +300,24 @@ class BaseModule:
         :param event: the understock event.
         """
 
-    def _rule_triggered(self, delta: int,
-                        rule: Rule,
-                        part: Part,
-                        amount: int) -> RuleTriggeredEvent:
+    def _rule_triggered(self, delta: int, rule: Rule,
+                        part: Part | None = None,
+                        units: int | None = None,
+                        packages: int | None = None) -> RuleTriggeredEvent:
         """
         Enqueue a rule-triggered event.
 
         :param delta: the time delta from now
         :param rule: the rule that was triggered
         :param part: the part to enter the warehouse
-        :param amount: the amount of the part
+        :param units: the amount of the part units
+        :param packages: the amount of packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[RuleTriggeredEvent] = RuleTriggeredEvent(
-            self.__end_of_job(self.__time, delta, True), p, rule, part, amount)
+            self.__end_of_job(self.__time, delta, True), p, rule, part, units,
+            packages)
         heappush(self.__queue, res)
         return res
 
@@ -347,9 +343,9 @@ class BaseModule:
         :param event: the event
         """
 
-    def available_units(self, part: Part) -> int:
+    def available_packages(self, part: Part) -> int:
         """
-        Get the available units of the given part.
+        Get the available number of packages of the given part.
 
         These are units either currently in bins or in overstock, i.e., the
         number of units that we can ship immediately.
@@ -447,7 +443,7 @@ class BaseModule:
             _QUIT: self._handle_end_event,  # type: ignore
             id(StartEvent): self._handle_start_event,  # type: ignore
             id(Event): self._error,  # type: ignore
-            id(StorageEvent): self._error,  # type: ignore
+            id(StoragePackageEvent): self._error,  # type: ignore
             id(BinEvent): self._error,  # type: ignore
             id(BinIn): self._handle_bin_in,  # type: ignore
             id(BinOut): self._handle_bin_out,  # type: ignore

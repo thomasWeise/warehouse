@@ -1,12 +1,12 @@
-key;name;bin_type
-0;trousers;random_small
-1;skirt;random_small
-2;suitcase;random_large
-3;shoe;shoe_bin
-4;sock;sock_bin
-5;boot;random_small
-6;hat;random_small
-7;tie;random_small
+key;name;bin_type;units_per_package
+0;trousers;random_small;7
+1;skirt;random_small;3
+2;suitcase;random_large;8
+3;shoe;shoe_bin;5
+4;sock;sock_bin;2
+5;boot;random_small;9
+6;hat;random_small;4
+7;tie;random_small;1
 8;jumpsuit;random_large
 # key: the unique key of the element within its type
 # name: the unique name of the element (unique over all elements of all types)

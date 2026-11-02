@@ -25,10 +25,10 @@ from warehouse.instance.time import (
 )
 
 #: the minimum column
-COLUMN_MINIMUM: Final[str] = "minimum"
+COLUMN_MINIMUM: Final[str] = "minimum_units"
 
 #: the maximum column
-COLUMN_MAXIMUM: Final[str] = "maximum"
+COLUMN_MAXIMUM: Final[str] = "maximum_units"
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
@@ -37,15 +37,15 @@ class MinMaxRule(Rule):
 
     #: the part which is concerned here
     part: Part
-    #: the minimum value triggering the rule
-    minimum: int
-    #: the maximum value, to whose amount we order
-    maximum: int
+    #: the minimum units value triggering the rule
+    minimum_units: int
+    #: the maximum units value, to whose amount we order
+    maximum_units: int
 
     def __init__(self, key: int | None, name: str,
                  part: Part | int | str,
-                 minimum: int | str = 1,
-                 maximum: int | str | None = None,
+                 minimum_units: int | str = 1,
+                 maximum_units: int | str | None = None,
                  effect_delay: int | str = 150 * 60) -> None:
         """
         Create a new minimum rule.
@@ -62,11 +62,12 @@ class MinMaxRule(Rule):
         with context() as ctx:
             part = ctx.resolve(Part, part)
         object.__setattr__(self, "part", part)
-        object.__setattr__(self, "minimum", check_to_amount(minimum))
+        object.__setattr__(self, "minimum_units", check_to_amount(
+            minimum_units))
         object.__setattr__(
-            self, "maximum", self.minimum if maximum is None else
-            check_int_range(check_to_amount(maximum), "maximum",
-                            self.minimum))
+            self, "maximum_units", self.minimum_units if maximum_units is None
+            else check_int_range(check_to_amount(maximum_units),
+                                 "maximum_units", self.minimum_units))
 
     def __eq__(self, other) -> bool:
         """
@@ -77,8 +78,9 @@ class MinMaxRule(Rule):
         """
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
-            self.part == other.part) and (self.minimum == other.minimum) and (
-            self.maximum == other.maximum) and (
+            self.part == other.part) and (
+            self.minimum_units == other.minimum_units) and (
+            self.maximum_units == other.maximum_units) and (
             self.effect_delay == other.effect_delay)
 
     def __ne__(self, other) -> bool:
@@ -90,8 +92,9 @@ class MinMaxRule(Rule):
         """
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
-            self.part != other.part) or (self.minimum != other.minimum) or (
-            self.maximum != other.maximum) or (
+            self.part != other.part) or (
+            self.minimum_units != other.minimum_units) or (
+            self.maximum_units != other.maximum_units) or (
             self.effect_delay != other.effect_delay)
 
     def __hash__(self) -> int:
@@ -162,8 +165,8 @@ class CsvReader(CsvReaderBase[T]):
             key=csv_val_or_none(data, self.col_key, int),
             name=data[self.col_name],
             part=data[self.col_part],
-            minimum=data[self.col_min],
-            maximum=csv_val_or_none(data, self.col_max, int),
+            minimum_units=data[self.col_min],
+            maximum_units=csv_val_or_none(data, self.col_max, int),
             effect_delay=data[self.col_delay])
 
 
@@ -185,7 +188,7 @@ class CsvWriter(CsvWriterBase[T]):
 
         needs_max: bool = False
         for row in data:
-            if row.maximum > row.minimum:
+            if row.maximum_units > row.minimum_units:
                 needs_max = True
                 break
         #: the maximum column
@@ -216,9 +219,9 @@ class CsvWriter(CsvWriterBase[T]):
         """
         yield from super().get_row(data)
         yield data.part.name
-        yield str(data.minimum)
+        yield str(data.minimum_units)
         if self.col_max is not None:
-            yield str(data.maximum)
+            yield str(data.maximum_units)
         yield timedelta_to_str(data.effect_delay)
 
     def get_footer_comments(self) -> Iterable[str]:
@@ -230,8 +233,8 @@ class CsvWriter(CsvWriterBase[T]):
         yield from super().get_footer_comments()
         yield f"{self.col_part}: the part for which the minimum is defined"
         if self.col_max is not None:
-            yield (f"{self.col_max}: the goal number of parts to which we "
-                   f"will order")
-        yield f"{self.col_min}: the minimum number of parts required"
+            yield (f"{self.col_max}: the goal number of part units to which"
+                   f"we will order")
+        yield f"{self.col_min}: the minimum number of part units required"
         yield (f"{self.col_delay}: the time until the rule's effects become "
                f"visible")

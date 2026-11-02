@@ -16,21 +16,22 @@ A warehouse setup.
 ...     instance = Instance((b1, b2, b3, b4, b5), (m1, m2, m3, m4), (e1, e2))
 
 >>> instance.parts
-(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50, is_random=True), units_per_package=1), \
-Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30, is_random=False), units_per_package=3), \
+(Part(key=0, name='Shoe', bin_type=BinType(\
+key=0, name='random_small', packages=50, is_random=True), \
+units_per_package=1), \
+Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', packages=30, \
+is_random=False), units_per_package=3), \
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100, is_random=True), units_per_package=9), \
+packages=100, is_random=True), units_per_package=9), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55, is_random=False), units_per_package=1))
+packages=55, is_random=False), units_per_package=1))
 
 >>> instance.bin_types
-(BinType(key=0, name='random_small', amount=50, is_random=True), \
-BinType(key=1, name='random_large', amount=100, is_random=True), \
-BinType(key=2, name='wardrobe', amount=30, is_random=False), \
-BinType(key=3, name='drawer', amount=55, is_random=False), \
-BinType(key=4, name='shed', amount=76, is_random=False))
+(BinType(key=0, name='random_small', packages=50, is_random=True), \
+BinType(key=1, name='random_large', packages=100, is_random=True), \
+BinType(key=2, name='wardrobe', packages=30, is_random=False), \
+BinType(key=3, name='drawer', packages=55, is_random=False), \
+BinType(key=4, name='shed', packages=76, is_random=False))
 
 >>> instance.events
 (StartEvent(time=1005000000, priority=0), \
@@ -42,21 +43,22 @@ EndEvent(time=1007000000, priority=0))
 ...     instance_2 = Instance.from_directory(td)
 
 >>> instance_2.parts
-(Part(key=0, name='Shoe', bin_type=BinType(key=0, name='random_small', \
-amount=50, is_random=True), units_per_package=1), \
-Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', \
-amount=30, is_random=False), units_per_package=3), \
+(Part(key=0, name='Shoe', bin_type=BinType(\
+key=0, name='random_small', packages=50, is_random=True), \
+units_per_package=1), \
+Part(key=1, name='Hat', bin_type=BinType(key=2, name='wardrobe', packages=30, \
+is_random=False), units_per_package=3), \
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=100, is_random=True), units_per_package=9), \
+packages=100, is_random=True), units_per_package=9), \
 Part(key=3, name='T-Shirt', bin_type=BinType(key=3, name='drawer', \
-amount=55, is_random=False), units_per_package=1))
+packages=55, is_random=False), units_per_package=1))
 
 >>> instance_2.bin_types
-(BinType(key=0, name='random_small', amount=50, is_random=True), \
-BinType(key=1, name='random_large', amount=100, is_random=True), \
-BinType(key=2, name='wardrobe', amount=30, is_random=False), \
-BinType(key=3, name='drawer', amount=55, is_random=False), \
-BinType(key=4, name='shed', amount=76, is_random=False))
+(BinType(key=0, name='random_small', packages=50, is_random=True), \
+BinType(key=1, name='random_large', packages=100, is_random=True), \
+BinType(key=2, name='wardrobe', packages=30, is_random=False), \
+BinType(key=3, name='drawer', packages=55, is_random=False), \
+BinType(key=4, name='shed', packages=76, is_random=False))
 
 >>> instance_2.events
 (StartEvent(time=1005000000, priority=0), \

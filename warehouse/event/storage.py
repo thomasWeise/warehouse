@@ -37,18 +37,18 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 ...     events_2 = tuple(Event.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-2017-07-14 10:40;warehouse_in;hat;1200
-2017-07-14 10:40:20;warehouse_in;shoe;40
-2017-07-14 12:37;warehouse_in;trousers;750
-2017-07-14 13:10;overstock_in;hat;200
-2017-07-14 13:18:20;overstock_in;shoe;10
-2017-07-14 18:51:40;overstock_in;trousers;250
-2017-07-14 21:30;overstock_out;hat;200
-2017-07-15 00:25;overstock_out;shoe;10
-2017-07-15 00:58:20;overstock_out;trousers;250
-2020-09-13 20:26:40;warehouse_demand;hat;1200
-2020-09-13 20:27;warehouse_demand;shoe;40
-2020-09-13 22:23:40;warehouse_demand;trousers;750
+2017-07-14 10:40;warehouse_in;hat;1200;;;;;1200
+2017-07-14 10:40:20;warehouse_in;shoe;40;;;;;40
+2017-07-14 12:37;warehouse_in;trousers;750;;;;;750
+2017-07-14 13:10;overstock_in;hat;200;;;;;200
+2017-07-14 13:18:20;overstock_in;shoe;10;;;;;10
+2017-07-14 18:51:40;overstock_in;trousers;250;;;;;250
+2017-07-14 21:30;overstock_out;hat;200;;;;;200
+2017-07-15 00:25;overstock_out;shoe;10;;;;;10
+2017-07-15 00:58:20;overstock_out;trousers;250;;;;;250
+2020-09-13 20:26:40;warehouse_demand;hat;1200;;;;;1200
+2020-09-13 20:27;warehouse_demand;shoe;40;;;;;40
+2020-09-13 22:23:40;warehouse_demand;trousers;750;;;;;750
 <BLANKLINE>
 ===================
 <BLANKLINE>
@@ -70,19 +70,24 @@ True
 """
 from dataclasses import dataclass, field
 
-from warehouse.instance.element import COLUMN_AMOUNT, check_to_amount, context
+from warehouse.instance.element import (
+    COLUMN_PACKAGES,
+    COLUMN_UNITS,
+    check_to_amount,
+    context,
+)
 from warehouse.instance.event import Event
 from warehouse.instance.part import COLUMN_PART, Part
 
 
 @dataclass(frozen=True, init=True, order=False, eq=False, unsafe_hash=True)
-class StorageEvent(Event):  # noqa: PLW1641
-    """An amount of part has changed places."""
+class StoragePackageEvent(Event):  # noqa: PLW1641
+    """An amount of part packages has changed places."""
 
     #: the part
     part: Part = field(hash=True)
-    #: the amount to store/retrieve
-    amount: int = field(hash=True)
+    #: the packages to store/retrieve
+    packages: int = field(hash=True)
 
     @classmethod
     def eventclass_needs_register(cls) -> bool:
@@ -91,10 +96,10 @@ class StorageEvent(Event):  # noqa: PLW1641
 
         :returns: `True` if it should be registered as a possible event type,
             `False` otherwise; in this case: `True` if it should be is not
-            `Event` or `StorageEvent`.
+            `Event` or `StoragePackageEvent`.
         """
         return super().eventclass_needs_register() and (
-            cls.__name__ != "StorageEvent")
+            cls.__name__ != "StoragePackageEvent")
 
     def __eq__(self, other) -> bool:
         """
@@ -108,7 +113,7 @@ class StorageEvent(Event):  # noqa: PLW1641
             self.time == other.time) and (
             self.priority == other.priority) and (
             self.part == other.part) and (
-            self.amount == other.amount)
+            self.packages == other.packages)
 
     def __ne__(self, other) -> bool:
         """
@@ -122,7 +127,7 @@ class StorageEvent(Event):  # noqa: PLW1641
             self.time != other.time) or (
             self.priority != other.priority) or (
             self.part != other.part) or (
-            self.amount != other.amount)
+            self.packages != other.packages)
 
     @classmethod
     def eventclass_get_col_desc(cls, col: str) -> str | None:
@@ -134,8 +139,8 @@ class StorageEvent(Event):  # noqa: PLW1641
         """
         if col == COLUMN_PART:
             return "the type of part associated with the event"
-        if col == COLUMN_AMOUNT:
-            return "the amount of part stored or retrieved"
+        if col == COLUMN_PACKAGES:
+            return "the number of packages of the part stored or retrieved"
         return None
 
     def event_get_csv_value(self, column: str) -> str:
@@ -147,8 +152,10 @@ class StorageEvent(Event):  # noqa: PLW1641
         """
         if column == COLUMN_PART:
             return self.part.name
-        if column == COLUMN_AMOUNT:
-            return str(self.amount)
+        if column == COLUMN_PACKAGES:
+            return str(self.packages)
+        if column == COLUMN_UNITS:
+            return str(self.packages * self.part.units_per_package)
         return ""
 
     @classmethod
@@ -158,28 +165,28 @@ class StorageEvent(Event):  # noqa: PLW1641
 
         :return: the csv columns
         """
-        return COLUMN_PART, COLUMN_AMOUNT
+        return COLUMN_PART, COLUMN_PACKAGES
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, priority: int, part: int | str | Part,
-            amount: int | str, **_) -> "StorageEvent":  # type: ignore
+            packages: int | str, **_) -> "StoragePackageEvent":  # type: ignore
         """
         Create the storage event.
 
         :param time: the time
         :param priority: the event priority
         :param part: the part to use
-        :param amount: the amount of the part to use
+        :param packages: the amount of the packages to store/retrieve
         :return: the storage event
         """
         with context() as ctx:
             part = ctx.resolve(Part, part)
         return cls(time, priority, part,  # type: ignore
-                   check_to_amount(amount))  # type: ignore
+                   check_to_amount(packages))  # type: ignore
 
 
-class WarehouseIn(StorageEvent):
+class WarehouseIn(StoragePackageEvent):
     """Store part in the warehouse."""
 
     @classmethod
@@ -203,55 +210,7 @@ class WarehouseIn(StorageEvent):
                 " put it.")
 
 
-class WarehouseDemand(StorageEvent):
-    """Retrieve parts from the warehouse."""
-
-    @classmethod
-    def eventclass_get_csv_type(cls) -> str:
-        """
-        Get the csv type of the event.
-
-        :return: the csv type
-        """
-        return "warehouse_demand"
-
-    @classmethod
-    def eventclass_get_event_desc(cls) -> str | None:
-        """
-        Get the event description.
-
-        :return: the event description, if any
-        """
-        return ("a certain amount of a part is requested from the "
-                "warehouse and needs to be taken out of the stored amount of "
-                "this part; it then needs to be decided from which bin to"
-                " take it or, if there is overstock, maybe it can be taken "
-                "from there.")
-
-
-class WarehouseDelivers(StorageEvent):
-    """Part was retrieved from the warehouse."""
-
-    @classmethod
-    def eventclass_get_csv_type(cls) -> str:
-        """
-        Get the csv type of the event.
-
-        :return: the csv type
-        """
-        return "warehouse_delivered"
-
-    @classmethod
-    def eventclass_get_event_desc(cls) -> str | None:
-        """
-        Get the event description.
-
-        :return: the event description, if any
-        """
-        return "a certain amount of a part is shipped by the warehouse"
-
-
-class OverstockIn(StorageEvent):
+class OverstockIn(StoragePackageEvent):
     """Store part in the overstock."""
 
     @classmethod
@@ -276,7 +235,7 @@ class OverstockIn(StorageEvent):
                 "that it is just lying around somewhere.")
 
 
-class OverstockOut(StorageEvent):
+class OverstockOut(StoragePackageEvent):
     """Retrieve part from the overstock."""
 
     @classmethod
@@ -300,7 +259,29 @@ class OverstockOut(StorageEvent):
                 "occupied; so it was just lying around.")
 
 
-class Understock(StorageEvent):
+class WarehouseDelivers(StoragePackageEvent):
+    """Part packages were retrieved from the warehouse."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "warehouse_delivered"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return "an amount of units of a part is shipped by the warehouse"
+
+
+class Understock(StoragePackageEvent):
     """Not enough part was available to satisfy a request."""
 
     @classmethod
@@ -319,5 +300,31 @@ class Understock(StorageEvent):
 
         :return: the event description, if any
         """
-        return ("there was not enough part in the "
+        return ("there were not enough units of a part in the "
                 "warehouse to satisfy a warehouse_demand request.")
+
+
+class WarehouseDemand(StoragePackageEvent):
+    """Retrieve parts from the warehouse."""
+
+    @classmethod
+    def eventclass_get_csv_type(cls) -> str:
+        """
+        Get the csv type of the event.
+
+        :return: the csv type
+        """
+        return "warehouse_demand"
+
+    @classmethod
+    def eventclass_get_event_desc(cls) -> str | None:
+        """
+        Get the event description.
+
+        :return: the event description, if any
+        """
+        return ("an amount of packages of a part is requested from the "
+                "warehouse and needs to be taken out of the stored amount of "
+                "this part; it then needs to be decided from which bin to"
+                " take it or, if there is overstock, maybe it can be taken "
+                "from there.")

@@ -1,4 +1,4 @@
-time;type;part;amount;bin_type
+time;type;part;packages;bin_type
 2026-01-02 19:09:22;start
 2026-01-04 05:18:44;warehouse_in;skirt;233
 2026-01-05 15:28:06;bin_in;skirt;233;random_small
@@ -19,20 +19,20 @@ time;type;part;amount;bin_type
 # time: The time at which the event takes place, as an ISO timestamp with millisecond precision
 # type: The type of the event. Each event type has a specific meaning. See below for a list of event types.
 # part: the type of part associated with the event
-# amount: the amount of part stored or retrieved
+# packages: the number of packages of the part stored or retrieved
 # bin_type: the type of bin into which is part stored in or taken out of
 #
 # Event types (column type):
-# - bin_in: a certain amount of a part is stored in a certain type of bins; the amount of part and the amount of bins used are the same, as part always comes in units that are multiples of bin sizes.
-# - bin_out: a certain amount of a part is retrieved from a certain type of bins; the amount of part and the amount of bins used are the same, as part always comes in units that are multiples of bin sizes.
+# - bin_in: a certain amount of packages of a part is stored in a certain type of bins; the amount of part packages and the amount of bins used are the same, as one package always occupies one bin.
+# - bin_out: a certain amount of packages of a part is retrieved from a certain type of bins; the amount of part packages and the amount of bins used are the same, as one package always occupies one bin.
 # - end: the time when the simulation ends, or, alternatively, after which it should be aborted and all other events still in the queue are discarded
 # - initialization_complete: this event is triggered automatically after all the events that come at the beginning of the simulation at the same time as the start event.
 # - overstock_in: a certain amount of a part has arrived in the warehouse, but it could not be put into any bin, because all bins are full; the part was placed into the 'overstock', meaning that it is just lying around somewhere.
 # - overstock_out: a certain amount of a part was taken from the overstock: this part was not in any bin, because all bins were occupied; so it was just lying around.
 # - start: the time when the simulation begins
-# - understock: there was not enough part in the warehouse to satisfy a warehouse_demand request.
-# - warehouse_delivered: a certain amount of a part is shipped by the warehouse
-# - warehouse_demand: a certain amount of a part is requested from the warehouse and needs to be taken out of the stored amount of this part; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
+# - understock: there were not enough units of a part in the warehouse to satisfy a warehouse_demand request.
+# - warehouse_delivered: an amount of units of a part is shipped by the warehouse
+# - warehouse_demand: an amount of packages of a part is requested from the warehouse and needs to be taken out of the stored amount of this part; it then needs to be decided from which bin to take it or, if there is overstock, maybe it can be taken from there.
 # - warehouse_in: a certain amount of a part has arrived at the warehouse and needs to be stored; it then needs to be decided where to put it.
 #
 # This CSV output has been created using the versatile CSV API of pycommons.io.csv, version 0.8.108.

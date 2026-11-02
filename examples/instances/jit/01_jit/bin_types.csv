@@ -1,4 +1,4 @@
-name;amount;is_random
+name;packages;is_random
 rack_1;100;T
 rack_2;500;T
 rack_3;300;T

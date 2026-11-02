@@ -64,7 +64,8 @@ class JitRule(MinMaxRule):
         """
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
-            self.part == other.part) and (self.minimum == other.minimum) and (
+            self.part == other.part) and (
+            self.minimum_units == other.minimum_units) and (
             self.effect_delay == other.effect_delay) and (
             self.checkpoint == other.checkpoint) and (
             self.product == other.product)
@@ -78,7 +79,8 @@ class JitRule(MinMaxRule):
         """
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
-            self.part != other.part) or (self.minimum != other.minimum) or (
+            self.part != other.part) or (
+            self.minimum_units != other.minimum_units) or (
             self.effect_delay != other.effect_delay) or (
             self.checkpoint != other.checkpoint) or (
             self.product != other.product)

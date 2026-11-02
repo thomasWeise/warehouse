@@ -25,13 +25,13 @@ which it can be stored.
 
 >>> repr(m1)
 "Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5, is_random=False), units_per_package=1)"
+packages=5, is_random=False), units_per_package=1)"
 >>> repr(m2)
 "Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10, is_random=True), units_per_package=7)"
+packages=10, is_random=True), units_per_package=7)"
 >>> repr(m3)
 "Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10, is_random=True), units_per_package=121)"
+packages=10, is_random=True), units_per_package=121)"
 
 >>> csv1 = list(Part.to_csv((m1, m2, m3)))
 >>> for row in csv1:
@@ -49,11 +49,11 @@ key;name;bin_type;units_per_package
 ...     for mat in Part.from_csv(csv1):
 ...         print(repr(mat))
 Part(key=0, name='Shoe', bin_type=BinType(key=2, name='shoe_bin', \
-amount=5, is_random=False), units_per_package=1)
+packages=5, is_random=False), units_per_package=1)
 Part(key=1, name='Hat', bin_type=BinType(key=0, name='random_small', \
-amount=10, is_random=True), units_per_package=7)
+packages=10, is_random=True), units_per_package=7)
 Part(key=2, name='Skirt', bin_type=BinType(key=1, name='random_large', \
-amount=10, is_random=True), units_per_package=121)
+packages=10, is_random=True), units_per_package=121)
 """
 
 from dataclasses import dataclass

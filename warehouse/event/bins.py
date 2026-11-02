@@ -30,13 +30,13 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     events_2 = tuple(BinEvent.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-time;type;part;amount;bin_type;checkpoint;product;rule
-2017-07-14 10:40;bin_in;hat;10;hat_bins
-2023-11-15 06:13:20;bin_in;shoe;15;random_small
-2027-01-15 16:00;bin_in;trousers;7;random_large
-2030-03-18 01:46:40;bin_out;hat;9;hat_bins
-2033-05-18 11:33:20;bin_out;shoe;8;random_small
-2036-07-18 21:20;bin_out;trousers;3;random_large
+time;type;part;packages;bin_type;checkpoint;product;rule;units
+2017-07-14 10:40;bin_in;hat;10;hat_bins;;;;10
+2023-11-15 06:13:20;bin_in;shoe;15;random_small;;;;15
+2027-01-15 16:00;bin_in;trousers;7;random_large;;;;7
+2030-03-18 01:46:40;bin_out;hat;9;hat_bins;;;;9
+2033-05-18 11:33:20;bin_out;shoe;8;random_small;;;;8
+2036-07-18 21:20;bin_out;trousers;3;random_large;;;;3
 <BLANKLINE>
 ===================
 <BLANKLINE>
@@ -53,8 +53,8 @@ True
 
 
 from warehouse.event.storage import (
-    COLUMN_AMOUNT,
-    StorageEvent,
+    COLUMN_PACKAGES,
+    StoragePackageEvent,
     check_to_amount,
 )
 from warehouse.instance.bin_type import COLUMN_BIN_TYPE, BinType
@@ -62,7 +62,7 @@ from warehouse.instance.element import context
 from warehouse.instance.part import COLUMN_PART, Part
 
 
-class BinEvent(StorageEvent):  # noqa: PLW1641
+class BinEvent(StoragePackageEvent):  # noqa: PLW1641
     """An amount of part has changed places."""
 
     @classmethod
@@ -108,12 +108,12 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
 
         :return: the csv columns
         """
-        return COLUMN_PART, COLUMN_AMOUNT, COLUMN_BIN_TYPE
+        return COLUMN_PART, COLUMN_PACKAGES, COLUMN_BIN_TYPE
 
     @classmethod
     def create(  # type: ignore  # pylint: disable=W0221
             cls, time: int, priority: int,
-            part: int | str | Part, amount: int | str,
+            part: int | str | Part, packages: int | str,
             bin_type: int | str | BinType | None = None) -> "BinEvent":
         """
         Create the storage event.
@@ -121,7 +121,7 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
         :param time: the time
         :param priority: the priority
         :param part: the part to use
-        :param amount: the amount of the part to use
+        :param packages: the amount of packages of the part to use
         :param bin_type: the optional bin type
         :return: the bin event
         """
@@ -131,7 +131,7 @@ class BinEvent(StorageEvent):  # noqa: PLW1641
                 bin_type = ctx.resolve(BinType, bin_type)  # type: ignore
 
         rv = cls(time, priority, part,  # type: ignore
-                 check_to_amount(amount))  # type: ignore
+                 check_to_amount(packages))  # type: ignore
         if (bin_type is not None) and (rv.part.bin_type is not bin_type):
             raise ValueError(f"Expected bin type {bin_type!r} for {rv!r}.")
         return rv
@@ -156,10 +156,10 @@ class BinIn(BinEvent):
 
         :return: the event description, if any
         """
-        return ("a certain amount of a part is stored in a certain type "
-                "of bins; the amount of part and the amount of bins used "
-                "are the same, as part always comes in units that are "
-                "multiples of bin sizes.")
+        return ("a certain amount of packages of a part is stored in a "
+                "certain type of bins; the amount of part packages and the "
+                "amount of bins used are the same, as one package always "
+                "occupies one bin.")
 
 
 class BinOut(BinEvent):
@@ -181,7 +181,7 @@ class BinOut(BinEvent):
 
         :return: the event description, if any
         """
-        return ("a certain amount of a part is retrieved from a certain "
-                "type of bins; the amount of part and the amount of bins "
-                "used are the same, as part always comes in units that "
-                "are multiples of bin sizes.")
+        return ("a certain amount of packages of a part is retrieved from "
+                "a certain type of bins; the amount of part packages and the "
+                "amount of bins used are the same, as one package always "
+                "occupies one bin.")

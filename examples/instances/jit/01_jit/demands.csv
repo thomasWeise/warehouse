@@ -1,4 +1,4 @@
-checkpoint;product;part;delay;amount
+checkpoint;product;part;delay;units
 M1;jacket;A;00:25;3
 M1;jacket;B;00:45;4
 S1;jacket;C;00:35;5

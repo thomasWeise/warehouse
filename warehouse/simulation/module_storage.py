@@ -75,7 +75,7 @@ class StorageModule(BaseModule):
         for i, st in enumerate(self.__in_bin):
             for k in self.__mat_bin[i]:
                 st[k] = 0
-            empty_bins[i] = bin_types[i].amount
+            empty_bins[i] = bin_types[i].packages
             over_queue[i].clear()
 
     def _handle_warehouse_in(self, event: WarehouseIn) -> None:
@@ -90,34 +90,34 @@ class StorageModule(BaseModule):
         part_key: Final[int] = part.key
         bin_type: Final[BinType] = part.bin_type
         bin_key: Final[int] = bin_type.key
-        amount: int = event.amount
+        packages: int = event.packages
         empty_bins: Final[list[int]] = self.__empty_bins
 
         # First, we check if there is a prior pending request for the
-        # parts. If yes, we directly satisfy it without putting the
+        # part boxes. If yes, we directly satisfy it without putting the
         # material in any stock.
-        use: int = min(self.__in_understock[part_key], amount)
+        use: int = min(self.__in_understock[part_key], packages)
         if use > 0:
             self._warehouse_delivers(0, part, use)
             self.__in_understock[part_key] -= use
-            amount -= use
-            if amount <= 0:
+            packages -= use
+            if packages <= 0:
                 return
 
         # Now we check whether we can put the parts into empty bins.
-        use = min(empty_bins[bin_key], amount)
+        use = min(empty_bins[bin_key], packages)
         if use > 0:
             empty_bins[bin_key] -= use
             self.__in_bin[bin_key][part_key] += use
             self._bin_in(0, part, use)
-            amount -= use
-            if amount <= 0:
+            packages -= use
+            if packages <= 0:
                 return
 
         # Finally, all remaining parts go into the overstock.
-        self.__in_overstock[part_key] += amount
-        self.__overstock_queue[bin_key].append([part_key, amount])
-        self._overstock_in(0, part, amount)
+        self.__in_overstock[part_key] += packages
+        self.__overstock_queue[bin_key].append([part_key, packages])
+        self._overstock_in(0, part, packages)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """
@@ -129,53 +129,57 @@ class StorageModule(BaseModule):
         part_key: Final[int] = part.key
         bin_type: Final[BinType] = part.bin_type
         bin_key: Final[int] = bin_type.key
-        amount: int = event.amount
+
+        # get the number of units to deliver and update the lingering demands
+        packages = event.packages
+        if packages <= 0:
+            return  # the line gets nothing
 
         in_bin: Final[Counter[int]] = self.__in_bin[bin_key]
         in_overstock: Final[list[int]] = self.__in_overstock
 
         # Check how much part we can actually deliver.
         use: int = in_bin[part_key] + in_overstock[part_key]
-        if use < amount:
+        if use < packages:
             # We cannot fulfill this request, so we are in an understock
             # situation.
             # We remember the request, though, so as soon as parts come in,
             # we can directly ship them to satisfy the understock requests
             # first.
-            under: int = amount - use
+            under: int = packages - use
             self.__in_understock[part_key] += under
             self._understock(0, part, under)
             if use <= 0:
                 return
 
             # Make a modified copy of the original event
-            amount = use
+            packages = use
 
-        deliver_amount: Final[int] = amount
+        deliver_amount: Final[int] = packages
         empty_bins: Final[list[int]] = self.__empty_bins
         bin_type_empty = empty_bins[bin_key]
 
-        if amount > 0:
-            use = min(in_bin[part_key], amount)
+        if packages > 0:
+            use = min(in_bin[part_key], packages)
             if use > 0:
                 # We have part in the bin and can ship it.
                 # This means that we take the part out of the bin.
                 # This creates new empty bins
-                amount -= use
+                packages -= use
                 in_bin[part_key] -= use
                 bin_type_empty += use
                 empty_bins[bin_key] = bin_type_empty
                 self._bin_out(0, part, use)
 
-            use = min(in_overstock[part_key], amount)
+            use = min(in_overstock[part_key], packages)
             if use > 0:
                 # Now take from overstock
-                amount -= use
+                packages -= use
                 in_overstock[part_key] -= use
                 _over_unqueue(self.__overstock_queue[bin_key], part_key, use)
                 self._overstock_out(0, part, use)
 
-        if amount > 0:
+        if packages > 0:
             raise ValueError("Huh?")
 
         # When we get here, we have extracted all the required part and
@@ -201,9 +205,9 @@ class StorageModule(BaseModule):
                 if bin_type_empty <= 0:
                     break
 
-    def available_units(self, part: Part) -> int:
+    def available_packages(self, part: Part) -> int:
         """
-        Get the amount of units currently available in the warehouse.
+        Get the amount of packages currently available in the warehouse.
 
         :param part: the part
         :return: the units
@@ -215,30 +219,30 @@ class StorageModule(BaseModule):
 
 
 def _over_unqueue(over_lst: list[list[int]],
-                  part_key: int, amount: int) -> None:
+                  part_key: int, packages: int) -> None:
     """
-    Remove the given amount of material from the overstock queue.
+    Remove the given packages of material from the overstock queue.
 
     :param over_lst: the overstock queue
     :param part_key: the material key
-    :param amount: the amount of material to remove
+    :param packages: the packages of material to remove
     """
     total: int = list.__len__(over_lst)
     i: int = 0
-    while (i < total) and (amount > 0):
+    while (i < total) and (packages > 0):
         current: list[int] = over_lst[i]
         if current[0] != part_key:
             i += 1
             continue
         got: int = current[1]
-        remove: int = min(got, amount)
+        remove: int = min(got, packages)
         got -= remove
         if got <= 0:
             del over_lst[i]
             total -= 1
         else:
             current[1] = got
-        amount -= remove
-    if amount > 0:
-        raise ValueError(f"There are {amount} units of part"
-                         f" {part_key} unaccounted for in overstock.")
+        packages -= remove
+    if packages > 0:
+        raise ValueError(f"There are {packages} packages of part "
+                         f"{part_key} unaccounted for in overstock.")

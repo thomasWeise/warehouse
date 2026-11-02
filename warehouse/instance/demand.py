@@ -9,7 +9,7 @@ from pycommons.io.csv import csv_column, csv_scope
 
 from warehouse.instance.checkpoint import COLUMN_CHECKPOINT, Checkpoint
 from warehouse.instance.element import (
-    COLUMN_AMOUNT,
+    COLUMN_UNITS,
     check_to_amount,
     context,
 )
@@ -36,14 +36,14 @@ class Demand:
     #: the amount of time after the checkpoint where the part is needed
     delay: int
     #: the amount of part units required
-    amount: int
+    units: int
 
     def __init__(self,
                  product: Product | int | str,
                  checkpoint: Checkpoint | int | str,
                  part: Part | int | str,
                  delay: int | str = 0,
-                 amount: int | str = 1) -> None:
+                 units: int | str = 1) -> None:
         """
         Create a new bin type.
 
@@ -51,7 +51,7 @@ class Demand:
         :param checkpoint: the checkpoint
         :param part: the part
         :param delay: the delay
-        :param amount: the amount of part units
+        :param units: the amount of part units
         """
         with context() as ctx:
             product = ctx.resolve(Product, product)
@@ -62,7 +62,7 @@ class Demand:
         object.__setattr__(self, "part", part)
         object.__setattr__(self, "delay", check_timedelta(
             delay) if isinstance(delay, int) else str_to_timedelta(delay))
-        object.__setattr__(self, "amount", check_to_amount(amount))
+        object.__setattr__(self, "units", check_to_amount(units))
 
     @classmethod
     def to_csv(cls, data: Iterable["Demand"]) -> Iterable[str]:
@@ -108,9 +108,9 @@ class CsvReader(CsvReaderBase[Demand]):
         #: the delay key
         self.col_delay: Final[int] = csv_column(
             columns, COLUMN_DELAY, True)
-        #: the amount key
-        self.col_amount: Final[int] = csv_column(
-            columns, COLUMN_AMOUNT, True)
+        #: the units key
+        self.col_units: Final[int] = csv_column(
+            columns, COLUMN_UNITS, True)
 
     def parse_row(self, data: list[str]) -> Demand:
         """
@@ -123,7 +123,7 @@ class CsvReader(CsvReaderBase[Demand]):
                       checkpoint=data[self.col_checkpoint],
                       part=data[self.col_part],
                       delay=data[self.col_delay],
-                      amount=data[self.col_amount])
+                      units=data[self.col_units])
 
 
 class CsvWriter(CsvWriterBase[Demand]):
@@ -147,7 +147,7 @@ class CsvWriter(CsvWriterBase[Demand]):
         #: the delay column
         self.col_delay: Final[str] = csv_scope(scope, COLUMN_DELAY)
         #: the amount column
-        self.col_amount: Final[str] = csv_scope(scope, COLUMN_AMOUNT)
+        self.col_units: Final[str] = csv_scope(scope, COLUMN_UNITS)
 
     def get_column_titles(self) -> Iterable[str]:
         """
@@ -160,7 +160,7 @@ class CsvWriter(CsvWriterBase[Demand]):
         yield self.col_checkpoint
         yield self.col_part
         yield self.col_delay
-        yield self.col_amount
+        yield self.col_units
 
     def get_row(self, data: Demand) -> Iterable[str]:
         """
@@ -174,7 +174,7 @@ class CsvWriter(CsvWriterBase[Demand]):
         yield data.checkpoint.name
         yield data.part.name
         yield timedelta_to_str(data.delay)
-        yield str(data.amount)
+        yield str(data.units)
 
     def get_footer_comments(self) -> Iterable[str]:
         """
@@ -188,5 +188,5 @@ class CsvWriter(CsvWriterBase[Demand]):
         yield f"{self.col_part}: the name of the part that will be required"
         yield (f"{self.col_delay}: the delay after the product reaches the "
                "checkpoint until the parts are required")
-        yield (f"{self.col_amount}: the number of part units needed after "
+        yield (f"{self.col_units}: the number of part units needed after "
                f"the {self.col_delay}")

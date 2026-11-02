@@ -59,12 +59,15 @@ class JitModule(DemandModule):
             part: Part = jit_rule.part
             part_key: int = jit_rule.part.key
             otw: list[WarehouseIn] = self.__jit_on_the_way[part_key]
-            remaining: int = self.available_units(part) + _get_on_the_way(otw)
-            trigger: int = jit_rule.minimum - remaining
-            if trigger > 0:
-                self._rule_triggered(0, jit_rule, part, trigger)
-                _put_one_the_way(otw, self._warehouse_in(
-                    jit_rule.effect_delay, part, trigger))
+            remaining: int = (self.available_packages(
+                part) + _get_on_the_way(otw)) * part.units_per_package
+            units: int = jit_rule.minimum_units - remaining
+            if units > 0:
+                packages = units // part.units_per_package
+                self._rule_triggered(0, jit_rule, part, units, packages)
+                if packages > 0:
+                    _put_one_the_way(otw, self._warehouse_in(
+                        jit_rule.effect_delay, part, packages))
 
         super()._handle_checkpoint(event)
 

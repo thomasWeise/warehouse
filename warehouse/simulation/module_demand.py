@@ -38,7 +38,7 @@ class DemandModule(MinMaxModule):
         :param event: the event
         """
         for demand in self.__demands(event.checkpoint.key)(event.product.key):
-            self._warehouse_demand(demand.delay, demand.part, demand.amount)
+            self._warehouse_demand(demand.delay, demand.part, demand.units)
 
 
 def __empty(_: Any) -> tuple:
