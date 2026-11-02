@@ -30,13 +30,13 @@ Events regarding the storage and retrieval of part to and from bins.
 ...     events_2 = tuple(BinEvent.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-time;type;part;packages;bin_type;checkpoint;product;rule;units
-2017-07-14 10:40;bin_in;hat;10;hat_bins;;;;10
-2023-11-15 06:13:20;bin_in;shoe;15;random_small;;;;15
-2027-01-15 16:00;bin_in;trousers;7;random_large;;;;7
-2030-03-18 01:46:40;bin_out;hat;9;hat_bins;;;;9
-2033-05-18 11:33:20;bin_out;shoe;8;random_small;;;;8
-2036-07-18 21:20;bin_out;trousers;3;random_large;;;;3
+time;type;part;packages;bin_type;checkpoint;product;units;rule
+2017-07-14 10:40;bin_in;hat;10;hat_bins;;;10
+2023-11-15 06:13:20;bin_in;shoe;15;random_small;;;15
+2027-01-15 16:00;bin_in;trousers;7;random_large;;;7
+2030-03-18 01:46:40;bin_out;hat;9;hat_bins;;;9
+2033-05-18 11:33:20;bin_out;shoe;8;random_small;;;8
+2036-07-18 21:20;bin_out;trousers;3;random_large;;;3
 <BLANKLINE>
 ===================
 <BLANKLINE>

@@ -37,7 +37,7 @@ class StorageModule(BaseModule):
             tuple(part.key for part in instance.parts if
                   part.bin_type is bt) for bt in instance.bin_types)
         #: the parts
-        self._parts: Final[tuple[Part, ...]] = instance.parts
+        self.parts: Final[tuple[Part, ...]] = instance.parts
 
         n_parts: Final[int] = tuple.__len__(instance.parts)
         n_bin_types: Final[int] = tuple.__len__(instance.bin_types)
@@ -192,7 +192,7 @@ class StorageModule(BaseModule):
             while over_queue:
                 other_part, other_amount = over_queue[0]
                 use = min(bin_type_empty, other_amount)
-                use_part = self._parts[other_part]
+                use_part = self.parts[other_part]
                 _over_unqueue(over_queue, other_part, use)
                 self._overstock_out(0, use_part, use)
 

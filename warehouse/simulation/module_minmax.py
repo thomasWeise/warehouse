@@ -25,7 +25,7 @@ class MinMaxModule(StorageModule):
         """
         super().__init__(instance)
 
-        n_parts: Final[int] = tuple.__len__(self._parts)
+        n_parts: Final[int] = tuple.__len__(self.parts)
 
         #: the parts already ordered by the min/max rules
         self.__mm_on_the_way: Final[tuple[list[WarehouseIn], ...]] = tuple(
@@ -54,22 +54,21 @@ class MinMaxModule(StorageModule):
 
         :param parts: the parts to check
         """
-        pks: Final[tuple[Part, ...]] = self._parts
+        pks: Final[tuple[Part, ...]] = self.parts
         mm_min: Final[tuple[MinMaxRule | None, ...]] = self.__mm_min
         for part_key in parts:
             part = pks[part_key]
             min_rule: MinMaxRule | None = mm_min[part_key]
             if min_rule is not None:
                 otw: list[WarehouseIn] = self.__mm_on_the_way[part_key]
-                remaining: int = self.available_packages(
-                    part) * part.units_per_package
+                remaining: int = (self.available_packages(
+                    part) + _get_on_the_way(otw)) * part.units_per_package
                 if min_rule.minimum_units > remaining:
                     units = min_rule.maximum_units - remaining
-                    packages = units // part.units_per_package
+                    packages = max(1, units // part.units_per_package)
                     self._rule_triggered(0, min_rule, part, units, packages)
-                    if packages > 0:
-                        _put_one_the_way(otw, self._warehouse_in(
-                            min_rule.effect_delay, part, packages))
+                    _put_one_the_way(otw, self._warehouse_in(
+                        min_rule.effect_delay, part, packages))
 
     def _handle_initizalization_complete(
             self, event: InitializationComplete) -> None:
@@ -78,7 +77,7 @@ class MinMaxModule(StorageModule):
 
         :param event: the event
         """
-        self.__check_min_max_rules(p.key for p in self._parts)
+        self.__check_min_max_rules(p.key for p in self.parts)
 
     def _handle_warehouse_demand(self, event: WarehouseDemand) -> None:
         """

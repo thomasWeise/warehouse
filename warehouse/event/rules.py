@@ -28,7 +28,7 @@ Events regarding rules.
 ...     events_2 = tuple(Event.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-2017-07-14 10:40;rule_triggered;hat;;;;;min_hat;1200
+2017-07-14 10:40;rule_triggered;hat;;;;;1200;min_hat
 <BLANKLINE>
 ===================
 <BLANKLINE>

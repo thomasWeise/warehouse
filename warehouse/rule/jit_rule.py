@@ -9,51 +9,37 @@ from pycommons.io.csv import (
     csv_val_or_none,
 )
 
-from warehouse.instance.checkpoint import COLUMN_CHECKPOINT, Checkpoint
 from warehouse.instance.element import (
     context,
 )
-from warehouse.instance.part import Part
-from warehouse.instance.product import COLUMN_PRODUCT, Product
-from warehouse.rule.minmax_rule import CsvReader as CsvReaderBase
-from warehouse.rule.minmax_rule import CsvWriter as CsvWriterBase
-from warehouse.rule.minmax_rule import MinMaxRule
+from warehouse.instance.part import COLUMN_PART, Part
+from warehouse.instance.rule import CsvReader as CsvReaderBase
+from warehouse.instance.rule import CsvWriter as CsvWriterBase
+from warehouse.instance.rule import Rule
 
 
 @dataclass(frozen=True, init=False, order=False, eq=False)
-class JitRule(MinMaxRule):
+class JitRule(Rule):
     """A class for identifying a JIT rule."""
 
-    #: the checkpoint at which the rule triggers
-    checkpoint: Checkpoint
-    #: the product for which the rule triggers
-    product: Product
+    #: the part for which the rule triggers
+    part: Part
 
     def __init__(self, key: int | None, name: str,
-                 checkpoint: Checkpoint | int | str,
-                 product: Product | int | str,
                  part: Part | int | str,
-                 minimum: int | str = 1,
                  effect_delay: int | str = 150 * 60 * 1000) -> None:
         """
         Create a new minimum rule.
 
         :param key: the rule key
         :param name: the rule name
-        :param checkpoint: the checkpoint at which the rule is evaluated
-        :param product: the product for which the rule triggers
         :param part: the part concerned by the rule
-        :param minimum: the minimum value of that part
         :param effect_delay: the approximate delay after which the re-ordered
             material will arrive
         """
+        super().__init__(key, name, effect_delay)
         with context() as ctx:
-            super().__init__(key, name, part, minimum,
-                             effect_delay=effect_delay)
-            checkpoint = ctx.resolve(Checkpoint, checkpoint)
-            product = ctx.resolve(Product, product)
-        object.__setattr__(self, "checkpoint", checkpoint)
-        object.__setattr__(self, "product", product)
+            object.__setattr__(self, "part", ctx.resolve(Part, part))
 
     def __eq__(self, other) -> bool:
         """
@@ -65,10 +51,7 @@ class JitRule(MinMaxRule):
         return (self.__class__ is other.__class__) and (
             self.key == other.key) and (self.name == other.name) and (
             self.part == other.part) and (
-            self.minimum_units == other.minimum_units) and (
-            self.effect_delay == other.effect_delay) and (
-            self.checkpoint == other.checkpoint) and (
-            self.product == other.product)
+            self.effect_delay == other.effect_delay)
 
     def __ne__(self, other) -> bool:
         """
@@ -80,10 +63,7 @@ class JitRule(MinMaxRule):
         return (self.__class__ is not other.__class__) or (
             self.key != other.key) or (self.name != other.name) or (
             self.part != other.part) or (
-            self.minimum_units != other.minimum_units) or (
-            self.effect_delay != other.effect_delay) or (
-            self.checkpoint != other.checkpoint) or (
-            self.product != other.product)
+            self.effect_delay != other.effect_delay)
 
     def __hash__(self) -> int:
         """
@@ -124,19 +104,16 @@ class CsvReader(CsvReaderBase[T]):
     """A CsvReader that reads named objects from a CSV file."""
 
     def __init__(self, columns: dict[str, int],
-                 clazz: type[T] = cast("type[T]", Part)):
+                 clazz: type[T] = cast("type[T]", JitRule)):
         """
         Initialize.
 
         :param columns: the named object columns
         """
         super().__init__(columns, clazz)
-        #: the checkpoint column
-        self.col_checkpoint: Final[int] = csv_column(
-            columns, COLUMN_CHECKPOINT, True)
-        #: the product column
-        self.col_product: Final[int] = csv_column(
-            columns, COLUMN_PRODUCT, True)
+        #: the part column
+        self.col_part: Final[int] = csv_column(
+            columns, COLUMN_PART, True)
 
     def parse_row(self, data: list[str]) -> T:
         """
@@ -148,10 +125,7 @@ class CsvReader(CsvReaderBase[T]):
         return self.clazz(
             key=csv_val_or_none(data, self.col_key, int),
             name=data[self.col_name],
-            checkpoint=data[self.col_checkpoint],
-            product=data[self.col_product],
             part=data[self.col_part],
-            minimum=data[self.col_min],
             effect_delay=data[self.col_delay])
 
 
@@ -166,10 +140,8 @@ class CsvWriter(CsvWriterBase[T]):
         :param scope: the scope
         """
         super().__init__(data, scope)
-        #: the checkpoint column
-        self.col_checkpoint: Final[str] = csv_scope(scope, COLUMN_CHECKPOINT)
-        #: the product column
-        self.col_product: Final[str] = csv_scope(scope, COLUMN_PRODUCT)
+        #: the part column
+        self.col_part: Final[str] = csv_scope(scope, COLUMN_PART)
 
     def get_column_titles(self) -> Iterable[str]:
         """
@@ -178,8 +150,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the column titles
         """
         yield from super().get_column_titles()
-        yield self.col_checkpoint
-        yield self.col_product
+        yield self.col_part
 
     def get_row(self, data: T) -> Iterable[str]:
         """
@@ -189,8 +160,7 @@ class CsvWriter(CsvWriterBase[T]):
         :returns: the row iterator
         """
         yield from super().get_row(data)
-        yield data.checkpoint.name
-        yield data.product.name
+        yield data.part.name
 
     def get_footer_comments(self) -> Iterable[str]:
         """
@@ -199,6 +169,4 @@ class CsvWriter(CsvWriterBase[T]):
         :return: the footer comments
         """
         yield from super().get_footer_comments()
-        yield (f"{self.col_checkpoint}: the checkpoint at which the rule "
-               "triggers")
-        yield f"{self.col_product}: the product for which the rule triggers"
+        yield f"{self.col_part}: the part for which the rule triggers"

@@ -37,18 +37,18 @@ Events regarding the storage and retrieval of parts in/from the warehouse.
 ...     events_2 = tuple(Event.from_csv(csv))
 ...     for i, ev in enumerate(events_2):
 ...         print(ev == events_1[i])
-2017-07-14 10:40;warehouse_in;hat;1200;;;;;1200
-2017-07-14 10:40:20;warehouse_in;shoe;40;;;;;40
-2017-07-14 12:37;warehouse_in;trousers;750;;;;;750
-2017-07-14 13:10;overstock_in;hat;200;;;;;200
-2017-07-14 13:18:20;overstock_in;shoe;10;;;;;10
-2017-07-14 18:51:40;overstock_in;trousers;250;;;;;250
-2017-07-14 21:30;overstock_out;hat;200;;;;;200
-2017-07-15 00:25;overstock_out;shoe;10;;;;;10
-2017-07-15 00:58:20;overstock_out;trousers;250;;;;;250
-2020-09-13 20:26:40;warehouse_demand;hat;1200;;;;;1200
-2020-09-13 20:27;warehouse_demand;shoe;40;;;;;40
-2020-09-13 22:23:40;warehouse_demand;trousers;750;;;;;750
+2017-07-14 10:40;warehouse_in;hat;1200;;;;1200
+2017-07-14 10:40:20;warehouse_in;shoe;40;;;;40
+2017-07-14 12:37;warehouse_in;trousers;750;;;;750
+2017-07-14 13:10;overstock_in;hat;200;;;;200
+2017-07-14 13:18:20;overstock_in;shoe;10;;;;10
+2017-07-14 18:51:40;overstock_in;trousers;250;;;;250
+2017-07-14 21:30;overstock_out;hat;200;;;;200
+2017-07-15 00:25;overstock_out;shoe;10;;;;10
+2017-07-15 00:58:20;overstock_out;trousers;250;;;;250
+2020-09-13 20:26:40;warehouse_demand;hat;1200;;;;1200
+2020-09-13 20:27;warehouse_demand;shoe;40;;;;40
+2020-09-13 22:23:40;warehouse_demand;trousers;750;;;;750
 <BLANKLINE>
 ===================
 <BLANKLINE>

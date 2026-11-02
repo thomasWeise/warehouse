@@ -140,18 +140,18 @@ class BaseModule:
         """
 
     def _warehouse_demand(self, delta: int,
-                          part: Part, units: int) -> WarehouseDemand:
+                          part: Part, packages: int) -> WarehouseDemand:
         """
         Enqueue a warehouse-demand event.
 
         :param delta: the time delta from now
         :param part: the part to enter the warehouse
-        :param units: the amount of the part units
+        :param packages: the amount of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[WarehouseDemand] = WarehouseDemand(
-            self.__end_of_job(self.__time, delta, False), p, part, units)
+            self.__end_of_job(self.__time, delta, True), p, part, packages)
         heappush(self.__queue, res)
         return res
 

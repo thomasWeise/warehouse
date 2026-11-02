@@ -11,18 +11,14 @@ from pycommons.io.csv import (
 )
 from pycommons.types import check_int_range
 
-from warehouse.instance.element import CsvReader as CsvReaderBase
-from warehouse.instance.element import CsvWriter as CsvWriterBase
 from warehouse.instance.element import (
     check_to_amount,
     context,
 )
 from warehouse.instance.part import COLUMN_PART, Part
+from warehouse.instance.rule import CsvReader as CsvReaderBase
+from warehouse.instance.rule import CsvWriter as CsvWriterBase
 from warehouse.instance.rule import Rule
-from warehouse.instance.time import (
-    COLUMN_EFFECT_DELAY,
-    timedelta_to_str,
-)
 
 #: the minimum column
 COLUMN_MINIMUM: Final[str] = "minimum_units"
@@ -136,7 +132,7 @@ class CsvReader(CsvReaderBase[T]):
     """A CsvReader that reads named objects from a CSV file."""
 
     def __init__(self, columns: dict[str, int],
-                 clazz: type[T] = cast("type[T]", Part)):
+                 clazz: type[T] = cast("type[T]", MinMaxRule)):
         """
         Initialize.
 
@@ -150,9 +146,6 @@ class CsvReader(CsvReaderBase[T]):
         #: the maximum column
         self.col_max: Final[int | None] = csv_column_or_none(
             columns, COLUMN_MAXIMUM, True)
-        #: the delay column
-        self.col_delay: Final[int] = csv_column(
-            columns, COLUMN_EFFECT_DELAY, True)
 
     def parse_row(self, data: list[str]) -> T:
         """
@@ -194,8 +187,6 @@ class CsvWriter(CsvWriterBase[T]):
         #: the maximum column
         self.col_max: Final[str | None] = csv_scope(
             scope, COLUMN_MAXIMUM) if needs_max else None
-        #: the delay column
-        self.col_delay: Final[str] = csv_scope(scope, COLUMN_EFFECT_DELAY)
 
     def get_column_titles(self) -> Iterable[str]:
         """
@@ -208,7 +199,6 @@ class CsvWriter(CsvWriterBase[T]):
         yield self.col_min
         if self.col_max is not None:
             yield self.col_max
-        yield self.col_delay
 
     def get_row(self, data: T) -> Iterable[str]:
         """
@@ -222,7 +212,6 @@ class CsvWriter(CsvWriterBase[T]):
         yield str(data.minimum_units)
         if self.col_max is not None:
             yield str(data.maximum_units)
-        yield timedelta_to_str(data.effect_delay)
 
     def get_footer_comments(self) -> Iterable[str]:
         """
@@ -236,5 +225,3 @@ class CsvWriter(CsvWriterBase[T]):
             yield (f"{self.col_max}: the goal number of part units to which"
                    f"we will order")
         yield f"{self.col_min}: the minimum number of part units required"
-        yield (f"{self.col_delay}: the time until the rule's effects become "
-               f"visible")

@@ -171,7 +171,7 @@ class Instance:
         object.__setattr__(self, "demands", _load_demands(
             demands, self.products, self.checkpoints, self.parts))
         object.__setattr__(self, "jit_rules", _load_jit_rules(
-            jit_rules, names, self.parts, self.checkpoints, self.products))
+            jit_rules, names, self.parts))
         object.__setattr__(self, "events", _load_events(events))
 
         # shortcuts directly to time routines
@@ -420,53 +420,34 @@ def _load_minmax_rules(minmax_rules: Iterable[MinMaxRule] | None,
 
 def _load_jit_rules(jit_rules: Iterable[JitRule] | None,
                     names: dict[str, Element],
-                    parts: tuple[Part, ...],
-                    checkpoints: tuple[Checkpoint, ...],
-                    products: tuple[Product, ...]) -> tuple[JitRule, ...]:
+                    parts: tuple[Part, ...]) -> tuple[JitRule, ...]:
     """
-    Load the minimum rules.
+    Load the JIT rules.
 
-    :param min_rules: the minimum rules
+    :param jit_rules: the JIT rules source
     :param names: the names
     :param parts: the parts
-    :param checkpoints: the checkpoints
-    :param products: the products
     :return: the result
     """
     result: Final[tuple[JitRule, ...]] = _load_type(jit_rules, JitRule, names)
     if tuple.__len__(result) <= 0:
         return result
 
-    jit_rule_dct: Final[dict[tuple[int, int, int], JitRule]] = {}
+    jit_rule_dct: Final[dict[int, JitRule]] = {}
     for jit_rule in result:
         part = jit_rule.part
         pak: int = part.key
-        checkpoint = jit_rule.checkpoint
-        chk: int = checkpoint.key
-        product = jit_rule.product
-        prk = product.key
 
         if part is not parts[pak]:
             raise ValueError(
                 "Inconsistent part of JIT rule "
                 f"{jit_rule!r} and {parts[pak]!r}.")
 
-        if checkpoint is not checkpoints[chk]:
+        if pak in jit_rule_dct:
             raise ValueError(
-                "Inconsistent part of JIT rule "
-                f"{jit_rule!r} and {checkpoints[chk]!r}.")
-
-        if product is not products[prk]:
-            raise ValueError(
-                "Inconsistent part of JIT rule "
-                f"{jit_rule!r} and {products[prk]!r}.")
-
-        key = pak, chk, prk
-        if key in jit_rule_dct:
-            raise ValueError(
-                "Two JIT rules for same part, checkpoint, and product:"
-                f" {jit_rule!r} and {jit_rule_dct[key]!r}.")
-        jit_rule_dct[key] = jit_rule
+                "Two JIT rules for same part :"
+                f" {jit_rule!r} and {jit_rule_dct[pak]!r}.")
+        jit_rule_dct[pak] = jit_rule
 
     return result
 
