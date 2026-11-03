@@ -1,5 +1,5 @@
-name;checkpoint;part;minimum_units;effect_delay
-jit_A;M1;A;02:03
-jit_B;M1;B;02:11
-jit_C;S1;C;02:07
-jit_D;S2;D;02:05
+name;part;effect_delay
+jit_A;A;02:03
+jit_B;B;02:11
+jit_C;C;02:07
+jit_D;D;02:05
