@@ -10,5 +10,5 @@ time;type;part;packages;bin_type;checkpoint;product;units;rule
 2026-10-15 08:50;overstock_in;C;30;;;;210
 2026-10-15 09:05;warehouse_demand;C;20;;;;140
 2026-10-15 09:05;overstock_out;C;20;;;;140
-2026-10-15 09:05;warehouse_delivered;C;20;;;;140
-2026-10-15 09:05;end
+2026-10-15 09:09;warehouse_delivered;C;20;;;;140
+2026-10-15 09:09;end

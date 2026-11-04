@@ -28,12 +28,15 @@ class DemandModule(MinMaxModule):
         for demand in instance.demands:
             raw[demand.checkpoint.key][demand.product.key].append(demand)
 
+        trig: Final[bool] = instance.checkpoints_trigger_demands
+        #: the checkpoints trigger
+        self.__not_trigger_dem: Final[bool] = not trig
         #: the demand lookup
         self.demands_cp_pd: Final[Callable[[int], Callable[[
             int], tuple[Demand, ...]]]] = _flatten_cp(raw)
         #: the pending demands
         self.__pending_dems: Final[list[int]] = [0] * tuple.__len__(
-            instance.parts)
+            instance.parts) if trig else []
 
     def _start(self) -> None:
         """Begin the simulation."""
@@ -48,6 +51,8 @@ class DemandModule(MinMaxModule):
 
         :param event: the event
         """
+        if self.__not_trigger_dem:
+            return
         dms: Final[list[int]] = self.__pending_dems
         units: Final[int] = event.units
         for demand in self.demands_cp_pd(

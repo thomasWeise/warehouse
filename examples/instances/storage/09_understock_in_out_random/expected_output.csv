@@ -9,10 +9,10 @@ time;type;part;packages;bin_type;checkpoint;product;units;rule
 2026-10-15 08:50;warehouse_demand;A;50;;;;250
 2026-10-15 08:50;understock;A;10;;;;50
 2026-10-15 08:50;bin_out;A;40;rack_1;;;200
-2026-10-15 08:50;warehouse_delivered;A;40;;;;200
 2026-10-15 08:50;overstock_out;B;10;;;;120
 2026-10-15 08:50;bin_in;B;10;rack_1;;;120
+2026-10-15 08:54;warehouse_delivered;A;40;;;;200
 2026-10-15 09:15;warehouse_in;A;30;;;;150
-2026-10-15 09:15;warehouse_delivered;A;10;;;;50
 2026-10-15 09:15;bin_in;A;20;rack_1;;;100
-2026-10-15 09:15;end
+2026-10-15 09:19;warehouse_delivered;A;10;;;;50
+2026-10-15 09:19;end

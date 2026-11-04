@@ -69,9 +69,10 @@ EndEvent(time=1007000000, priority=0))
 """
 
 from dataclasses import dataclass, field
-from typing import Final, Iterable, TypeVar
+from typing import Any, Final, Iterable, TypeVar
 
 from pycommons.io.console import logger
+from pycommons.io.csv import COMMENT_START
 from pycommons.io.path import Path, directory_path, write_lines
 from pycommons.types import type_error
 
@@ -113,6 +114,8 @@ FILE_PRODUCTS: Final[str] = "products.csv"
 FILE_CHECKPOINTS: Final[str] = "checkpoints.csv"
 #: the demands file
 FILE_DEMANDS: Final[str] = "demands.csv"
+#: the properties file
+FILE_PROPERTIES: Final[str] = "properties.txt"
 
 
 @dataclass(frozen=True, init=False, order=True, eq=True)
@@ -135,6 +138,8 @@ class Instance:
     checkpoints: tuple[Checkpoint, ...] = field(hash=True, compare=True)
     #: the set of demands
     demands: tuple[Demand, ...] = field(hash=True, compare=True)
+    #: do checkpoints trigger demands?
+    checkpoints_trigger_demands: bool = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -144,7 +149,9 @@ class Instance:
                  jit_rules: Iterable[JitRule] | None = None,
                  products: Iterable[Product] | None = None,
                  checkpoints: Iterable[Checkpoint] | None = None,
-                 demands: Iterable[Demand] | None = None) -> None:
+                 demands: Iterable[Demand] | None = None,
+                 checkpoints_trigger_demands: bool | str = False,
+                 **_) -> None:
         """
         Create an instance of the warehousing instance.
 
@@ -156,6 +163,7 @@ class Instance:
         :param products: the products
         :param checkpoints: the checkpoints
         :param demands: the demands
+        :param checkpoints_trigger_demands: do check points trigger demands?
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -177,6 +185,15 @@ class Instance:
         # shortcuts directly to time routines
         object.__setattr__(self, "end_of_job", end_of_job)
         object.__setattr__(self, "next_multiple_of", next_multiple_of)
+
+        if isinstance(checkpoints_trigger_demands, str):
+            checkpoints_trigger_demands = str.startswith(str.lower(
+                checkpoints_trigger_demands), "t")
+        if not isinstance(checkpoints_trigger_demands, bool):
+            raise type_error(checkpoints_trigger_demands,
+                             "checkpoints_trigger_demands", bool)
+        object.__setattr__(
+            self, "checkpoints_trigger_demands", checkpoints_trigger_demands)
 
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
@@ -229,6 +246,8 @@ class Instance:
                 source.resolve_inside(FILE_DEMANDS), Demand)
             events: tuple[Event, ...] = _load_csv(
                 source.resolve_inside(FILE_EVENTS), Event)
+            properties = _read_properties(source.resolve_inside(
+                FILE_PROPERTIES))
 
         result = Instance(bin_types=bin_types,
                           parts=parts,
@@ -237,7 +256,8 @@ class Instance:
                           jit_rules=jit_rules,
                           products=products,
                           checkpoints=checkpoints,
-                          demands=demands)
+                          demands=demands,
+                          **properties)
         logger(f"Finished loading instance/scenario from {source!r}.")
         return result
 
@@ -265,6 +285,9 @@ class Instance:
                    self.checkpoints)
         _write_csv(dest.resolve_inside(FILE_DEMANDS), Demand,
                    self.demands)
+        _write_properties(dest.resolve_inside(FILE_PROPERTIES), {
+            "checkpoints_trigger_demands": self.checkpoints_trigger_demands,
+        })
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest
 
@@ -533,4 +556,61 @@ def _write_csv(file: Path, cls: type[A], source: tuple[A, ...]) -> None:
             raise ValueError(f"File {file!r} exists, but we do "
                              f"not have any {cls.__name__} to store.")
         logger("Instance does not have any {cls.__name__}, so we don't need "
+               f"to store them and thus won't create file {file!r}.")
+
+
+def _read_properties(file: Path) -> dict[str, str]:
+    """
+    Read the properties from a file.
+
+    :param file: the properties file
+    :return: the properties
+    """
+    if not file.exists():
+        logger(f"Properties file {field!r} does not exist.")
+        return {}
+
+    file.enforce_file()
+    result: dict[str, str] = {}
+    with file.open_for_read() as stream:
+        for lidx, oline in enumerate(stream):
+            idx: int = str.find(oline, COMMENT_START)
+            line: str = str.strip(oline[:idx] if idx > 0 else oline)
+            if str.__len__(line) <= 0:
+                continue
+            idx = str.find(line, "=")
+            if idx <= 0:
+                continue
+            key: str = str.lower(str.strip(line[:idx]))
+            val: str = str.strip(line[idx + 1:])
+            if (str.__len__(key) <= 0) or (str.__len__(val) <= 0):
+                raise ValueError(
+                    f"Invalid key values pair {key!r} = {val!r} in line"
+                    f" {lidx + 1} of properties file {file!r}.")
+            if key in result:
+                raise ValueError(
+                    f"Key {key!r} already exists in properties, cannot get "
+                    f"new value {val!r} in line {lidx + 1} of properties "
+                    f"file {file!r}. ")
+            result[key] = val
+    return result
+
+
+def _write_properties(file: Path, properties: dict[str, Any]) -> None:
+    """
+    Write the properties to a file.
+
+    :param file: the file
+    :param properties: the properties
+    """
+    if dict.__len__(properties) > 0:
+        logger(f"Storing properties elements into {file!r}.")
+
+        with file.open_for_write() as stream:
+            write_lines((f"{k} = {v}" for k, v in properties.items()), stream)
+    else:
+        if file.exists():
+            raise ValueError(f"File {file!r} exists, but we do not have any"
+                             " properties to store.")
+        logger("Instance does not have any properties, so we don't need "
                f"to store them and thus won't create file {file!r}.")

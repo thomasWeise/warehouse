@@ -98,7 +98,7 @@ class StorageModule(BaseModule):
         # material in any stock.
         use: int = min(self.__in_understock[part_key], packages)
         if use > 0:
-            self._warehouse_delivers(0, part, use)
+            self._warehouse_delivers(part, use)
             self.__in_understock[part_key] -= use
             packages -= use
             if packages <= 0:
@@ -184,7 +184,7 @@ class StorageModule(BaseModule):
 
         # When we get here, we have extracted all the required part and
         # can now ship it out of the warehouse.
-        self._warehouse_delivers(0, part, deliver_amount)
+        self._warehouse_delivers(part, deliver_amount)
 
         # Some bins became empty, so let's fill them.
         if bin_type_empty > 0:
