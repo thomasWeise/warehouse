@@ -1,0 +1,26 @@
+warehouse.rule package
+======================
+
+.. automodule:: warehouse.rule
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+warehouse.rule.jit\_rule module
+-------------------------------
+
+.. automodule:: warehouse.rule.jit_rule
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+warehouse.rule.minmax\_rule module
+----------------------------------
+
+.. automodule:: warehouse.rule.minmax_rule
+   :members:
+   :show-inheritance:
+   :undoc-members:

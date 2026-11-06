@@ -1,0 +1,46 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.checkpoint — warehouse 0.8.3 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=7f96dc5e"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/checkpoint.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.checkpoint</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.checkpoint</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>A class for identifying a checkpoint.</span>
+
+<span class=sd>>>> from warehouse.instance.element import context</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     p1 = Checkpoint(None, "M1")</span>
+<span class=sd>...     p2 = Checkpoint(None, "S2")</span>
+
+<span class=sd>>>> repr(p1)</span>
+<span class=sd>"Checkpoint(key=0, name='M1')"</span>
+<span class=sd>>>> repr(p2)</span>
+<span class=sd>"Checkpoint(key=1, name='S2')"</span>
+
+<span class=sd>>>> csv_1 = list(Checkpoint.to_csv((p1, p2)))</span>
+<span class=sd>>>> for row in csv_1:</span>
+<span class=sd>...     if not str.startswith(row, "#"):</span>
+<span class=sd>...         print(row)</span>
+<span class=sd>key;name</span>
+<span class=sd>0;M1</span>
+<span class=sd>1;S2</span>
+
+<span class=sd>>>> with context():</span>
+<span class=sd>...     for xbin in Checkpoint.from_csv(csv_1):</span>
+<span class=sd>...         print(repr(xbin))</span>
+<span class=sd>Checkpoint(key=0, name='M1')</span>
+<span class=sd>Checkpoint(key=1, name='S2')</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Final</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>warehouse.instance.element</span><span class=w> </span><span class=kn>import</span> <span class=p>(</span>
+    <span class=n>Element</span><span class=p>,</span>
+<span class=p>)</span>
+
+<span class=c1>#: the CSV column for checkpoints</span>
+<span class=n>COLUMN_CHECKPOINT</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"checkpoint"</span>
+
+
+<div class=viewcode-block id=Checkpoint>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.checkpoint.Checkpoint>[docs]</a>
+<span class=k>class</span><span class=w> </span><span class=nc>Checkpoint</span><span class=p>(</span><span class=n>Element</span><span class=p>):</span>
+<span class=w>    </span><span class=sd>"""A class for describing checkpoints."""</span></div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.3 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.checkpoint</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
