@@ -393,8 +393,8 @@
 2026-10-10;T  # Makeup workday for National Day
 2027-01-01;F  # New Year's Day
 2027-01-02;F  # New Year's Day (weekend adjacent)
-2027-01-03;T  # Makeup workday for New Year's Day
 2027-01-03;F  # New Year's Day (weekend adjacent)
+2027-01-31;T  # Working day for Lunar New Year Eve
 2027-02-05;F  # Spring Festival (Lunar New Year Eve)
 2027-02-06;F  # Spring Festival (Lunar New Year Day 1)
 2027-02-07;F  # Spring Festival (Lunar New Year Day 2)
@@ -405,11 +405,9 @@
 2027-02-12;F  # Spring Festival (compensated leave)
 2027-02-13;F  # Spring Festival (compensated leave)
 2027-02-14;T  # Makeup workday for Spring Festival
-2027-02-20;T  # Makeup workday for Spring Festival
 2027-04-03;F  # Qingming Festival (compensated leave)
 2027-04-04;F  # Qingming Festival (weekend adjacent)
 2027-04-05;F  # Qingming Festival
-2027-04-25;T  # Makeup workday for Labor Day
 2027-05-01;F  # Labor Day
 2027-05-02;F  # Labor Day
 2027-05-03;F  # Labor Day (compensated leave)
@@ -417,11 +415,7 @@
 2027-05-05;F  # Labor Day (compensated leave)
 2027-05-08;T  # Makeup workday for Labor Day
 2027-06-09;F  # Dragon Boat Festival
-2027-06-10;F  # Dragon Boat Festival (weekend adjacent)
-2027-06-11;F  # Dragon Boat Festival (weekend adjacent)
 2027-09-15;F  # Mid-Autumn Festival
-2027-09-16;F  # Mid-Autumn Festival (weekend adjacent)
-2027-09-17;F  # Mid-Autumn Festival (weekend adjacent)
 2027-09-26;T  # Makeup workday for National Day
 2027-10-01;F  # National Day
 2027-10-02;F  # National Day
