@@ -45,7 +45,10 @@ On the assembly line, units of different [products](#33-products) are processed 
 These products pass by [checkpoints](#34-checkpoints).
 When product units pass by checkpoints, they are registered.
 Only during these moments, the progress of the assembly line becomes visible to the supervising personell.
-Each product has a bill of materials, i.e., the per-product demands for parts.
+
+Each product has a bill of materials, i.e., the list of per-product [demands](#35-demands-the-bill-of-material) for parts.
+Each demand is triggered at a certain check point and specifies how many units of which part are needed.
+Optionally, it can also specify how long after the product unit passes the checkpoint this need arises.
 
 
 ## 3. Input Data
@@ -55,8 +58,10 @@ Each datatype has an associated `csv` file.
 Some of the files are optional, some are required.
 Columns in the files are separated by&nbsp;`;`.
 Each file has a first row with column headers.
+The order of columns does not matter, i.e., you can provide the columns in any order you wish.
 
 Several example datasets are given in the folder [`examples/instances`](https://github.com/thomasWeise/warehouse/tree/main/examples/instances) of this repository.
+
 
 ### 3.1. Bin Types
 For *each [bin type](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.bin_type),* we need the following information:
@@ -82,6 +87,8 @@ floor_2;50;F
 floor_3;25;F
 ```
 
+*Notice:* The first row contains the column names.
+These names are important and must not be changed.
 Here, `name`&nbsp;is the unique name of the bin type.
 `packages`&nbsp;stands for the number of packages we can store in total, i.e., it is also the number of bins of that type.
 `is_random`&nbsp;tells us whether the bins of this type are random bins&nbsp;(`T`) or part-specific bins&nbsp;(`F`).
@@ -93,6 +100,7 @@ Which part types can be stored in the bin is then specified in [`parts.csv`](#32
 `floor_1`, on the other hand, is a fixed/part-specific bin type.
 We have space for 200&nbsp;packages in it, but can only store exactly one type of part in it.
 In [`parts.csv`](#32-parts) in the next section, you can see that this will be parts of type&nbsp;`J`.
+
 
 ### 3.2. Parts
 For *each [part](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.part),* we store the following information.
@@ -129,6 +137,7 @@ I;floor_1;9
 J;floor_2;10
 K;floor_3;11
 ```
+
 Here, `name`&nbsp;is the unique name of the part.
 `bin_type`&nbsp;identifies the type of bin into which the packages of this part are stored.
 You can see that this corresponds to the column `name` in file [`bin_types.csv`](#31-bin-types) back in Section&nbsp;[Bin Types](#31-bin-types).
@@ -181,6 +190,58 @@ S2
 
 Here, `name`&nbsp;is the unique name of the checkpoint.
 In other words, we have three checkpoints in our simulation:&nbsp;`M1`, `S1`, and&nbsp;`S2`.
+
+
+### 3.5. Demands: The Bill of Material
+Each [product](#33-products) requires a set of parts to manufacture.
+All such requirements form the bill of material.
+Each item of this list is here called a [demand](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.demand).
+For *each demand,* we store the following information.
+
+1. The name of the [product](#33-products) which requires the parts.
+   This name references a name given in `products.csv`.
+2. The name of the [checkpoint](#34-checkpoints) when the demand is triggered.
+   This name references a name given in `checkpoints.csv`.
+3. The name of the [part](#32-parts) that is needed.
+   This name references a name given in `parts.csv`.
+4. The amount of units of the part that are needed.
+   If omitted, it is assumed that 1&nbsp;unit is needed.
+   *Notice:*&nbsp;The amount is given in *units*, not in *packages*.
+5. If the product unit passes the check point, we might not immediately need this part.
+   It could be that, say, an hour passes before we actually need it.
+   Therefore, we can *optionally* specify the amount of time (`delay`) *after* the checkpoint when the parts are required.
+   The format is `hours:minutes[:seconds]`, i.e., the `seconds` part is optional.
+   If this information is not supplied, it is assumed that the parts are needed immediately.
+
+This data is stored in the file&nbsp;`demands.csv`.
+Each row represents one demand.
+Such a file is *optional*, i.e., if you do not need demands, you can simply not supply it.
+However, if this file is supplied, then you **must** also supply `checkpoints.csv` and `products.csv`.
+The file could look like this:
+
+```text
+checkpoint;product;part;delay;units
+M1;jacket;A;00:25;3
+M1;jacket;B;00:45;4
+S1;jacket;C;00:35;5
+S2;jacket;D;00:40;6
+M1;hat;E
+```
+
+Here, `checkpoint` gives the name of the [checkpoint](#34-checkpoints), `product` gives the name of the [product](#33-products), `part` is the name of the [part](#32-parts), and `units` specifies the number of units of the part that is required by one unit of the product after passing the checkpoint.
+`delay`&nbsp;optionally defines a delay when this requirement arises. 
+
+In the example, you can see that, if a `jacket` passes checkpoint `M1`, then the need for `3`&nbsp;units of part&nbs;`A` arise exactly 25&nbsp;minutes later.
+Also, `4`&nbsp;units of product&nbsp;`B` will be needed `45`&nbsp;minutes after passing checkpoint&nbsp;`M1`.
+The last line tells us that, if a unit of `hat` passes checkpoint&nbsp;`M1`, we will need part&nbsp;`E`.
+Since neither a delay nor an amount for part&nbsp;`E` is supplied, the system will assume that `1`&nbsp;unit is required immediately, i.e., after 0&nbsp;seconds.
+
+The column `delay` is optional, but it has one good use case:
+It allows the simulation to automatically generate requests to the warehouse.
+Normally, we can supply the requests to deliver the warehouse manually, in the `events.csv` list.
+However, if we do *know* when the parts are actually needed, then we can simply let the system generate the requests accordingly.
+This feature can also be turned on and off separately.
+If you supply the requests as part of scenario data, then we turn this feature off and can also simply omit the `delay` column here.
 
 
 ## 4. License

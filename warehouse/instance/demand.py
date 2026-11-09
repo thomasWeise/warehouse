@@ -10,9 +10,15 @@ It stores the :attr:`~Demand.product` for which it is defined as well as the
 needed.
 It also stores the :attr:`~Demand.checkpoint` after which the
 :attr:`~Demand.units` are needed.
+By default, this value is `1`.
+
 You can optionally define how much time (in seconds) after the checkpoint
 these parts are required in field :attr:`~Demand.delay`.
 By default, this value is `0`.
+
+If the delay is provided, the simulation can use this information to
+automatically generate requests to the warehouse based on what is going on in
+the assembly line.
 """
 
 from dataclasses import dataclass
