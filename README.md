@@ -26,6 +26,8 @@ The warehouse needs to be replenished to not run out of parts.
 We want to avoid [running out of parts](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.Understock) but we also want to avoid that the warehouse is [overflowing](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.OverstockIn).
 
 ## 2. The Scenario
+
+### 2.1. The Warehouse Side
 The warehouse has bins to store the parts that are required by the assembly line.
 Each bin has [type](#31-bin-types).
 A bin type can be random or not.
@@ -40,7 +42,9 @@ Each package occupies exactly one bin.
 A package may include multiple units of a given part&nbsp;(but always only of one part type).
 Replenishment rules work with units of parts, though.
 For each part, we thus also know how many units are contained in one package.
- 
+
+
+### 2.2. The Assembly Line Side
 On the assembly line, units of different [products](#33-products) are processed continuously.
 These products pass by [checkpoints](#34-checkpoints).
 When product units pass by checkpoints, they are registered.
@@ -49,6 +53,30 @@ Only during these moments, the progress of the assembly line becomes visible to 
 Each product has a bill of materials, i.e., the list of per-product [demands](#35-demands-the-bill-of-material) for parts.
 Each demand is triggered at a certain check point and specifies how many units of which part are needed.
 Optionally, it can also specify how long after the product unit passes the checkpoint this need arises.
+
+
+### 2.3. The Rule Side
+The simulation supports two kinds of rules.
+
+[Min/Max-Rules](#36-minmax-rules) allow for automated replenishment of parts if they drop below a certain amount.
+A Min/Max-Rule specifies three things:
+
+- The [part](#32-parts) for which it applies,
+- the minimum number of units of that part that we always want to have in the warehouse, and
+- the level to which we will replenish the warehouse if the stock level falls under the minimum.
+
+If the stock level ever falls under the minimum, we will order at least one  new package of material.
+We will basically compute `(units in warehouse + units on the way)` and divide this by the units per package.
+This value is rounded *down*, but never below 1.
+Then this gives us the number of packages that we have to order to replenish the warehouse.
+
+*Notice* that `units on the way` *only* considers units ordered by the Min/Max-Rule itself.
+
+*Notice* further that, while the rule considers amount of part *units*, it always orders *packages*.
+Only *packages* can enter and leave the warehouse.
+
+Min/Max-Rules are checked every two minutes by default, starting immediately
+at the beginning of the work day.
 
 
 ## 3. Input Data
@@ -242,6 +270,55 @@ Normally, we can supply the requests to deliver the warehouse manually, in the `
 However, if we do *know* when the parts are actually needed, then we can simply let the system generate the requests accordingly.
 This feature can also be turned on and off separately.
 If you supply the requests as part of scenario data, then we turn this feature off and can also simply omit the `delay` column here.
+
+
+### 3.6. Min/Max-Rules
+For each [Min/Max-Rule](https://thomasweise.github.io/warehouse/warehouse.rule.html#warehouse.rule.minmax_rule.MinMaxRule), we store the following information:
+
+1. The name of the rule.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for Min/Max-Rules, you may just name them "MM-1", "MM-2", &hellip;
+2. The name of the [part](#32-parts) which is managed by the rule
+   This name references a name given in `parts.csv`.
+3. The "minimum" amount of *units* of the part we want to have in the warehouse.
+   If the amount of units in the warehouse<sup>1</sup> drops *below* this limit, we order new packages.   
+4. The "maximum" amount of *units*, i.e., the level to which we will replenish the warehouse by ordering new units.
+5. The delay of the effect, i.e., how long it takes after ordering until the parts arrive.
+
+**<sup>1</sup>** The amount of units in the warehouse includes packages that have been ordered by the rule and are currently on the way.
+The rule only has knowledge of packages that it ordered by itself.
+It has no information about what other rules may have done.
+
+The rules trigger based on the amounts of units in the warehouse, but always order packages.
+Min/Max-Rules are checked every two minutes by default.
+
+This data is stored in the file&nbsp;`minmax_rules.csv`.
+Each row represents one Min/Max-Rule.
+Such a file is *optional*, i.e., if you do not need Min/Max-Rules, you can simply not supply it.
+The file could look like this:
+
+```text
+name;part;minimum_units;maximum_units;effect_delay
+min_A;A;90;180;00:150
+min_B;B;80;180;1:40
+```
+
+The column `name` represents the name of the rule.
+`part` identifies a part name from [`parts.csv`](#32-parts).
+`minimum_units` is the lower limit of the amount of units of the part we need in the warehouse.
+`maximum_units` is the level to which we will replenish the warehouse once the rule is triggered.
+`effect_delay` is the delay until packages ordered by this rule will arrive.
+It is specified in the format `hours:minutes[:seconds]`, i.e., the `seconds` part is optional.
+
+From the example given above, we see that two Min/Max-Rules exist.
+The rule with the name `min_A` says that there should never be less than 90&nbsp;units of part&nbsp;`A` in the warehouse.
+If the stock level of that part drops *below* 90, e.g., to 87, then the rule will trigger.
+It will then order as many packages as needed to get the stocklevel up to 180&nbsp;units.
+These freshly ordered packages will arrive after 150&nbsp;minutes.
+
+For part&nbsp;`B`, the second rule (named `min_B`) observes that there never shall be less than 80&nbsp;units.
+If the stock level drops below 80, say to 79, then it orders as many packages as needed to get the stock level for part&nbsp;`B` back up to&nbsp;180.
+These packages will then arrive after 1&nbsp;hour and 40&nbsp;minutes.
 
 
 ## 4. License

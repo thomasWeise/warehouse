@@ -74,7 +74,7 @@ from typing import Any, Final, Iterable, TypeVar
 from pycommons.io.console import logger
 from pycommons.io.csv import COMMENT_START
 from pycommons.io.path import Path, directory_path, write_lines
-from pycommons.types import type_error
+from pycommons.types import check_int_range, type_error
 
 from warehouse.event.time import (
     EndEvent,
@@ -94,6 +94,8 @@ from warehouse.instance.time import (
     LATEST_END,
     end_of_job,
     next_multiple_of,
+    str_to_timedelta,
+    timedelta_to_str,
 )
 from warehouse.rule.jit_rule import JitRule
 from warehouse.rule.minmax_rule import MinMaxRule
@@ -140,6 +142,8 @@ class Instance:
     demands: tuple[Demand, ...] = field(hash=True, compare=True)
     #: do checkpoints trigger demands?
     checkpoints_trigger_demands: bool = field(hash=True, compare=True)
+    #: the interval in which min/max rules are triggered
+    minmaxrule_interval_s: int = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -151,6 +155,7 @@ class Instance:
                  checkpoints: Iterable[Checkpoint] | None = None,
                  demands: Iterable[Demand] | None = None,
                  checkpoints_trigger_demands: bool | str = False,
+                 minmaxrule_interval_s: int | str = 120,
                  **_) -> None:
         """
         Create an instance of the warehousing instance.
@@ -164,6 +169,7 @@ class Instance:
         :param checkpoints: the checkpoints
         :param demands: the demands
         :param checkpoints_trigger_demands: do check points trigger demands?
+        :param minmaxrule_interval_s: the interval for min/max rules.
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -194,6 +200,10 @@ class Instance:
                              "checkpoints_trigger_demands", bool)
         object.__setattr__(
             self, "checkpoints_trigger_demands", checkpoints_trigger_demands)
+        object.__setattr__(self, "minmaxrule_interval_s", check_int_range(
+            minmaxrule_interval_s, "minmaxrule_interval_s", 0) if isinstance(
+            minmaxrule_interval_s, int) else str_to_timedelta(
+            minmaxrule_interval_s))
 
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
@@ -287,6 +297,8 @@ class Instance:
                    self.demands)
         _write_properties(dest.resolve_inside(FILE_PROPERTIES), {
             "checkpoints_trigger_demands": self.checkpoints_trigger_demands,
+            "minmaxrule_interval_s": timedelta_to_str(
+                self.minmaxrule_interval_s),
         })
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest
