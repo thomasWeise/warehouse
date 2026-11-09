@@ -4,9 +4,9 @@ A class holding the information of a Min/Max-Rule.
 A Min/Max-Rule specifies five things:
 
 - The :attr:`~warehouse.instance.element.Element.name` of the rule.
-- The :attr:`~MinMaxRule.part` for which it applies, the minimum number of
-  units of that part that we always want to have in the warehouse
-  (in :attr:`~MinMaxRule.minimum_units`),
+- The :attr:`~MinMaxRule.part` for which it applies,
+- the minimum number of units of that part that we always want to have in the
+  warehouse (in :attr:`~MinMaxRule.minimum_units`),
 - the level (:attr:`MinMaxRule.maximum_units`) to which we will replenish the
   warehouse if the stock level falls under the minimum, and
 - the delay after which the newly ordered parts will arrive, stored in

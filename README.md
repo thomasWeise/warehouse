@@ -7,11 +7,17 @@
 
 - [Introduction](#1-introduction)
 - [Scenario](#2-scenario)
+    - [The Warehouse Side](#21-the-warehouse-side)
+    - [The Assembly-Line Side](#22-the-assembly-line-side)
+    - [The Rule Side](#23-the-rule-side)
 - [Input Data](#3-input-data)
     - [Bin Types](#31-bin-types)
     - [Parts](#32-parts)
     - [Products](#33-products)
     - [Checkpoints](#34-checkpoints)
+    - [Bill of Material](#35-demands-the-bill-of-material)
+    - [Min/Max-Rules](#36-minmax-rules)
+    - [JIT-Rules](#37-jit-rules)
 - [License](#4-license)
 - [Contact](#5-contact)
 
@@ -19,11 +25,19 @@
 ## 1. Introduction
 
 This is a warehouse simulator.
-It tries to simulate what is going on in a warehouse that directly feeds an assembly line.
+It tries to simulate what is going on in a warehouse that directly feeds an assembly line and, in return, is fed by suppliers.
 The assembly line assembles products and therefore needs parts.
 The parts come from the warehouse.
 The warehouse needs to be replenished to not run out of parts.
 We want to avoid [running out of parts](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.Understock) but we also want to avoid that the warehouse is [overflowing](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.OverstockIn).
+
+In [Section&nbsp;2](#2-the-scenario), we describe the scenario and how the simulation works in detail.
+We explain the components that exist in the real world and how they interact.
+
+In [Section&nbsp;3](#3-input-data), we give a specification of the data that you can feed into the simulation.
+Basically, this input data tells the simulation what things exist and what the human operators or automated systems tell the warehouse to day.
+It also specifies rules that guide the warehouses behavior.
+
 
 ## 2. The Scenario
 
@@ -58,7 +72,7 @@ Optionally, it can also specify how long after the product unit passes the check
 ### 2.3. The Rule Side
 The simulation supports two kinds of rules.
 
-[Min/Max-Rules](#36-minmax-rules) allow for automated replenishment of parts if they drop below a certain amount.
+**[Min/Max-Rules](#36-minmax-rules)** allow for automated replenishment of parts if they drop below a certain amount.
 A Min/Max-Rule specifies three things:
 
 - The [part](#32-parts) for which it applies,
@@ -77,6 +91,26 @@ Only *packages* can enter and leave the warehouse.
 
 Min/Max-Rules are checked every two minutes by default, starting immediately
 at the beginning of the work day.
+
+**[JIT-Rules](#37-jit-rules)**, on the other hand, work with the bill of materials directly.
+There can be only one JIT-Rule per [part](#32-parts).
+Whenever a unit of the [product](#33-products) passes a certain [checkpoint](#34-checkpoints), the corresponding [demands](#35-demands-the-bill-of-material) are checked.
+If some units of the part for which an JIT-Rule is active are required, then these units are ordered immediately when the rule triggers.
+
+Notice again that we can only order packages, not single units.
+JIT-Rules divide the number of required parts by the number of part units per package and *round the result down*.
+This means that it is possible that a JIT-Rule triggers, but finds that not enough part units are required to justify ordering a full package.
+In this case, no package is ordered.
+
+The rule remembers the "un-ordered" number of parts, though.
+These numbers are added up and, as soon as they reach or exceed the part-units-per-package *and* the JIT-Rule is triggered again, the package will be ordered.
+
+JIT-Rules are checked every five minutes.
+All the product units pass through any checkpoint are remembered during these intervalls and processed in one sweep.
+
+JIT-Rules do not share any information with Min/Max Rules-and vice versa.
+They also ignore the stocklevel of the warehouse:
+Regardless of how many units of a given product we already have in the warehouse &mdash; if the rule is triggered, it will order the number of packages needed by the aggregate demand.
 
 
 ## 3. Input Data
@@ -319,6 +353,48 @@ These freshly ordered packages will arrive after 150&nbsp;minutes.
 For part&nbsp;`B`, the second rule (named `min_B`) observes that there never shall be less than 80&nbsp;units.
 If the stock level drops below 80, say to 79, then it orders as many packages as needed to get the stock level for part&nbsp;`B` back up to&nbsp;180.
 These packages will then arrive after 1&nbsp;hour and 40&nbsp;minutes.
+
+
+### 3.7. JIT-Rules
+For each [JIT-Rule](https://thomasweise.github.io/warehouse/warehouse.rule.html#module-warehouse.rule.jit_rule), we store the following information:
+
+1. The name of the rule.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for JIT-Rules, you may just name them "JR-1", "JR-2", &hellip;
+2. The [part](#32-parts) managed by the rule.
+   There can be only one JIT-Rule per part.
+   This rule then applies across all products and checkpoints.
+3. The delay until the packages ordered by the rule will arrive.
+
+JIT-Rules can only be defined if [products](#33-products), [checkpoints](#34-checkpoints), and [demands](#35-demands-the-bill-of-material) are also given.
+They are stored in a file named `jit_rules.csv`.
+The file could look like this:
+
+```text
+name;part;effect_delay
+jit_A;A;02:03
+jit_B;B;02:11
+jit_C;C;02:07
+jit_D;D;02:05
+
+```
+
+The column `name` represents the name of the rule.
+`part` identifies a part name from [`parts.csv`](#32-parts).
+`effect_delay` is the delay until packages ordered by this rule will arrive.
+It is specified in the format `hours:minutes[:seconds]`, i.e., the `seconds` part is optional.
+
+The first data row of the example above tells us that a JIT-Rule named `jit_A` is watching for parts of type&nbsp;`A`.
+If any product passes through a checkpoint and its bill of material says that it requires units of part&nbsp;`A`, then this will trigger this rule.
+The rule then checks how many units of part&nbsp;`A` are required in total, by all products that passed through all checkpoints since the rule was checked last time.
+If the number of units is high enough so that at least one package is required, the package(s) will immediately be ordered.
+They will arrive in the warehouse after 2&nbsp;hours and 3&nbsp;minutes.
+If the number is not high enough, it is remembered and added in when the rule is checked next time.
+
+JIT-Rules are checked by default at full five minutes intervals.
+They ignore the stocklevel of the warehouse.
+
+
 
 
 ## 4. License

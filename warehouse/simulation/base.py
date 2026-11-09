@@ -53,6 +53,12 @@ class BaseModule:
         #: the time adjustment function for next multiples
         self.__next_multiple_of: Final[Callable[[int, int], int]] = (
             instance.next_multiple_of)
+        #: the amount of time until the warehouse delivers
+        self.__warehouse_delivers_delay = instance.warehouse_delivers_delay
+        #: the interval at which min-max rules are triggered
+        self.__minmaxrule_interval: Final[int] = instance.minmaxrule_interval
+        #: the interval at which JIT rules are triggered
+        self.__jitrule_interval: Final[int] = instance.jitrule_interval
 
     def _start(self) -> None:
         """Begin the simulation."""
@@ -86,7 +92,8 @@ class BaseModule:
         """
         self.__priority = p = self.__priority + 1
         res: Final[MinMaxRuleCheckEvent] = MinMaxRuleCheckEvent(
-            self.__next_multiple_of(self.__time, 120), p)
+            self.__next_multiple_of(
+                self.__time, self.__minmaxrule_interval), p)
         heappush(self.__queue, res)
         return res
 
@@ -105,7 +112,7 @@ class BaseModule:
         """
         self.__priority = p = self.__priority + 1
         res: Final[JitRuleCheckEvent] = JitRuleCheckEvent(
-            self.__next_multiple_of(self.__time, 300), p)
+            self.__next_multiple_of(self.__time, self.__jitrule_interval), p)
         heappush(self.__queue, res)
         return res
 
@@ -167,13 +174,15 @@ class BaseModule:
         """
         Enqueue a warehouse-delivers event.
 
+        The warehouse delivery is always uninterrupted.
+
         :param part: the part to enter the warehouse
         :param packages: the amount of the part packages
         :return: the event
         """
         self.__priority = p = self.__priority + 1
         res: Final[WarehouseDelivers] = WarehouseDelivers(
-            self.__end_of_job(self.__time, 240, False), p, part, packages)
+            self.__time + self.__warehouse_delivers_delay, p, part, packages)
         heappush(self.__queue, res)
         return res
 

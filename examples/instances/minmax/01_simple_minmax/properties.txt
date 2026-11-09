@@ -1,0 +1,1 @@
+minmaxrule_interval = 00:02

@@ -140,10 +140,14 @@ class Instance:
     checkpoints: tuple[Checkpoint, ...] = field(hash=True, compare=True)
     #: the set of demands
     demands: tuple[Demand, ...] = field(hash=True, compare=True)
+    #: the delay until the warehouse delivers: default=4min
+    warehouse_delivers_delay: int = field(hash=True, compare=True)
     #: do checkpoints trigger demands?
     checkpoints_trigger_demands: bool = field(hash=True, compare=True)
-    #: the interval in which min/max rules are triggered
-    minmaxrule_interval_s: int = field(hash=True, compare=True)
+    #: the interval in which min/max rules are triggered: default=2min
+    minmaxrule_interval: int = field(hash=True, compare=True)
+    #: the interval in which JIT rules are triggered: default=5min
+    jitrule_interval: int = field(hash=True, compare=True)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -154,8 +158,10 @@ class Instance:
                  products: Iterable[Product] | None = None,
                  checkpoints: Iterable[Checkpoint] | None = None,
                  demands: Iterable[Demand] | None = None,
+                 warehouse_delivers_delay: int | str = 240,
                  checkpoints_trigger_demands: bool | str = False,
-                 minmaxrule_interval_s: int | str = 120,
+                 minmaxrule_interval: int | str = 120,
+                 jitrule_interval: int | str = 300,
                  **_) -> None:
         """
         Create an instance of the warehousing instance.
@@ -169,7 +175,10 @@ class Instance:
         :param checkpoints: the checkpoints
         :param demands: the demands
         :param checkpoints_trigger_demands: do check points trigger demands?
-        :param minmaxrule_interval_s: the interval for min/max rules.
+        :param warehouse_delivers_delay: the delay until the warehouse
+            delivers
+        :param minmaxrule_interval: the interval for min/max rules.
+        :param jitrule_interval: the interval for JIT rules.
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -198,12 +207,20 @@ class Instance:
         if not isinstance(checkpoints_trigger_demands, bool):
             raise type_error(checkpoints_trigger_demands,
                              "checkpoints_trigger_demands", bool)
+        object.__setattr__(self, "warehouse_delivers_delay", check_int_range(
+            warehouse_delivers_delay, "warehouse_delivers_delay", 0)
+            if isinstance(warehouse_delivers_delay, int) else
+            str_to_timedelta(warehouse_delivers_delay))
         object.__setattr__(
             self, "checkpoints_trigger_demands", checkpoints_trigger_demands)
-        object.__setattr__(self, "minmaxrule_interval_s", check_int_range(
-            minmaxrule_interval_s, "minmaxrule_interval_s", 0) if isinstance(
-            minmaxrule_interval_s, int) else str_to_timedelta(
-            minmaxrule_interval_s))
+        object.__setattr__(self, "minmaxrule_interval", check_int_range(
+            minmaxrule_interval, "minmaxrule_interval", 0) if isinstance(
+            minmaxrule_interval, int) else str_to_timedelta(
+            minmaxrule_interval))
+        object.__setattr__(self, "jitrule_interval", check_int_range(
+            jitrule_interval, "jitrule_interval", 0) if isinstance(
+            jitrule_interval, int) else str_to_timedelta(
+            jitrule_interval))
 
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
@@ -296,9 +313,11 @@ class Instance:
         _write_csv(dest.resolve_inside(FILE_DEMANDS), Demand,
                    self.demands)
         _write_properties(dest.resolve_inside(FILE_PROPERTIES), {
+            "warehouse_delivers_delay": timedelta_to_str(
+                self.warehouse_delivers_delay),
             "checkpoints_trigger_demands": self.checkpoints_trigger_demands,
-            "minmaxrule_interval_s": timedelta_to_str(
-                self.minmaxrule_interval_s),
+            "minmaxrule_interval": timedelta_to_str(self.minmaxrule_interval),
+            "jitrule_interval": timedelta_to_str(self.jitrule_interval),
         })
         logger(f"Finished storing instance/scenario into {dest!r}.")
         return dest

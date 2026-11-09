@@ -1,4 +1,28 @@
-"""A class holding the information of a jit rule."""
+"""
+A class holding the information of a JIT rule.
+
+A JIT-Rule specifies five things:
+
+- The :attr:`~warehouse.instance.element.Element.name` of the rule.
+- The :attr:`~JitRule.part` for which it applies, and
+- the delay after which the newly ordered parts will arrive, stored in
+  :attr:`~warehouse.instance.rule.Rule.effect_delay`.
+
+JIT-Rules relate the bill of material, i.e., the demands
+(:mod:`~warehouse.instance.demand`) to the checkpoints
+(:mod:`~warehouse.instance.checkpoint`) on the incoming side of the warehouse.
+Whenever a produce unit passes a checkpoint, it may require certain demands,
+i.e., a certain number of certain parts.
+If a JIT-Rule is active for a part, then it will record this requirement.
+Every five minutes, a JIT-Rule may trigger.
+It will then automatically order the number of packages for this part.
+
+This may be 0, if the number of required units are not enough to fill a whole
+package.
+In that case, the not-ordered part number is remembered.
+As soon as they add up to a full package and a JIT-Rule is triggered, the
+package is ordered.
+"""
 
 from dataclasses import dataclass
 from typing import Final, Iterable, TypeVar, cast
