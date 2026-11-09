@@ -18,8 +18,9 @@
     - [Bill of Material](#35-demands-the-bill-of-material)
     - [Min/Max-Rules](#36-minmax-rules)
     - [JIT-Rules](#37-jit-rules)
-- [License](#4-license)
-- [Contact](#5-contact)
+- [Events in the Simulation](#4-events-in-the-simulation)
+- [License](#5-license)
+- [Contact](#6-contact)
 
 
 ## 1. Introduction
@@ -111,6 +112,35 @@ All the product units pass through any checkpoint are remembered during these in
 JIT-Rules do not share any information with Min/Max Rules-and vice versa.
 They also ignore the stocklevel of the warehouse:
 Regardless of how many units of a given product we already have in the warehouse &mdash; if the rule is triggered, it will order the number of packages needed by the aggregate demand.
+
+
+### 2.4. Event Side
+The warehouse is simulated via a *discrete event simulation*.
+This simulation is thus driven by *events*.
+Everything that happens is an event.
+
+Something is stored in the warehouse?
+That's an event.
+Something is taken out of the warehouse?
+That's an event.
+A product unit passes a checkpoint?
+Another event.
+
+Each event happens at a certain date and time.
+A part of the input of a simulation are events, such as those mentioned above.
+The output the simulation are **also** events.
+
+For example:
+
+A rule triggers?
+That's an (output) event.
+Some package belonging to a given part is put into a bin?
+That's an (output) event.
+
+Actually, all events that go as input into the simulation also come out as output again.
+A simulation therefore loads data based on the formats described in [Section&nbsp;3](#3-input-data).
+It also loads a sequence of events following in the format described in [Section&nbsp;4](#4-events-in-the-simulation).
+It then produces output in exactly that same event format.
 
 
 ## 3. Input Data
@@ -395,9 +425,232 @@ JIT-Rules are checked by default at full five minutes intervals.
 They ignore the stocklevel of the warehouse.
 
 
+## 4. Events in the Simulation
+Our simulation is then driven by a stream of [events](https://thomasweise.github.io/warehouse/warehouse.event.html#module-warehouse.event).
+There are some events that tell the simulation about things that happened or things that the warehouse is supposed to do.
+These events are **input** events.
+If the warehouse does something or some rule is triggered, that generates **output** events.
+
+Therefore, a stream of **input** events goes into the simulation giving commands to the warehouse.
+The simulation simulates what the warehouse does.
+This results in more events, the **output** events.
+These are then combined with the **input** events and returned to the user.
+
+Therefore, we get an exact picture of what happens, in which order, and why.
+
+The input events of a simulation are stored in a file `events.csv`.
+Here we describe this format as well as the types of events that exist.
+The output of the simulation can be stored in a file of the same format.
+
+This format has the following columns:
+
+- `time`: The time when the event occurred.
+   The format is `year-month-date hour:minute[:second]`, where the seconds are only provided if they are not zero.
+- `type`: The type of the event that occurred.
+- `part`: The [part type](#32-parts) involved.
+   Some events involve parts, e.g., such that store stuff in the warehouse or retrieve stuff..
+   Others don't, and in this case, leave this column empty.
+- `packages`: A number of packages involved.
+   Events that store packages of parts into the warehouse, retrieve packages, or order packages provide this value.
+   Other events that are unrelated to packages omit it.
+- `bin_type`: The [bin type](#31-bin-types).
+   This value is provided only for events that store and retrieve things to and from bins.
+- `checkpoint`: The name of a [checkpoint](#34-checkpoints) that was triggered, omitted if the event does not involve checkpoints.
+- `product`: The [product](#33-products) that was involved in the event, omitted if the event is unrelated to products.
+- `units`: The number of units of the part or product involved in the event, if any.
+- `rule`: The rule that was triggered; either a [Min/Max-Rule](#36-minmax-rules) or a [JIT-Rule](#37-jit-rules), or left empty if the event is unrelated to rules.
+
+Here we give an example of how this may look like:
+
+```text
+time;type;part;packages;bin_type;checkpoint;product;units;rule
+2026-10-15 08:00;start
+2026-10-15 08:00;warehouse_in;A;20;;;;60
+2026-10-15 08:00;warehouse_in;B;25;;;;50
+2026-10-15 08:00;warehouse_in;C;30;;;;30
+2026-10-15 08:00;warehouse_in;D;35;;;;140
+2026-10-15 08:00;bin_in;A;20;rack_1;;;60
+2026-10-15 08:00;bin_in;B;25;rack_1;;;50
+2026-10-15 08:00;bin_in;C;30;rack_1;;;30
+2026-10-15 08:00;bin_in;D;25;rack_1;;;100
+2026-10-15 08:00;overstock_in;D;10;;;;40
+2026-10-15 08:00;initialization_complete
+2026-10-15 08:00;rule_triggered;A;20;;;;60;min_A
+2026-10-15 08:20;checkpoint;;;;M1;jacket;1
+2026-10-15 08:20;check_jit
+2026-10-15 08:20;rule_triggered;A;1;;;;3;jit_A
+2026-10-15 08:20;rule_triggered;B;2;;;;4;jit_B
+2026-10-15 08:45;warehouse_demand;A;1;;;;3
+2026-10-15 08:45;bin_out;A;1;rack_1;;;3
+2026-10-15 08:45;overstock_out;D;1;;;;4
+2026-10-15 08:45;bin_in;D;1;rack_1;;;4
+2026-10-15 08:49;warehouse_delivered;A;1;;;;3
+2026-10-15 08:50;checkpoint;;;;M1;jacket;1
+2026-10-15 08:50;check_jit
+2026-10-15 08:50;rule_triggered;A;1;;;;3;jit_A
+2026-10-15 08:50;rule_triggered;B;2;;;;4;jit_B
+2026-10-15 09:05;warehouse_demand;B;2;;;;4
+2026-10-15 09:05;bin_out;B;2;rack_1;;;4
+2026-10-15 09:05;overstock_out;D;2;;;;8
+2026-10-15 09:05;bin_in;D;2;rack_1;;;8
+2026-10-15 09:09;warehouse_delivered;B;2;;;;4
+....
+2026-10-15 13:05;warehouse_demand;B;2;;;;4
+2026-10-15 13:05;warehouse_demand;C;20;;;;20
+2026-10-15 13:05;bin_out;B;2;rack_1;;;4
+2026-10-15 13:05;understock;C;20;;;;20
+...
+2026-10-15 15:07;end
+```
+
+### 4.1. Input Events
+#### 4.1.1. start
+This event denotes the start of the simulation.
+If you provide it, the `time` value of this event marks the beginning of a work day.
+If you do not provide it, then such an event will automatically be generated with the timestamp of the first event in the simulation.
+
+`2026-10-15 08:00;start` means that the workday started on October 15, 2026, at 08:00am.
 
 
-## 4. License
+#### 4.1.2. end
+This event can be provided to mark the end of the simulation.
+No other event can occur after it. 
+If you do not provide it, it will be generated automatically after the last simulated event.
+
+`2026-10-15 15:07;end` means that the simulation ended after the last event on October 15, 2026, at 15:07(pm).
+
+
+#### 4.1.3. warehouse_in
+A certain number of `packages` of the given [`part`](#32-parts) is stored into the warehouse at a certain time.
+The `units` value can be omitted and is automatically computed based on the number of `packages` and the number of units per package for the given part.
+
+You can manually specify such events to express that someone puts something into the warehouse.
+In particular, the initial state of the warehouse at the beginning of the workday can be constructed by creating such events for all the items currently stored in the warehouse. 
+
+The simulation also generates such events automatically:
+If a rule triggers and orders packages of a given part to replenish the warehouse, these will eventually arrive in form of this event.
+
+`2026-10-15 08:00;warehouse_in;A;20;;;;60` means that 20&nbsp;packages of part&nbsp;`A` arrived at the warehouse on October 15, 2026, at 08:00am.
+They then need to be stored.
+Actually, this event denotes such a warehouse setup situation mentioned above. 
+
+
+#### 4.1.4. warehouse_demand
+This event means that the assembly line has asked our warehouse to provide at least one package of a given [part](#32-parts).
+
+`2026-10-15 08:45;warehouse_demand;A;1;;;;3`, for example, means that 1&nbsp;package of part&nbsp;`A` has been demanded from our warehouse on October 15, 2026, at 08:45am.
+One such package here corresponds to 3&nbsp;units of&nbsp;`A`.
+
+Notice that such events can also be automatically generated based on [`checkpoint`](#415-checkpoint) events and the [bill of material](#35-demands-the-bill-of-material) *if* this functionality is activated in the simulation.
+
+
+#### 4.1.5. checkpoint
+This event denotes that a certain amount of units of a given [product](#33-products) has arrived at a certain [checkpoint](#34-checkpoints).
+
+For example, `2026-10-15 08:20;checkpoint;;;;M1;jacket;1` tells us that 1&nbsp;unit of product&nbsp;`jacket` has been registered at checkpoint&nbsp;`M1` at 08:20 on October 15, 2026.
+
+Checkpoint events can lead to the triggering of [JIT-Rules](#37-jit-rules) or, if that is activated, of [demands](#35-demands-the-bill-of-material).
+
+
+### 4.2. Output Events
+Events of this type can never be manually created.
+They result from the simulation.
+
+#### 4.2.1. warehouse_delivered
+Whenever a packages of a given [part](#32-parts) leaves the warehouse, this event is triggered.
+This event is the answer to a [`warehouse_demand`](#414-warehouse_demand) event.
+The `warehouse_demand` is either satisfied from the overstock, by taking parts out of the bins, or leads to an [`understock`](#427-understock) event.
+In the latter case, once the understock is resolved because new packages of the part arrive and can be delivered, a `warehouse_delivered` event is triggered as well.
+
+For example `2026-10-15 08:49;warehouse_delivered;A;1;;;;3` means that, on October 15, 2026, at 08:49, 1&nbsp;package of part&nbsp;`A` (corresponding to 3&nbsp;units of part&nbsp;`A`) has left the warehouse.
+
+
+#### 4.2.2. bin_in
+A certain number of packages of a [part](#32-parts) have been placed into bins of the corresponding [type](#31-bin-types
+).
+Such events are generated as response to [`warehouse_in`](#413-warehouse_in) events, if empty bins of the required type exist.
+
+`2026-10-15 08:00;bin_in;B;25;rack_1;;;50` means that on October 15, 2026, at 08:00am, 2`&nbsp;packages of part&nbsp;`B` were placed into (also 25) bins of type `rack_1`.
+This corresponds to 50&nbsp;units.
+This units value is automatically computed and otherwise meaningless.
+
+
+#### 4.2.3. bin_out
+This event is the opposite of `bin_in` events.
+It denotes that a certain number of packages of a [part](#32-parts) has been taken out of bins of the corresponding [type](#31-bin-types).
+Such events are generated as a response to [`warehouse_demand`](#414-warehouse_demand) events.
+
+For example, `2026-10-15 08:45;bin_out;A;1;rack_1;;;3` means that, on October 15, 2026 at 08:45am, 1&nbsp;package of part&nbsp;`A` has been taken out of one bin of the type&nbsp;`rack_1`.
+(One package here corresponds to 3&nbsp;units).
+
+
+#### 4.2.4. overstock_in
+This event expresses that a certain amount of packages of a given [part](#32-parts) could not be placed into bins.
+All bins of the required type are occupied.
+Therefore, these packages land in the "overstock".
+This is one of the things that we would like to avoid.
+In other words, such events are generated as a response to [`warehouse_in`](#413-warehouse_in) events if the amount of empty bins of the required type is insufficient.
+
+For example, `2026-10-15 08:00;overstock_in;D;10;;;;40` means that 10&nbsp;packages of part&nbsp;`D` could not be put into bins on October 15, 2026, 08:00am.
+They land in the overstock.
+(The value of 40&nbsp;units is computed automatically.)
+
+
+#### 4.2.5. overstock_out
+This type of event occurs if we remove packages of a given [part](#32-parts) from the overstock.
+The cause of this can either be that some bins of the required [type](#31-bin-types) have become empty or that a [`warehouse_demand`](#414-warehouse_demand) has occurred for the part.
+Of course, these packages must have arrived in the overstock before due to an [`overstock_in`](#424-overstock_in) event.
+
+For example, `2026-10-15 08:45;overstock_out;D;1;;;;4` means that on October 15, 2026, at 08:45, 1&nbsp;package of part&nbsp;`D` was removed from the overstock.
+(This package corresponds to 4&nbsp;units of part&nbsp;`D`).
+
+
+#### 4.2.6. initialization_complete
+After all events that take place right in the first second of the simulation are completed, the `initialization_complete` event is generated.
+Often, we want to manually trigger some [`warehouse_in`](#413-warehouse_in) events to build the initial state of the warehouse on that day.
+These events will lead to corresponding [`bin_in`](#422-bin_in) or [`overstock_in`](#424-overstock_in) events.
+After these are all processed, the initialization is over.
+
+`2026-10-15 08:00;initialization_complete`, for example, denotes the end of all setup events (on October 15, 2026, 08:00am).
+
+
+#### 4.2.7. understock
+The worst-case event for the warehouse is an `understock`.
+It happens if a [`warehouse_demand`](#414-warehouse_demand) is issued but the amount of packages in the warehouse is insufficient to satisfy it.
+It therefore tells us how many packages of which [part](#32-parts) could not be delivered.
+(If packages of the part arrive later on, they will directly be sent down the line and directly cause [`warehouse_delivered`](#421-warehouse_delivered) events.)
+
+For example, `2026-10-15 13:05;understock;C;20;;;;20` means that on October 15, 2026, at 13:05, the warehouse was lacking 20&nbsp;packages of part&nbsp;`C` (corresponding to also 20&nbsp;units of part&nbsp;`C`).
+
+
+#### 4.2.8. rule_triggered
+This event occurs if the condition for triggering a [Min/Max-Rule](#36-minmax-rules) or [JIT-Rule](#37-jit-rules) has been met.
+The rule was activated and potentially has ordered some new [parts](#32-parts) to replenish the warehouse.
+If so, this will lead to a corresponding [`warehouse_in`](#413-warehouse_in) event down the line when the ordered package has arrived. 
+
+`2026-10-15 08:00;rule_triggered;A;20;;;;60;min_A` denotes that the Min/Max-Rule `min_A` was triggered at 08:00am on October 15, 2026.
+It has realized that 20&nbsp;packages of part&nbsp;`A` are needed and ordered them&nbsp;(in order to obain 60 new units of part&nbsp;`A` to replenish our stock).
+
+
+#### 4.2.9. check_minmax
+This event happens when minimum limit of a [Min/Max-Rule](#36-minmax-rules) has been violated.
+Since Min/Max-Rules are only checked every 2&nbsp;minutes by default, the actual rule checking does not happen immediately, but, well, only in two-minute intervals.
+This is denoted by this event.
+Only after this event, a Min/Max-Rule may actually be triggered.
+
+For example `2026-10-15 12:40;check_minmax` means that the Min/Max-Rules were checked at 12:40 on October 15, 2026.
+
+
+#### 4.2.10. check_jit
+This event happens if a [product](#33-products) has passed a [checkpoint](#34-checkpoints) and in its [bill of material](#35-demands-the-bill-of-material), a [part](#32-parts) is contained for which a [JIT-Rule](#37-jit-rules) is defined.
+Such events can happen (by default) at most every five Minutes.
+When they happen, the [JIT-Rules](#37-jit-rules) get checked (and may order packages of parts).
+
+`2026-10-15 08:20;check_jit`, for example, means that the JIT-Rules have been checked on October 15, 2026, at 08:20am.
+This may then lead to [`rule_trigger`](#428-rule_triggered) events.
+
+
+## 5. License
 Copyright (C) 2026 [Thomas Weise](https://thomasweise.github.io)  (汤卫思教授)
 
 Dr. [Thomas Weise](https://thomasweise.github.io)  (see [Contact](#3-contact)) holds the copyright of this package.
@@ -412,7 +665,7 @@ Please visit the [contributions guidelines](https://thomasweise.github.io/wareho
 If you have any concerns regarding security, please visit our [security policy](https://thomasweise.github.io/warehouse/SECURITY_md.html).
 
 
-## 5. Contact
+## 6. Contact
 If you have any questions or suggestions, please contact
 Prof. Dr. [Thomas Weise](https://thomasweise.github.io) (汤卫思教授) of the 
 School of Artificial Intelligence and Big Data ([人工智能与大数据学院](http://www.hfuu.edu.cn/aibd)) at

@@ -1,0 +1,3 @@
+name;part;minimum_units;maximum_units;effect_delay
+min_A;A;90;120;00:150
+min_B;B;20;30;02:10

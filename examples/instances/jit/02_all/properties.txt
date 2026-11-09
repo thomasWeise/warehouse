@@ -1,0 +1,2 @@
+checkpoints_trigger_demands = True
+jitrule_interval = 00:05:00

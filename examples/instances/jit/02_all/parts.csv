@@ -1,0 +1,12 @@
+name;bin_type;units_per_package
+A;rack_1;3
+B;rack_1;2
+C;rack_1;1
+D;rack_1;4
+E;rack_3;5
+F;rack_3;6
+G;rack_2;7
+H;rack_2;8
+I;floor_1;9
+J;floor_2;10
+K;floor_3;11
