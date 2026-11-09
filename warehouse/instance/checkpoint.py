@@ -1,6 +1,13 @@
 """
 A class for identifying a checkpoint.
 
+Product units on the assembly line pass by checkpoints.
+Each checkpoint has a :attr:`~warehouse.instance.element.Element.name`.
+No other information is needed.
+
+The information of all checkpoints is usually stored in a file called
+`checkpoints.csv`
+
 >>> from warehouse.instance.element import context
 
 >>> with context():

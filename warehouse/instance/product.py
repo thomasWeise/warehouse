@@ -1,6 +1,12 @@
 """
 A class for identifying a product.
 
+Each product has a :attr:`~warehouse.instance.element.Element.name`.
+No other information is needed.
+
+The information of all products is usually stored in a file called
+`products.csv`
+
 >>> from warehouse.instance.element import context
 
 >>> with context():

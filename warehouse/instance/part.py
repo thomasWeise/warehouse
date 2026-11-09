@@ -3,8 +3,17 @@ A class for identifying a part.
 
 Each Instance of :class:`~Part` corresponds to some part that we need
 for production and store in the warehouse.
+Each part has a name (:attr:`~warehouse.instance.element.Element.name`).
 Each part has an associated bin type (:attr:`~Part.bin_type`) into
 which it can be stored.
+Parts come in packages and we store one package per bin.
+However, the replenishment rules deal with part *units*, not *packages*.
+So, for each part, we also store the number :attr:`~Part.units_per_package`,
+which tells us exactly how many units of the part are in one package.
+We assume that all packages of this part contain exactly this number of units.
+
+The information of all parts is usually stored in a file called
+`parts.csv`
 
 >>> from warehouse.instance.element import context
 

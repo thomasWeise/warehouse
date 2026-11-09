@@ -2,12 +2,25 @@
 A class for identifying a bin type.
 
 Each bin in our warehouse has a type.
+Each bin type has a name (:attr:`~warehouse.instance.element.Element.name`).
+
 Usually, there are some part-specific bins.
 Additionally, there are small and large random bins that can house different
 types of part.
+A bin type is random if its :attr:`~BinType.is_random` is `True`.
+If :attr:`~BinType.is_random` is `False`, then it is a part-specific bin
+type.
+Only random bins (bins of a random bin type) can store multiple different
+types of parts.
+
 Each bin type has an associated amount of bins (of that type).
 The :attr:`~BinType.packages` must be a positive integer number.
 It represents how many packages of parts can be stored in the bin.
+Since each bin can store exactly one package, this is also the number of bins
+of this type.
+
+The information of all bin types is usually stored in a file called
+`bin_types.csv`.
 
 >>> with context():
 ...     b1 = BinType(None, "shelf", 10, True)

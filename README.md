@@ -6,16 +6,184 @@
 # warehouse: A warehouse simulator
 
 - [Introduction](#1-introduction)
-- [License](#2-license)
-- [Contact](#3-contact)
+- [Scenario](#2-scenario)
+- [Input Data](#3-input-data)
+    - [Bin Types](#31-bin-types)
+    - [Parts](#32-parts)
+    - [Products](#33-products)
+    - [Checkpoints](#34-checkpoints)
+- [License](#4-license)
+- [Contact](#5-contact)
 
 
 ## 1. Introduction
 
 This is a warehouse simulator.
+It tries to simulate what is going on in a warehouse that directly feeds an assembly line.
+The assembly line assembles products and therefore needs parts.
+The parts come from the warehouse.
+The warehouse needs to be replenished to not run out of parts.
+We want to avoid [running out of parts](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.Understock) but we also want to avoid that the warehouse is [overflowing](https://thomasweise.github.io/warehouse/warehouse.event.html#warehouse.event.storage.OverstockIn).
+
+## 2. The Scenario
+The warehouse has bins to store the parts that are required by the assembly line.
+Each bin has [type](#31-bin-types).
+A bin type can be random or not.
+In random bins, parts of different types can be stored.
+Other bin types are specific, meaning that only one type of parts can be stored in them.
+Each bin always stores exactly zero or one packages of a given part.
+We know how many packages a bin type can store.
+
+The main task of the warehouse is to store and supply [parts](#32-parts).
+Parts come in packages into the warehouse and also leave in packages.
+Each package occupies exactly one bin.
+A package may include multiple units of a given part&nbsp;(but always only of one part type).
+Replenishment rules work with units of parts, though.
+For each part, we thus also know how many units are contained in one package.
+ 
+On the assembly line, units of different [products](#33-products) are processed continuously.
+These products pass by [checkpoints](#34-checkpoints).
+When product units pass by checkpoints, they are registered.
+Only during these moments, the progress of the assembly line becomes visible to the supervising personell.
+Each product has a bill of materials, i.e., the per-product demands for parts.
 
 
-## 2. License
+## 3. Input Data
+The input data of a simulation is stored in multiple `csv` files inside one folder.
+
+Each datatype has an associated `csv` file.
+Some of the files are optional, some are required.
+Columns in the files are separated by&nbsp;`;`.
+Each file has a first row with column headers.
+
+Several example datasets are given in the folder [`examples/instances`](https://github.com/thomasWeise/warehouse/tree/main/examples/instances) of this repository.
+
+### 3.1. Bin Types
+For *each [bin type](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.bin_type),* we need the following information:
+
+1. The name of the bin type.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for bin types, you may just name them "bin-type-1", "bin-type-2", &hellip; 
+2. How many bins of that type exist, i.e., how many packages we can store into the bins of this type in total.
+3. Whether this is a random bin or not.
+
+This data is stored in the file&nbsp;`bin_types.csv`.
+Each row represents one bin type.
+Such a file is required, i.e., you cannot simulate the warehouse without this information.
+It could look like this:
+
+```text
+name;packages;is_random
+rack_1;100;T
+rack_2;500;T
+rack_3;300;T
+floor_1;200;F
+floor_2;50;F
+floor_3;25;F
+```
+
+Here, `name`&nbsp;is the unique name of the bin type.
+`packages`&nbsp;stands for the number of packages we can store in total, i.e., it is also the number of bins of that type.
+`is_random`&nbsp;tells us whether the bins of this type are random bins&nbsp;(`T`) or part-specific bins&nbsp;(`F`).
+
+In the above example, `rack_1` is a random bin type, i.e., can store multiple different types of parts.
+We got 100&nbsp;bins of type&nbsp;`rack_1`.
+Which part types can be stored in the bin is then specified in [`parts.csv`](#32-parts) in the next section.
+
+`floor_1`, on the other hand, is a fixed/part-specific bin type.
+We have space for 200&nbsp;packages in it, but can only store exactly one type of part in it.
+In [`parts.csv`](#32-parts) in the next section, you can see that this will be parts of type&nbsp;`J`.
+
+### 3.2. Parts
+For *each [part](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.part),* we store the following information.
+
+1. The name of the part.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for parts, you may just name them "part-1", "part-2", &hellip;
+2. The name of the [bin type](#31-bin-types) which is used for packages of this part.
+   This means that packages of this part must always be stored into bins of this part.
+   Parts always enter and leave the warehouse in *packages*.
+   Each package will occupy exactly one bin of the bin type of the part.
+   Each part can be stored only into exactly one type of bins.
+3. While our warehouse processes only *packages* of parts, the replenishment rules deal with part *units*, not *packages*.
+   So, for each part, we also store how many units will be contained in one package.
+   We assume that all packages of this part contain exactly this number of units.
+   We do not simulate half-full packages or packages with missing/removed parts.
+
+This data is stored in the file&nbsp;`parts.csv`.
+Each row represents one part.
+Such a file is required, i.e., you cannot simulate the warehouse without this information.
+It could look like this:
+
+```text
+name;bin_type;units_per_package
+A;rack_1;3
+B;rack_1;2
+C;rack_1;1
+D;rack_1;4
+E;rack_3;5
+F;rack_3;6
+G;rack_2;7
+H;rack_2;8
+I;floor_1;9
+J;floor_2;10
+K;floor_3;11
+```
+Here, `name`&nbsp;is the unique name of the part.
+`bin_type`&nbsp;identifies the type of bin into which the packages of this part are stored.
+You can see that this corresponds to the column `name` in file [`bin_types.csv`](#31-bin-types) back in Section&nbsp;[Bin Types](#31-bin-types).
+The column `units_per_package` contains a number presenting the number of units of the part per package.
+In the above example, packages with parts of type&nbsp;`A` go into bins of type `rack_1` and each such package contains&nbsp;`3` units of&nbsp;`A`. 
+
+
+### 3.3. Products
+For *each [product](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.product),* we store the following information.
+
+1. The name of the checkpoint.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for products, you may just name them "product-1", "product-2", &hellip;
+
+This data is stored in the file&nbsp;`products.csv`.
+Each row represents one product.
+Such a file is *optional*, i.e., if you do not need products, you can simply not supply it.
+This makes sense if you just want to simulate packages going in and out of the warehouse.
+The file could look like this:
+
+```text
+name
+jacket
+hat
+shoe
+```
+
+Here, `name`&nbsp;is the unique name of the product.
+In other words, we have three products: `jacket`, `hat`, and `shoe` in our simulation.
+
+
+### 3.4. Checkpoints
+For *each [checkpoint](https://thomasweise.github.io/warehouse/warehouse.instance.html#module-warehouse.instance.checkpoint),* we store the following information.
+
+1. The name of the checkpoint.
+   Names must be unique, i.e., there never can be two objects (bin types, parts, &hellip;) in our simulation with the same name.
+   If you do not have reasonable names for checkpoints, you may just name them "checkpoint-1", "checkpoint-2", &hellip;
+
+This data is stored in the file&nbsp;`checkpoints.csv`.
+Each row represents one checkpoint.
+Such a file is *optional*, i.e., if you do not need checkpoints, you can simply not supply it.
+It could look like this:
+
+```text
+name
+M1
+S1
+S2
+```
+
+Here, `name`&nbsp;is the unique name of the checkpoint.
+In other words, we have three checkpoints in our simulation:&nbsp;`M1`, `S1`, and&nbsp;`S2`.
+
+
+## 4. License
 Copyright (C) 2026 [Thomas Weise](https://thomasweise.github.io)  (汤卫思教授)
 
 Dr. [Thomas Weise](https://thomasweise.github.io)  (see [Contact](#3-contact)) holds the copyright of this package.
@@ -30,7 +198,7 @@ Please visit the [contributions guidelines](https://thomasweise.github.io/wareho
 If you have any concerns regarding security, please visit our [security policy](https://thomasweise.github.io/warehouse/SECURITY_md.html).
 
 
-## 3. Contact
+## 5. Contact
 If you have any questions or suggestions, please contact
 Prof. Dr. [Thomas Weise](https://thomasweise.github.io) (汤卫思教授) of the 
 School of Artificial Intelligence and Big Data ([人工智能与大数据学院](http://www.hfuu.edu.cn/aibd)) at

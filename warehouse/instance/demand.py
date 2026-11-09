@@ -1,11 +1,32 @@
-"""A class for identifying a demand."""
+"""
+A class for identifying a demand.
+
+The list of demands for a given product represents basically the bill of
+material.
+
+Each demand has the following properties:
+It stores the :attr:`~Demand.product` for which it is defined as well as the
+:attr:`~Demand.part` that is required and how many :attr:`~Demand.units` are
+needed.
+It also stores the :attr:`~Demand.checkpoint` after which the
+:attr:`~Demand.units` are needed.
+You can optionally define how much time (in seconds) after the checkpoint
+these parts are required in field :attr:`~Demand.delay`.
+By default, this value is `0`.
+"""
 
 from dataclasses import dataclass
 from typing import Final, Iterable
 
 from pycommons.io.csv import CsvReader as CsvReaderBase
 from pycommons.io.csv import CsvWriter as CsvWriterBase
-from pycommons.io.csv import csv_column, csv_scope
+from pycommons.io.csv import (
+    csv_column,
+    csv_column_or_none,
+    csv_scope,
+    csv_str_or_none,
+    csv_val_or_none,
+)
 
 from warehouse.instance.checkpoint import COLUMN_CHECKPOINT, Checkpoint
 from warehouse.instance.element import (
@@ -42,8 +63,8 @@ class Demand:
                  product: Product | int | str,
                  checkpoint: Checkpoint | int | str,
                  part: Part | int | str,
-                 delay: int | str = 0,
-                 units: int | str = 1) -> None:
+                 delay: int | str | None = 0,
+                 units: int | str | None = 1) -> None:
         """
         Create a new bin type.
 
@@ -60,9 +81,11 @@ class Demand:
         object.__setattr__(self, "product", product)
         object.__setattr__(self, "checkpoint", checkpoint)
         object.__setattr__(self, "part", part)
-        object.__setattr__(self, "delay", check_timedelta(
-            delay) if isinstance(delay, int) else str_to_timedelta(delay))
-        object.__setattr__(self, "units", check_to_amount(units))
+        object.__setattr__(self, "delay", 0 if delay is None else (
+            check_timedelta(delay) if isinstance(delay, int) else
+            str_to_timedelta(delay)))
+        object.__setattr__(self, "units", 1 if units is None else
+                           check_to_amount(units))
 
     @classmethod
     def to_csv(cls, data: Iterable["Demand"]) -> Iterable[str]:
@@ -106,10 +129,10 @@ class CsvReader(CsvReaderBase[Demand]):
         #: the part key
         self.col_part: Final[int] = csv_column(columns, COLUMN_PART, True)
         #: the delay key
-        self.col_delay: Final[int] = csv_column(
+        self.col_delay: Final[int | None] = csv_column_or_none(
             columns, COLUMN_DELAY, True)
         #: the units key
-        self.col_units: Final[int] = csv_column(
+        self.col_units: Final[int | None] = csv_column_or_none(
             columns, COLUMN_UNITS, True)
 
     def parse_row(self, data: list[str]) -> Demand:
@@ -122,8 +145,9 @@ class CsvReader(CsvReaderBase[Demand]):
         return Demand(product=data[self.col_product],
                       checkpoint=data[self.col_checkpoint],
                       part=data[self.col_part],
-                      delay=data[self.col_delay],
-                      units=data[self.col_units])
+                      delay=csv_str_or_none(data, self.col_delay),
+                      units=csv_val_or_none(
+                          data, self.col_units, check_to_amount))
 
 
 class CsvWriter(CsvWriterBase[Demand]):
