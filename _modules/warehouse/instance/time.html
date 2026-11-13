@@ -1,0 +1,647 @@
+<!doctype html><html data-content_root=../../../ lang=en><meta charset=utf-8><meta content="width=device-width,initial-scale=1.0"name=viewport><title>warehouse.instance.time — warehouse 0.8.5 documentation</title><link href="../../../_static/pygments.css?v=b86133f3"rel=stylesheet><link href="../../../_static/bizstyle.css?v=5283bb3d"rel=stylesheet><link href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668"rel=stylesheet><script src="../../../_static/documentation_options.js?v=1067c88a"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src=../../../_static/bizstyle.js></script><link href=https://thomasweise.github.io/warehouse/_modules/warehouse/instance/time.html rel=canonical><link href=../../../genindex.html rel=index title=Index><link href=../../../search.html rel=search title=Search><meta content="width=device-width,initial-scale=1.0"name=viewport><body><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"accesskey=I href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.5 documentation</a> »<li class="nav-item nav-item-1"><a accesskey=U href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.time</a></ul></div><div class=document><div class=documentwrapper><div class=bodywrapper><div class=body role=main><h1>Source code for warehouse.instance.time</h1><div class=highlight><pre>
+<span></span><span class=sd>"""</span>
+<span class=sd>Time utilities.</span>
+
+<span class=sd>In our simulation, the time is represented as integer values `int`</span>
+<span class=sd>representing dates and times in second resolution, i.e., a time unit of `1`</span>
+<span class=sd>corresponds to one second.</span>
+<span class=sd>However, we store and retrieve times as ISO timestamps, where we clamp</span>
+<span class=sd>off zero components that are not used.</span>
+<span class=sd>Furthermore, as time zone, we by default use `Asia/Shanghai` time.</span>
+<span class=sd>This means that a date/time without UTC offset, i.e., without something</span>
+<span class=sd>like `"+08:00"` or `"-10:00"`, is treated as Shanghai time.</span>
+<span class=sd>Of course, you still provide time stamps in UTC time by using suffix</span>
+<span class=sd>`"+00:00"`.</span>
+<span class=sd>"""</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>datetime</span><span class=w> </span><span class=kn>import</span> <span class=n>date</span><span class=p>,</span> <span class=n>datetime</span><span class=p>,</span> <span class=n>timedelta</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>importlib.resources</span><span class=w> </span><span class=kn>import</span> <span class=n>open_text</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>math</span><span class=w> </span><span class=kn>import</span> <span class=n>floor</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>typing</span><span class=w> </span><span class=kn>import</span> <span class=n>Callable</span><span class=p>,</span> <span class=n>Final</span><span class=p>,</span> <span class=n>Sequence</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>zoneinfo</span><span class=w> </span><span class=kn>import</span> <span class=n>ZoneInfo</span>
+
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.io.path</span><span class=w> </span><span class=kn>import</span> <span class=n>UTF8</span>
+<span class=kn>from</span><span class=w> </span><span class=nn>pycommons.types</span><span class=w> </span><span class=kn>import</span> <span class=n>check_int_range</span>
+
+<span class=c1>#: the earliest start time for an event</span>
+<span class=n>EARLIEST_START</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1000000000</span>
+<span class=c1>#: the latest end time for an event</span>
+<span class=n>LATEST_END</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=mi>3500000000</span>
+
+
+<span class=c1>#: the CSV column for delays</span>
+<span class=n>COLUMN_DELAY</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=s2>"delay"</span>
+
+<span class=c1>#: the CSV column for delays of the effect of rules.</span>
+<span class=n>COLUMN_EFFECT_DELAY</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>str</span><span class=p>]</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>"effect_</span><span class=si>{</span><span class=n>COLUMN_DELAY</span><span class=si>}</span><span class=s2>"</span>
+
+<span class=c1>#: the internal time zone information record</span>
+<span class=n>TZ</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>ZoneInfo</span><span class=p>]</span> <span class=o>=</span> <span class=n>ZoneInfo</span><span class=p>(</span><span class=s2>"Asia/Shanghai"</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=check_time>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.check_time>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>check_time</span><span class=p>(</span><span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Check a given time stamp.</span>
+
+<span class=sd>    :param time: the time stamp</span>
+<span class=sd>    :return: the time stamp</span>
+
+<span class=sd>    >>> check_time(EARLIEST_START)</span>
+<span class=sd>    1000000000</span>
+
+<span class=sd>    >>> check_time(LATEST_END)</span>
+<span class=sd>    3500000000</span>
+
+<span class=sd>    >>> check_time(str_to_time('2026-09-14t12:54:55.616+00:00'))</span>
+<span class=sd>    1789390496</span>
+
+<span class=sd>    >>> check_time(1789361695)</span>
+<span class=sd>    1789361695</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_time("x")</span>
+<span class=sd>    ... except TypeError as err:</span>
+<span class=sd>    ...     print(err)</span>
+<span class=sd>    time should be an instance of int but is str, namely 'x'.</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_time(12)</span>
+<span class=sd>    ... except ValueError as err:</span>
+<span class=sd>    ...     print(err)</span>
+<span class=sd>    time=12 is invalid, must be in 1000000000..3500000000.</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_time(EARLIEST_START - 1)</span>
+<span class=sd>    ... except ValueError as err:</span>
+<span class=sd>    ...     print(err)</span>
+<span class=sd>    time=999999999 is invalid, must be in 1000000000..3500000000.</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_time(999_999_999_999_999_999_999)</span>
+<span class=sd>    ... except ValueError as err:</span>
+<span class=sd>    ...     print(err)</span>
+<span class=sd>    time=999999999999999999999 is invalid, must be in 1000000000\</span>
+<span class=sd>..3500000000.</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_time(LATEST_END + 1)</span>
+<span class=sd>    ... except ValueError as err:</span>
+<span class=sd>    ...     print(err)</span>
+<span class=sd>    time=3500000001 is invalid, must be in 1000000000..3500000000.</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>check_int_range</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=s2>"time"</span><span class=p>,</span> <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>LATEST_END</span><span class=p>)</span></div>
+
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>__trim</span><span class=p>(</span><span class=n>text</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Trim a time or time delta string.</span>
+
+<span class=sd>    :param text: the text</span>
+<span class=sd>    :return: the trimmed text</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>str</span><span class=o>.</span><span class=n>removesuffix</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>rstrip</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>rstrip</span><span class=p>(</span>
+        <span class=n>text</span><span class=p>,</span> <span class=s2>"0"</span><span class=p>),</span> <span class=s2>"."</span><span class=p>)</span> <span class=k>if</span> <span class=s2>"."</span> <span class=ow>in</span> <span class=n>text</span> <span class=k>else</span> <span class=n>text</span><span class=p>,</span> <span class=s2>":00"</span><span class=p>)</span>
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>__timestamp</span><span class=p>(</span><span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=n>datetime</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Create a timestamp.</span>
+
+<span class=sd>    :param time: the time</span>
+<span class=sd>    :return: the timestamp</span>
+
+<span class=sd>    >>> __timestamp(EARLIEST_START)</span>
+<span class=sd>    datetime.datetime(2001, 9, 9, 9, 46, 40, tzinfo=zoneinfo.ZoneInfo(\</span>
+<span class=sd>key='Asia/Shanghai'))</span>
+
+<span class=sd>    >>> __timestamp(LATEST_END)</span>
+<span class=sd>    datetime.datetime(2080, 11, 28, 14, 13, 20, tzinfo=zoneinfo.ZoneInfo(\</span>
+<span class=sd>key='Asia/Shanghai'))</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>datetime</span><span class=o>.</span><span class=n>fromtimestamp</span><span class=p>(</span><span class=n>time</span><span class=p>,</span> <span class=n>tz</span><span class=o>=</span><span class=n>TZ</span><span class=p>)</span>
+
+
+<div class=viewcode-block id=time_to_str>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.time_to_str>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>time_to_str</span><span class=p>(</span><span class=n>time</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert an event time to a string.</span>
+
+<span class=sd>    :param time: the event time</span>
+<span class=sd>    :return: the string</span>
+
+<span class=sd>    >>> time_to_str(1789361695)</span>
+<span class=sd>    '2026-09-14 12:54:55'</span>
+<span class=sd>    >>> time_to_str(1789361640)</span>
+<span class=sd>    '2026-09-14 12:54'</span>
+<span class=sd>    >>> time_to_str(1789358400)</span>
+<span class=sd>    '2026-09-14 12:00'</span>
+<span class=sd>    >>> time_to_str(1789315200)</span>
+<span class=sd>    '2026-09-14 00:00'</span>
+<span class=sd>    >>> time_to_str(EARLIEST_START)</span>
+<span class=sd>    '2001-09-09 09:46:40'</span>
+<span class=sd>    >>> time_to_str(LATEST_END)</span>
+<span class=sd>    '2080-11-28 14:13:20'</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>__trim</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>isoformat</span><span class=p>(</span><span class=n>__timestamp</span><span class=p>(</span><span class=n>check_time</span><span class=p>(</span>
+        <span class=n>time</span><span class=p>))</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=n>tzinfo</span><span class=o>=</span><span class=kc>None</span><span class=p>),</span> <span class=n>sep</span><span class=o>=</span><span class=s2>" "</span><span class=p>,</span> <span class=n>timespec</span><span class=o>=</span><span class=s2>"seconds"</span><span class=p>))</span></div>
+
+
+
+<div class=viewcode-block id=str_to_time>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.str_to_time>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>str_to_time</span><span class=p>(</span><span class=n>string</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert a time string to an event time value.</span>
+
+<span class=sd>    :param string: the time string</span>
+<span class=sd>    :return: the event time value.</span>
+
+<span class=sd>    >>> str_to_time('2026-09-14T12:54:55')</span>
+<span class=sd>    1789361695</span>
+<span class=sd>    >>> str_to_time('2026-09-14T12:54:55+08')</span>
+<span class=sd>    1789361695</span>
+<span class=sd>    >>> str_to_time('2026-09-14T12:54+08')</span>
+<span class=sd>    1789361640</span>
+<span class=sd>    >>> str_to_time('2026-09-14T12+08')</span>
+<span class=sd>    1789358400</span>
+<span class=sd>    >>> str_to_time('2026-09-14T00+08')</span>
+<span class=sd>    1789315200</span>
+<span class=sd>    >>> str_to_time('2026-09-14 00+08')</span>
+<span class=sd>    1789315200</span>
+<span class=sd>    >>> str_to_time('2026-09-14 00')</span>
+<span class=sd>    1789315200</span>
+
+<span class=sd>    >>> str_to_time('2026-09-14T12:54:55+08:00')</span>
+<span class=sd>    1789361695</span>
+<span class=sd>    >>> str_to_time(time_to_str(EARLIEST_START)) == EARLIEST_START</span>
+<span class=sd>    True</span>
+<span class=sd>    >>> str_to_time(time_to_str(LATEST_END)) == LATEST_END</span>
+<span class=sd>    True</span>
+<span class=sd>    """</span>
+    <span class=n>stamp</span><span class=p>:</span> <span class=n>datetime</span> <span class=o>=</span> <span class=n>datetime</span><span class=o>.</span><span class=n>fromisoformat</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>string</span><span class=p>))</span>
+    <span class=k>if</span> <span class=n>stamp</span><span class=o>.</span><span class=n>tzinfo</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
+        <span class=n>stamp</span> <span class=o>=</span> <span class=n>stamp</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=n>tzinfo</span><span class=o>=</span><span class=n>TZ</span><span class=p>)</span>
+    <span class=k>return</span> <span class=n>check_time</span><span class=p>(</span><span class=nb>round</span><span class=p>(</span><span class=n>stamp</span><span class=o>.</span><span class=n>timestamp</span><span class=p>()))</span></div>
+
+
+
+<span class=c1>#: the maximum permitted time delta</span>
+<span class=n>MAX_TIME_DELTA</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>LATEST_END</span> <span class=o>-</span> <span class=n>EARLIEST_START</span><span class=p>,</span> <span class=n>floor</span><span class=p>(</span>
+    <span class=n>timedelta</span><span class=o>.</span><span class=n>max</span><span class=o>.</span><span class=n>total_seconds</span><span class=p>()))</span>
+
+
+<div class=viewcode-block id=check_timedelta>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.check_timedelta>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>check_timedelta</span><span class=p>(</span><span class=n>delta</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Check a time delta.</span>
+
+<span class=sd>    :param delta: the timte delta.</span>
+<span class=sd>    :return: the `delta`, if it is O</span>
+<span class=sd>    :raises ValueError: for invalid time deltas</span>
+
+<span class=sd>    >>> check_timedelta(0)</span>
+<span class=sd>    0</span>
+
+<span class=sd>    >>> try:</span>
+<span class=sd>    ...     check_timedelta(-1)</span>
+<span class=sd>    ... except ValueError as ve:</span>
+<span class=sd>    ...     print(ve)</span>
+<span class=sd>    delta=-1 is invalid, must be in 0..2500000000.</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>check_int_range</span><span class=p>(</span><span class=n>delta</span><span class=p>,</span> <span class=s2>"delta"</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=n>MAX_TIME_DELTA</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=timedelta_to_str>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.timedelta_to_str>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>timedelta_to_str</span><span class=p>(</span><span class=n>delta</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>str</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert a time delta to a string.</span>
+
+<span class=sd>    :param delta: the delta</span>
+<span class=sd>    :return: the string representation of the delta</span>
+
+<span class=sd>    >>> timedelta_to_str(0)</span>
+<span class=sd>    '0:00'</span>
+
+<span class=sd>    >>> timedelta_to_str(1)</span>
+<span class=sd>    '0:00:01'</span>
+
+<span class=sd>    >>> timedelta_to_str(10)</span>
+<span class=sd>    '0:00:10'</span>
+
+<span class=sd>    >>> timedelta_to_str(60)</span>
+<span class=sd>    '0:01'</span>
+
+<span class=sd>    >>> timedelta_to_str(10 * 60)</span>
+<span class=sd>    '0:10'</span>
+
+<span class=sd>    >>> timedelta_to_str(60 * 60)</span>
+<span class=sd>    '1:00'</span>
+
+<span class=sd>    >>> timedelta_to_str(10 * 60 * 60)</span>
+<span class=sd>    '10:00'</span>
+
+<span class=sd>    >>> timedelta_to_str(24 * 60 * 60)</span>
+<span class=sd>    '1 day'</span>
+
+<span class=sd>    >>> timedelta_to_str(10 * 24 * 60 * 60)</span>
+<span class=sd>    '10 days'</span>
+
+<span class=sd>    >>> timedelta_to_str(10 * 24 * 60 * 60 + 1)</span>
+<span class=sd>    '10 days, 0:00:01'</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>str</span><span class=o>.</span><span class=n>removesuffix</span><span class=p>(</span><span class=n>__trim</span><span class=p>(</span><span class=nb>str</span><span class=p>(</span><span class=n>timedelta</span><span class=p>(</span>
+        <span class=n>seconds</span><span class=o>=</span><span class=n>check_timedelta</span><span class=p>(</span><span class=n>delta</span><span class=p>)))),</span> <span class=s2>", 0:00"</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=str_to_timedelta>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.str_to_timedelta>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>str_to_timedelta</span><span class=p>(</span><span class=n>text</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Convert a time delta string to a time delta value.</span>
+
+<span class=sd>    :param text: the string</span>
+<span class=sd>    :return: the time delta</span>
+
+<span class=sd>    >>> str_to_timedelta('0:00')</span>
+<span class=sd>    0</span>
+
+<span class=sd>    >>> str_to_timedelta('0')</span>
+<span class=sd>    0</span>
+
+<span class=sd>    >>> str_to_timedelta('0:00:01')</span>
+<span class=sd>    1</span>
+
+<span class=sd>    >>> str_to_timedelta('0:00:10')</span>
+<span class=sd>    10</span>
+
+<span class=sd>    >>> str_to_timedelta('0:01')</span>
+<span class=sd>    60</span>
+
+<span class=sd>    >>> str_to_timedelta('0:10')</span>
+<span class=sd>    600</span>
+
+<span class=sd>    >>> str_to_timedelta('0:10:00.1')</span>
+<span class=sd>    600</span>
+
+<span class=sd>    >>> str_to_timedelta('1:00')</span>
+<span class=sd>    3600</span>
+
+<span class=sd>    >>> str_to_timedelta('10:00')</span>
+<span class=sd>    36000</span>
+
+<span class=sd>    >>> str_to_timedelta('1 day')</span>
+<span class=sd>    86400</span>
+
+<span class=sd>    >>> str_to_timedelta('10 days')</span>
+<span class=sd>    864000</span>
+
+<span class=sd>    >>> str_to_timedelta('10 days, 0:00:01')</span>
+<span class=sd>    864001</span>
+
+<span class=sd>    >>> str_to_timedelta('150:00')</span>
+<span class=sd>    540000</span>
+
+<span class=sd>    >>> str_to_timedelta('00:150')</span>
+<span class=sd>    9000</span>
+
+<span class=sd>    >>> str_to_timedelta('2:30:00')</span>
+<span class=sd>    9000</span>
+<span class=sd>    """</span>
+    <span class=n>text</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>lower</span><span class=p>(</span><span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>text</span><span class=p>))</span>
+    <span class=n>slen</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>text</span><span class=p>)</span>
+    <span class=n>i</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>text</span><span class=p>,</span> <span class=s2>"day"</span><span class=p>)</span>
+    <span class=k>if</span> <span class=n>i</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+        <span class=n>i</span> <span class=o>=</span> <span class=n>days</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=k>else</span><span class=p>:</span>
+        <span class=n>days</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[:</span><span class=n>i</span><span class=p>])</span>
+        <span class=n>i</span> <span class=o>+=</span> <span class=mi>3</span>
+        <span class=k>while</span> <span class=p>(</span><span class=n>i</span> <span class=o><</span> <span class=n>slen</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=ow>in</span> <span class=s2>"days,"</span><span class=p>):</span>
+            <span class=n>i</span> <span class=o>+=</span> <span class=mi>1</span>
+
+    <span class=n>h</span> <span class=o>=</span> <span class=n>m</span> <span class=o>=</span> <span class=n>s</span> <span class=o>=</span> <span class=n>ms</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=k>if</span> <span class=n>slen</span> <span class=o>></span> <span class=n>i</span><span class=p>:</span>
+        <span class=n>j</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>text</span><span class=p>,</span> <span class=s2>":"</span><span class=p>,</span> <span class=n>i</span><span class=p>)</span>
+        <span class=k>if</span> <span class=n>j</span> <span class=o><=</span> <span class=n>i</span><span class=p>:</span>
+            <span class=n>h</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:])</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>h</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:</span><span class=n>j</span><span class=p>])</span>
+            <span class=n>i</span> <span class=o>=</span> <span class=n>j</span> <span class=o>+</span> <span class=mi>1</span>
+            <span class=n>j</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>text</span><span class=p>,</span> <span class=s2>":"</span><span class=p>,</span> <span class=n>i</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>j</span> <span class=o><=</span> <span class=n>i</span><span class=p>:</span>
+                <span class=n>m</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:])</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>m</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:</span><span class=n>j</span><span class=p>])</span>
+                <span class=n>i</span> <span class=o>=</span> <span class=n>j</span> <span class=o>+</span> <span class=mi>1</span>
+                <span class=n>j</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>text</span><span class=p>,</span> <span class=s2>"."</span><span class=p>,</span> <span class=n>i</span><span class=p>)</span>
+                <span class=k>if</span> <span class=n>j</span> <span class=o><=</span> <span class=n>i</span><span class=p>:</span>
+                    <span class=n>s</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:])</span>
+                <span class=k>else</span><span class=p>:</span>
+                    <span class=n>s</span> <span class=o>=</span> <span class=nb>int</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>i</span><span class=p>:</span><span class=n>j</span><span class=p>])</span>
+                    <span class=n>ms</span> <span class=o>=</span> <span class=nb>round</span><span class=p>(</span><span class=mi>1_000_000</span> <span class=o>*</span> <span class=nb>float</span><span class=p>(</span><span class=n>text</span><span class=p>[</span><span class=n>j</span><span class=p>:]))</span>
+
+    <span class=k>return</span> <span class=n>check_timedelta</span><span class=p>(</span><span class=nb>round</span><span class=p>(</span><span class=n>timedelta</span><span class=p>(</span>
+        <span class=n>days</span><span class=o>=</span><span class=n>days</span><span class=p>,</span> <span class=n>hours</span><span class=o>=</span><span class=n>h</span><span class=p>,</span> <span class=n>minutes</span><span class=o>=</span><span class=n>m</span><span class=p>,</span> <span class=n>seconds</span><span class=o>=</span><span class=n>s</span><span class=p>,</span>
+        <span class=n>microseconds</span><span class=o>=</span><span class=n>ms</span><span class=p>)</span><span class=o>.</span><span class=n>total_seconds</span><span class=p>()))</span></div>
+
+
+
+<span class=c1>#: a time delta of a single day</span>
+<span class=n>__DD</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=n>timedelta</span><span class=p>]</span> <span class=o>=</span> <span class=n>timedelta</span><span class=p>(</span><span class=n>days</span><span class=o>=</span><span class=mi>1</span><span class=p>)</span>
+
+<span class=c1>#: the ordinal of the first supported day</span>
+<span class=n>__FIRST_ORDINAL</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>__timestamp</span><span class=p>(</span><span class=n>EARLIEST_START</span><span class=p>)</span><span class=o>.</span><span class=n>toordinal</span><span class=p>()</span>
+
+
+<div class=viewcode-block id=load_day_map>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.load_day_map>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>load_day_map</span><span class=p>(</span><span class=n>is_workday</span><span class=p>:</span> <span class=n>Callable</span><span class=p>[[</span><span class=nb>int</span><span class=p>],</span> <span class=nb>bool</span><span class=p>]</span> <span class=o>=</span> <span class=nb>range</span><span class=p>(</span>
+        <span class=mi>6</span><span class=p>)</span><span class=o>.</span><span class=fm>__contains__</span><span class=p>)</span> <span class=o>-></span> <span class=n>Sequence</span><span class=p>[</span><span class=nb>int</span><span class=p>]:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Load the work day map, defining for each ordinal the next work day.</span>
+
+<span class=sd>    :param is_workday: check if a day is a work day (monday=0)</span>
+<span class=sd>    :return: the work day map</span>
+
+<span class=sd>    >>> dm = load_day_map()</span>
+<span class=sd>    >>> __timestamp(LATEST_END)</span>
+<span class=sd>    datetime.datetime(2080, 11, 28, 14, 13, 20, \</span>
+<span class=sd>tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))</span>
+
+<span class=sd>    >>> date.fromordinal(dm[-1])</span>
+<span class=sd>    datetime.date(2080, 11, 29)</span>
+
+<span class=sd>    >>> __timestamp(EARLIEST_START)</span>
+<span class=sd>    datetime.datetime(2001, 9, 9, 9, 46, 40, \</span>
+<span class=sd>tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))</span>
+
+<span class=sd>    >>> for i in range(20):</span>
+<span class=sd>    ...     print(date.fromordinal(dm[i]))</span>
+<span class=sd>    2001-09-10</span>
+<span class=sd>    2001-09-10</span>
+<span class=sd>    2001-09-11</span>
+<span class=sd>    2001-09-12</span>
+<span class=sd>    2001-09-13</span>
+<span class=sd>    2001-09-14</span>
+<span class=sd>    2001-09-15</span>
+<span class=sd>    2001-09-17</span>
+<span class=sd>    2001-09-17</span>
+<span class=sd>    2001-09-18</span>
+<span class=sd>    2001-09-19</span>
+<span class=sd>    2001-09-20</span>
+<span class=sd>    2001-09-21</span>
+<span class=sd>    2001-09-22</span>
+<span class=sd>    2001-09-24</span>
+<span class=sd>    2001-09-24</span>
+<span class=sd>    2001-09-25</span>
+<span class=sd>    2001-09-26</span>
+<span class=sd>    2001-09-27</span>
+<span class=sd>    2001-09-28</span>
+
+<span class=sd>    >>> date.fromordinal(dm[date(2016, 1, 1).toordinal() - __FIRST_ORDINAL])</span>
+<span class=sd>    datetime.date(2016, 1, 4)</span>
+
+<span class=sd>    >>> date.fromordinal(dm[date(2016, 2, 5).toordinal() - __FIRST_ORDINAL])</span>
+<span class=sd>    datetime.date(2016, 2, 5)</span>
+
+<span class=sd>    >>> date.fromordinal(dm[date(2016, 2, 6).toordinal() - __FIRST_ORDINAL])</span>
+<span class=sd>    datetime.date(2016, 2, 6)</span>
+
+<span class=sd>    >>> date.fromordinal(dm[date(2016, 2, 7).toordinal() - __FIRST_ORDINAL])</span>
+<span class=sd>    datetime.date(2016, 2, 14)</span>
+<span class=sd>    """</span>
+    <span class=n>first</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>__FIRST_ORDINAL</span>
+    <span class=n>last</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>__timestamp</span><span class=p>(</span><span class=n>LATEST_END</span><span class=p>)</span><span class=o>.</span><span class=n>toordinal</span><span class=p>()</span>
+    <span class=n>raw</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=p>[</span><span class=nb>int</span><span class=p>(</span><span class=n>is_workday</span><span class=p>((</span><span class=n>i</span> <span class=o>+</span> <span class=mi>6</span><span class=p>)</span> <span class=o>%</span> <span class=mi>7</span><span class=p>))</span> <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span>
+        <span class=n>first</span><span class=p>,</span> <span class=n>last</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)]</span>
+
+    <span class=k>with</span> <span class=n>open_text</span><span class=p>(</span><span class=nb>str</span><span class=p>(</span><span class=n>__package__</span><span class=p>),</span> <span class=s2>"special_days.txt"</span><span class=p>,</span> <span class=n>encoding</span><span class=o>=</span><span class=n>UTF8</span><span class=p>)</span> <span class=k>as</span> <span class=n>sc</span><span class=p>:</span>
+        <span class=k>for</span> <span class=n>oline</span> <span class=ow>in</span> <span class=n>sc</span><span class=p>:</span>
+            <span class=n>line</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>oline</span><span class=p>)</span>
+            <span class=n>idx</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=n>line</span><span class=p>,</span> <span class=s2>"#"</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>idx</span> <span class=o>>=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>line</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>strip</span><span class=p>(</span><span class=n>line</span><span class=p>[:</span><span class=n>idx</span><span class=p>])</span>
+            <span class=k>if</span> <span class=nb>str</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>line</span><span class=p>)</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=k>continue</span>
+            <span class=n>dte</span><span class=p>,</span> <span class=n>tp</span> <span class=o>=</span> <span class=nb>str</span><span class=o>.</span><span class=n>split</span><span class=p>(</span><span class=n>line</span><span class=p>,</span> <span class=s2>";"</span><span class=p>)</span>
+            <span class=n>raw</span><span class=p>[</span><span class=n>date</span><span class=p>(</span><span class=o>*</span><span class=nb>map</span><span class=p>(</span><span class=nb>int</span><span class=p>,</span> <span class=nb>str</span><span class=o>.</span><span class=n>split</span><span class=p>(</span><span class=n>dte</span><span class=p>,</span> <span class=s2>"-"</span><span class=p>)))</span><span class=o>.</span><span class=n>toordinal</span><span class=p>()</span> <span class=o>-</span> <span class=n>first</span><span class=p>]</span> <span class=o>=</span> <span class=p>(</span>
+                <span class=nb>str</span><span class=o>.</span><span class=n>upper</span><span class=p>(</span><span class=n>tp</span><span class=p>)</span> <span class=o>==</span> <span class=s2>"T"</span><span class=p>)</span>
+
+    <span class=n>raw</span><span class=p>[</span><span class=o>-</span><span class=mi>1</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span>  <span class=c1># Force that last day in our supported range is a workday</span>
+    <span class=n>raw</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=kc>True</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=nb>list</span><span class=o>.</span><span class=fm>__len__</span><span class=p>(</span><span class=n>raw</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>,</span> <span class=o>-</span><span class=mi>1</span><span class=p>):</span>
+        <span class=k>if</span> <span class=n>raw</span><span class=p>[</span><span class=n>i</span><span class=p>]:</span>
+            <span class=n>last</span> <span class=o>=</span> <span class=n>i</span> <span class=o>+</span> <span class=n>first</span>
+        <span class=n>raw</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=n>last</span>
+
+    <span class=k>return</span> <span class=nb>tuple</span><span class=p>(</span><span class=n>raw</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=get_workday>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.get_workday>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>get_workday</span><span class=p>(</span><span class=n>day</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>workdays</span><span class=p>:</span> <span class=n>Sequence</span><span class=p>[</span><span class=nb>int</span><span class=p>])</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get the work day from the workday map.</span>
+
+<span class=sd>    :param day: the day ordinal to check</span>
+<span class=sd>    :param workdays: the work day map, as returned by :func:`load_day_map`</span>
+<span class=sd>    :return: the work day closest to `day`, may be `day` itself</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=n>workdays</span><span class=p>[</span><span class=n>day</span> <span class=o>-</span> <span class=n>__FIRST_ORDINAL</span><span class=p>]</span></div>
+
+
+
+<span class=k>def</span><span class=w> </span><span class=nf>__offset</span><span class=p>(</span><span class=n>stamp</span><span class=p>:</span> <span class=n>datetime</span><span class=p>,</span> <span class=n>days</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>seconds</span><span class=p>:</span> <span class=nb>int</span><span class=p>)</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Create a time stamp with date offset by days and time defined by seconds.</span>
+
+<span class=sd>    :param stamp: the time stamp</span>
+<span class=sd>    :param days: the number of days to add to the date of `stamp`</span>
+<span class=sd>    :param seconds: the number of seconds after midnight on the new day</span>
+<span class=sd>    :return: the offset time stamp value</span>
+
+<span class=sd>    >>> time_to_str(__offset(datetime(2020, 10, 5, 2, 7, 8, tzinfo=TZ),</span>
+<span class=sd>    ...             3, 3600 * 6))</span>
+<span class=sd>    '2020-10-08 06:00'</span>
+<span class=sd>    """</span>
+    <span class=k>return</span> <span class=nb>round</span><span class=p>((</span><span class=n>stamp</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=n>hour</span><span class=o>=</span><span class=mi>0</span><span class=p>,</span> <span class=n>minute</span><span class=o>=</span><span class=mi>0</span><span class=p>,</span> <span class=n>second</span><span class=o>=</span><span class=mi>0</span><span class=p>)</span> <span class=o>+</span> <span class=n>timedelta</span><span class=p>(</span>
+        <span class=n>days</span><span class=o>=</span><span class=n>days</span><span class=p>,</span> <span class=n>seconds</span><span class=o>=</span><span class=n>seconds</span> <span class=o>%</span> <span class=mi>86400</span><span class=p>))</span><span class=o>.</span><span class=n>timestamp</span><span class=p>())</span>
+
+
+<div class=viewcode-block id=end_of_job>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.end_of_job>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>end_of_job</span><span class=p>(</span><span class=n>start</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>needed_time</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span>
+               <span class=n>can_wrap</span><span class=p>:</span> <span class=nb>bool</span><span class=p>,</span>
+               <span class=n>worktime</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>],</span>
+               <span class=n>workdays</span><span class=p>:</span> <span class=n>Sequence</span><span class=p>[</span><span class=nb>int</span><span class=p>])</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get the time when a job ends.</span>
+
+<span class=sd>    :param start: the time when the job begins; must be a work day</span>
+<span class=sd>    :param needed_time: the time the job needs</span>
+<span class=sd>    :param can_wrap: can the job wrap days (`True`) or does it need to be</span>
+<span class=sd>        completed entirely in a workday (`False`)?</span>
+<span class=sd>    :param worktime: the work time window tuples, multiple `(start, end)`</span>
+<span class=sd>        tuples</span>
+<span class=sd>    :param workdays: an internal sequence of workdays object, as obtained</span>
+<span class=sd>        via :func:`load_day_map`</span>
+<span class=sd>    :return: the adjusted time stamp</span>
+
+<span class=sd>    >>> _wt = ((8 * 3600, 11 * 3600), (12 * 3600, 19 * 3600))</span>
+<span class=sd>    >>> _wd = load_day_map(range(0, 6).__contains__)</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),</span>
+<span class=sd>    ...                        3600 * 2, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-10 14:00'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-12 12:00"),</span>
+<span class=sd>    ...                        3600 * 2, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-13 10:00'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-18 12:00"),</span>
+<span class=sd>    ...                        3600 * 2, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-18 14:00'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),</span>
+<span class=sd>    ...                        3600 * 6, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-10 18:00'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),</span>
+<span class=sd>    ...                        3600 * 6 + 1, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-10 18:00:01'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),</span>
+<span class=sd>    ...                        3600 * 6 + 1, False, _wt, _wd))</span>
+<span class=sd>    '2025-10-11 18:00:01'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),</span>
+<span class=sd>    ...                        3600 * 6 + 1, True, _wt, _wd))</span>
+<span class=sd>    '2025-10-11 08:00:01'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),</span>
+<span class=sd>    ...                        3600 * 6, True, _wt, _wd))</span>
+<span class=sd>    '2025-10-10 18:00'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),</span>
+<span class=sd>    ...                        3600 * 6 + 1, True, _wt, _wd))</span>
+<span class=sd>    '2025-10-10 18:00:01'</span>
+
+<span class=sd>    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),</span>
+<span class=sd>    ...                        3600 * 6 + 1, True, _wt, _wd))</span>
+<span class=sd>    '2025-10-11 08:00:01'</span>
+<span class=sd>    """</span>
+    <span class=c1># Get the start day and start time.</span>
+    <span class=n>start_stamp</span><span class=p>:</span> <span class=n>datetime</span> <span class=o>=</span> <span class=n>__timestamp</span><span class=p>(</span><span class=n>start</span><span class=p>)</span>
+    <span class=n>start_day</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>start_stamp</span><span class=o>.</span><span class=n>toordinal</span><span class=p>()</span>
+    <span class=n>start_time</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>start_stamp</span><span class=o>.</span><span class=n>second</span> <span class=o>+</span> <span class=mi>60</span> <span class=o>*</span> <span class=p>(</span>
+        <span class=n>start_stamp</span><span class=o>.</span><span class=n>minute</span> <span class=o>+</span> <span class=p>(</span><span class=mi>60</span> <span class=o>*</span> <span class=n>start_stamp</span><span class=o>.</span><span class=n>hour</span><span class=p>))</span>
+
+    <span class=n>wd_ofs</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>__FIRST_ORDINAL</span>
+    <span class=k>if</span> <span class=n>needed_time</span> <span class=o>>=</span> <span class=nb>max</span><span class=p>(</span><span class=n>wt_end</span> <span class=o>-</span> <span class=n>wt_start</span> <span class=k>for</span> <span class=n>wt_start</span><span class=p>,</span> <span class=n>wt_end</span> <span class=ow>in</span> <span class=n>worktime</span><span class=p>):</span>
+        <span class=c1># If this is the case, then we *must* wrap the work time.</span>
+        <span class=n>can_wrap</span> <span class=o>=</span> <span class=kc>True</span>
+
+    <span class=n>end_day</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>workdays</span><span class=p>[</span><span class=n>start_day</span> <span class=o>-</span> <span class=n>wd_ofs</span><span class=p>]</span>
+    <span class=k>if</span> <span class=n>end_day</span> <span class=o>></span> <span class=n>start_day</span><span class=p>:</span>
+        <span class=n>start_time</span> <span class=o>=</span> <span class=mi>0</span>
+    <span class=n>end_time</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>start_time</span>
+
+    <span class=n>loop</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=n>needed_time</span> <span class=o>></span> <span class=mi>0</span>
+    <span class=k>while</span> <span class=n>loop</span><span class=p>:</span>
+        <span class=k>for</span> <span class=n>wt_start</span><span class=p>,</span> <span class=n>wt_end</span> <span class=ow>in</span> <span class=n>worktime</span><span class=p>:</span>
+            <span class=k>if</span> <span class=n>wt_start</span> <span class=o>></span> <span class=n>start_time</span><span class=p>:</span>
+                <span class=n>start_time</span> <span class=o>=</span> <span class=n>wt_start</span>
+            <span class=k>elif</span> <span class=n>start_time</span> <span class=o>></span> <span class=n>wt_end</span><span class=p>:</span>
+                <span class=k>continue</span>
+            <span class=k>if</span> <span class=p>((</span><span class=n>start_time</span> <span class=o>+</span> <span class=n>needed_time</span><span class=p>)</span> <span class=o>></span> <span class=n>wt_end</span><span class=p>)</span> <span class=ow>and</span> <span class=p>(</span><span class=ow>not</span> <span class=n>can_wrap</span><span class=p>):</span>
+                <span class=k>continue</span>
+            <span class=n>end_time</span> <span class=o>=</span> <span class=nb>min</span><span class=p>(</span><span class=n>start_time</span> <span class=o>+</span> <span class=n>needed_time</span><span class=p>,</span> <span class=n>wt_end</span><span class=p>)</span>
+            <span class=n>needed_time</span> <span class=o>-=</span> <span class=n>end_time</span> <span class=o>-</span> <span class=n>start_time</span>
+            <span class=k>if</span> <span class=n>needed_time</span> <span class=o><=</span> <span class=mi>0</span><span class=p>:</span>
+                <span class=n>loop</span> <span class=o>=</span> <span class=kc>False</span>
+                <span class=k>break</span>
+            <span class=n>start_time</span> <span class=o>=</span> <span class=n>end_time</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=n>loop</span><span class=p>:</span>
+            <span class=k>break</span>
+        <span class=n>start_time</span> <span class=o>=</span> <span class=mi>0</span>
+        <span class=n>end_day</span> <span class=o>=</span> <span class=n>workdays</span><span class=p>[</span><span class=n>end_day</span> <span class=o>+</span> <span class=mi>1</span> <span class=o>-</span> <span class=n>wd_ofs</span><span class=p>]</span>
+
+    <span class=k>return</span> <span class=n>__offset</span><span class=p>(</span><span class=n>start_stamp</span><span class=p>,</span> <span class=n>end_day</span> <span class=o>-</span> <span class=n>start_day</span><span class=p>,</span> <span class=n>end_time</span><span class=p>)</span></div>
+
+
+
+<div class=viewcode-block id=next_multiple_of>
+<a class=viewcode-back href=../../../warehouse.instance.html#warehouse.instance.time.next_multiple_of>[docs]</a>
+<span class=k>def</span><span class=w> </span><span class=nf>next_multiple_of</span><span class=p>(</span><span class=n>now</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>multiple_in_s</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span>
+                     <span class=n>worktime</span><span class=p>:</span> <span class=nb>tuple</span><span class=p>[</span><span class=nb>tuple</span><span class=p>[</span><span class=nb>int</span><span class=p>,</span> <span class=nb>int</span><span class=p>],</span> <span class=o>...</span><span class=p>],</span>
+                     <span class=n>workdays</span><span class=p>:</span> <span class=n>Sequence</span><span class=p>[</span><span class=nb>int</span><span class=p>])</span> <span class=o>-></span> <span class=nb>int</span><span class=p>:</span>
+<span class=w>    </span><span class=sd>"""</span>
+<span class=sd>    Get the next time when a multiple of a certain amount of seconds elapses.</span>
+
+<span class=sd>    :param now: the current time</span>
+<span class=sd>    :param multiple_in_s: the multiple that needs to elapse</span>
+<span class=sd>    :param worktime: the work time window tuples, multiple `(start, end)`</span>
+<span class=sd>        tuples</span>
+<span class=sd>    :param workdays: an internal sequence of workdays object, as obtained</span>
+<span class=sd>        via :func:`load_day_map`</span>
+<span class=sd>    :return: the adjusted time stamp</span>
+
+<span class=sd>    >>> _wt = ((8 * 3600, 11 * 3600), (12 * 3600, 19 * 3600))</span>
+<span class=sd>    >>> _wd = load_day_map(range(0, 6).__contains__)</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3600,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-10 12:00'</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-10 12:00'</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 7,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-10 12:00:04'</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 7,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-10 17:59:59'</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 37,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-10 18:00:24'</span>
+
+<span class=sd>    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 18:59:58"), 37,</span>
+<span class=sd>    ...             _wt, _wd))</span>
+<span class=sd>    '2025-10-11 08:00:23'</span>
+<span class=sd>    """</span>
+    <span class=c1># Get the start day and start time.</span>
+    <span class=n>start_stamp</span><span class=p>:</span> <span class=n>datetime</span> <span class=o>=</span> <span class=n>__timestamp</span><span class=p>(</span><span class=n>now</span><span class=p>)</span>
+    <span class=n>start_day</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>start_stamp</span><span class=o>.</span><span class=n>toordinal</span><span class=p>()</span>
+    <span class=n>wd_ofs</span><span class=p>:</span> <span class=n>Final</span><span class=p>[</span><span class=nb>int</span><span class=p>]</span> <span class=o>=</span> <span class=n>__FIRST_ORDINAL</span>
+
+    <span class=n>end_day</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=n>workdays</span><span class=p>[</span><span class=n>start_day</span> <span class=o>-</span> <span class=n>wd_ofs</span><span class=p>]</span>
+    <span class=n>end_time</span> <span class=o>=</span> <span class=mi>0</span> <span class=k>if</span> <span class=n>end_day</span> <span class=o>></span> <span class=n>start_day</span> <span class=k>else</span> <span class=p>(</span><span class=n>start_stamp</span><span class=o>.</span><span class=n>second</span> <span class=o>+</span> <span class=mi>60</span> <span class=o>*</span> <span class=p>(</span>
+        <span class=n>start_stamp</span><span class=o>.</span><span class=n>minute</span> <span class=o>+</span> <span class=p>(</span><span class=mi>60</span> <span class=o>*</span> <span class=n>start_stamp</span><span class=o>.</span><span class=n>hour</span><span class=p>)))</span>
+
+    <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+        <span class=k>for</span> <span class=n>wt_start</span><span class=p>,</span> <span class=n>wt_end</span> <span class=ow>in</span> <span class=n>worktime</span><span class=p>:</span>
+            <span class=k>if</span> <span class=n>wt_start</span> <span class=o>></span> <span class=n>end_time</span><span class=p>:</span>
+                <span class=n>end_time</span> <span class=o>=</span> <span class=n>wt_start</span>
+            <span class=k>elif</span> <span class=n>end_time</span> <span class=o>></span> <span class=n>wt_end</span><span class=p>:</span>
+                <span class=k>continue</span>
+
+            <span class=n>d</span><span class=p>,</span> <span class=n>m</span> <span class=o>=</span> <span class=nb>divmod</span><span class=p>(</span><span class=n>end_time</span><span class=p>,</span> <span class=n>multiple_in_s</span><span class=p>)</span>
+            <span class=n>end_time</span> <span class=o>=</span> <span class=n>multiple_in_s</span> <span class=o>*</span> <span class=p>((</span><span class=n>d</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=k>if</span> <span class=n>m</span> <span class=o>></span> <span class=mi>0</span> <span class=k>else</span> <span class=n>d</span><span class=p>)</span>
+            <span class=k>if</span> <span class=n>end_time</span> <span class=o><</span> <span class=n>wt_end</span><span class=p>:</span>
+                <span class=k>return</span> <span class=n>__offset</span><span class=p>(</span><span class=n>start_stamp</span><span class=p>,</span> <span class=n>end_day</span> <span class=o>-</span> <span class=n>start_day</span><span class=p>,</span> <span class=n>end_time</span><span class=p>)</span>
+        <span class=n>end_time</span> <span class=o>=</span> <span class=mi>0</span>
+        <span class=n>end_day</span> <span class=o>=</span> <span class=n>workdays</span><span class=p>[</span><span class=n>end_day</span> <span class=o>-</span> <span class=n>wd_ofs</span> <span class=o>+</span> <span class=mi>1</span><span class=p>]</span></div>
+
+</pre></div><div class=clearer></div></div></div></div><div aria-label=Main class=sphinxsidebar role=navigation><div class=sphinxsidebarwrapper><search id=searchbox role=search style=display:none> <h3 id=searchlabel>Quick search</h3> <div class=searchformwrapper><form action=../../../search.html class=search><input aria-labelledby=searchlabel autocapitalize=off autocomplete=off autocorrect=off name=q spellcheck=false><input type=submit value=Go></form></div> </search><script>document.getElementById(`searchbox`).style.display=`block`;</script></div></div><div class=clearer></div></div><div aria-label=Related class=related role=navigation><h3>Navigation</h3><ul><li class=right style=margin-right:10px><a title="General Index"href=../../../genindex.html>index</a><li class=right><a title="Python Module Index"href=../../../py-modindex.html>modules</a> |<li class="nav-item nav-item-0"><a href=../../../index.html>warehouse 0.8.5 documentation</a> »<li class="nav-item nav-item-1"><a href=../../index.html>Module code</a> »<li class="nav-item nav-item-this"><a href>warehouse.instance.time</a></ul></div><div class=footer role=contentinfo>© Copyright 2023-2026, Thomas Weise.</div>
