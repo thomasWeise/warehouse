@@ -274,8 +274,7 @@ class Instance:
             if not (old < v < 86400):
                 raise ValueError(f"Invalid work times record {worktimes!r}.")
             old = v
-        object.__setattr__(self, "worktimes", tuple(batched(
-            worktimes, 2, strict=True)))
+        object.__setattr__(self, "worktimes", tuple(batched(worktimes, 2)))
 
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
