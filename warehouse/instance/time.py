@@ -16,7 +16,7 @@ Of course, you still provide time stamps in UTC time by using suffix
 from datetime import date, datetime, timedelta
 from importlib.resources import open_text
 from math import floor
-from typing import Callable, Final
+from typing import Callable, Final, Sequence
 from zoneinfo import ZoneInfo
 
 from pycommons.io.path import UTF8
@@ -341,23 +341,15 @@ __DD: Final[timedelta] = timedelta(days=1)
 __FIRST_ORDINAL: Final[int] = __timestamp(EARLIEST_START).toordinal()
 
 
-def __is_monday_to_friday(ordinal: int) -> bool:
-    """
-    Check if a date ordinal is a work day, i.e., Monday...Friday.
-
-    :param ordinal: the date ordinal
-    :return: if it is a work day
-    """
-    return ((ordinal + 6) % 7) < 5
-
-
-def __load_day_map() -> tuple[int, ...]:
+def load_day_map(is_workday: Callable[[int], bool] = range(
+        6).__contains__) -> Sequence[int]:
     """
     Load the work day map, defining for each ordinal the next work day.
 
+    :param is_workday: check if a day is a work day (monday=0)
     :return: the work day map
 
-    >>> dm = __load_day_map()
+    >>> dm = load_day_map()
     >>> __timestamp(LATEST_END)
     datetime.datetime(2080, 11, 28, 14, 13, 20, \
 tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))
@@ -377,14 +369,14 @@ tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))
     2001-09-12
     2001-09-13
     2001-09-14
-    2001-09-17
+    2001-09-15
     2001-09-17
     2001-09-17
     2001-09-18
     2001-09-19
     2001-09-20
     2001-09-21
-    2001-09-24
+    2001-09-22
     2001-09-24
     2001-09-24
     2001-09-25
@@ -406,7 +398,7 @@ tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))
     """
     first: Final[int] = __FIRST_ORDINAL
     last: int = __timestamp(LATEST_END).toordinal()
-    raw: list[int] = [__is_monday_to_friday(i) for i in range(
+    raw: list[int] = [int(is_workday((i + 6) % 7)) for i in range(
         first, last + 1)]
 
     with open_text(str(__package__), "special_days.txt", encoding=UTF8) as sc:
@@ -431,15 +423,15 @@ tzinfo=zoneinfo.ZoneInfo(key='Asia/Shanghai'))
     return tuple(raw)
 
 
-def get_workday(day: int, dm=__load_day_map().__getitem__) -> int:
+def get_workday(day: int, workdays: Sequence[int]) -> int:
     """
-    Get the next work day for the given day.
+    Get the work day from the workday map.
 
-    :param day: the day
-    :param dm: the next work day
-    :return: the next work day
+    :param day: the day ordinal to check
+    :param workdays: the work day map, as returned by :func:`load_day_map`
+    :return: the work day closest to `day`, may be `day` itself
     """
-    return dm(day - __FIRST_ORDINAL)
+    return workdays[day - __FIRST_ORDINAL]
 
 
 def __offset(stamp: datetime, days: int, seconds: int) -> int:
@@ -459,133 +451,165 @@ def __offset(stamp: datetime, days: int, seconds: int) -> int:
         days=days, seconds=seconds % 86400)).timestamp())
 
 
-def end_of_job(start: int, worktime: int,
-               can_wrap: bool = False,
-               work_start_in_s: int = 7 * 3600,
-               work_end_in_s: int = 18 * 3600,
-               workday: Callable[[int], int] = get_workday) -> int:
+def end_of_job(start: int, needed_time: int,
+               can_wrap: bool,
+               worktime: tuple[tuple[int, int], ...],
+               workdays: Sequence[int]) -> int:
     """
     Get the time when a job ends.
 
     :param start: the time when the job begins; must be a work day
-    :param worktime: the time the job needs
+    :param needed_time: the time the job needs
     :param can_wrap: can the job wrap days (`True`) or does it need to be
         completed entirely in a workday (`False`)?
-    :param work_start_in_s: the start time of the work, in seconds from
-        midnight
-    :param work_end_in_s: the end time of the work, in seconds from midnight
-    :param workday: a callable that receives a date ordinal and that returns
-        the earliest work day with an ordinal >= that date.
+    :param worktime: the work time window tuples, multiple `(start, end)`
+        tuples
+    :param workdays: an internal sequence of workdays object, as obtained
+        via :func:`load_day_map`
     :return: the adjusted time stamp
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 2))
+    >>> _wt = ((8 * 3600, 11 * 3600), (12 * 3600, 19 * 3600))
+    >>> _wd = load_day_map(range(0, 6).__contains__)
+
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),
+    ...                        3600 * 2, False, _wt, _wd))
     '2025-10-10 14:00'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-12 12:00"), 3600 * 2))
-    '2025-10-13 09:00'
+    >>> time_to_str(end_of_job(str_to_time("2025-10-12 12:00"),
+    ...                        3600 * 2, False, _wt, _wd))
+    '2025-10-13 10:00'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-18 12:00"), 3600 * 2))
-    '2025-10-20 09:00'
+    >>> time_to_str(end_of_job(str_to_time("2025-10-18 12:00"),
+    ...                        3600 * 2, False, _wt, _wd))
+    '2025-10-18 14:00'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 6))
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),
+    ...                        3600 * 6, False, _wt, _wd))
     '2025-10-10 18:00'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 6 + 1))
-    '2025-10-11 13:00:01'
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),
+    ...                        3600 * 6 + 1, False, _wt, _wd))
+    '2025-10-10 18:00:01'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 6,
-    ...                        can_wrap=True))
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),
+    ...                        3600 * 6 + 1, False, _wt, _wd))
+    '2025-10-11 18:00:01'
+
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),
+    ...                        3600 * 6 + 1, True, _wt, _wd))
+    '2025-10-11 08:00:01'
+
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),
+    ...                        3600 * 6, True, _wt, _wd))
     '2025-10-10 18:00'
 
-    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"), 3600 * 6 + 1,
-    ...                        can_wrap=True))
-    '2025-10-11 07:00:01'
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 12:00"),
+    ...                        3600 * 6 + 1, True, _wt, _wd))
+    '2025-10-10 18:00:01'
+
+    >>> time_to_str(end_of_job(str_to_time("2025-10-10 13:00"),
+    ...                        3600 * 6 + 1, True, _wt, _wd))
+    '2025-10-11 08:00:01'
     """
-    if worktime >= (work_end_in_s - work_start_in_s):
-        # If this is the case, then we *must* wrap the work time.
-        can_wrap = True
-
     # Get the start day and start time.
     start_stamp: datetime = __timestamp(start)
     start_day: Final[int] = start_stamp.toordinal()
     start_time: int = start_stamp.second + 60 * (
         start_stamp.minute + (60 * start_stamp.hour))
 
-    if start_time > work_end_in_s:
-        # Start time is outside working hours.
-        # So we start on the next day.
-        start_time = work_start_in_s
-        end_day = workday(start_day + 1)
-    else:  # Start time is within working hours.
-        end_day = workday(start_day)
+    wd_ofs: Final[int] = __FIRST_ORDINAL
+    if needed_time >= max(wt_end - wt_start for wt_start, wt_end in worktime):
+        # If this is the case, then we *must* wrap the work time.
+        can_wrap = True
 
-    # If everything goes well, this is the end time.
-    end_time: int = max(work_start_in_s, start_time) + worktime
+    end_day: int = workdays[start_day - wd_ofs]
+    if end_day > start_day:
+        start_time = 0
+    end_time: int = start_time
 
-    if can_wrap:
-        # The work can be done partially on different days.
-        # So we step-by-step gobble it up until it is done.
-        while end_time > work_end_in_s:
-            end_time = (end_time - work_end_in_s) + work_start_in_s
-            end_day = workday(end_day + 1)
-    elif end_day > start_day:
-        # If we *cannot* wrap and we start on next day, then we can
-        # begin at the work start time and finish the work.
-        end_time = work_start_in_s + worktime
-    elif end_time > work_end_in_s:
-        # I we *cannot* wrap and the work extends into the next day,
-        # we simply start at the next morning.
-        end_time = work_start_in_s + worktime
-        end_day = workday(end_day + 1)
+    loop: bool = needed_time > 0
+    while loop:
+        for wt_start, wt_end in worktime:
+            if wt_start > start_time:
+                start_time = wt_start
+            elif start_time > wt_end:
+                continue
+            if ((start_time + needed_time) > wt_end) and (not can_wrap):
+                continue
+            end_time = min(start_time + needed_time, wt_end)
+            needed_time -= end_time - start_time
+            if needed_time <= 0:
+                loop = False
+                break
+            start_time = end_time
+        if not loop:
+            break
+        start_time = 0
+        end_day = workdays[end_day + 1 - wd_ofs]
 
     return __offset(start_stamp, end_day - start_day, end_time)
 
 
 def next_multiple_of(now: int, multiple_in_s: int,
-                     work_start_in_s: int = 7 * 3600,
-                     work_end_in_s: int = 18 * 3600,
-                     workday: Callable[[int], int] = get_workday) -> int:
+                     worktime: tuple[tuple[int, int], ...],
+                     workdays: Sequence[int]) -> int:
     """
     Get the next time when a multiple of a certain amount of seconds elapses.
 
     :param now: the current time
-    :param multiple_in_s: the multiple that needs to ellapse
-    :param work_start_in_s: the start time of the work, in seconds from
-        midnight
-    :param work_end_in_s: the end time of the work, in seconds from midnight
-    :param workday: a callable that receives a date ordinal and that returns
-        the earliest work day with an ordinal >= that date.
+    :param multiple_in_s: the multiple that needs to elapse
+    :param worktime: the work time window tuples, multiple `(start, end)`
+        tuples
+    :param workdays: an internal sequence of workdays object, as obtained
+        via :func:`load_day_map`
     :return: the adjusted time stamp
 
-    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3600))
+    >>> _wt = ((8 * 3600, 11 * 3600), (12 * 3600, 19 * 3600))
+    >>> _wd = load_day_map(range(0, 6).__contains__)
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3600,
+    ...             _wt, _wd))
     '2025-10-10 12:00'
 
-    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3))
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 3,
+    ...             _wt, _wd))
     '2025-10-10 12:00'
 
-    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 7))
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 12:00"), 7,
+    ...             _wt, _wd))
     '2025-10-10 12:00:04'
 
-    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 7))
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 7,
+    ...             _wt, _wd))
     '2025-10-10 17:59:59'
 
-    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 37))
-    '2025-10-11 07:00'
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 17:59:58"), 37,
+    ...             _wt, _wd))
+    '2025-10-10 18:00:24'
+
+    >>> time_to_str(next_multiple_of(str_to_time("2025-10-10 18:59:58"), 37,
+    ...             _wt, _wd))
+    '2025-10-11 08:00:23'
     """
     # Get the start day and start time.
     start_stamp: datetime = __timestamp(now)
     start_day: Final[int] = start_stamp.toordinal()
-    end_day: int = workday(start_day)
-    if end_day > start_day:
-        end_time = work_start_in_s
-    else:
-        start_time: int = max(work_start_in_s, start_stamp.second + 60 * (
-            start_stamp.minute + (60 * start_stamp.hour)))
+    wd_ofs: Final[int] = __FIRST_ORDINAL
 
-        d, m = divmod(start_time - work_start_in_s, multiple_in_s)
-        end_time = work_start_in_s + multiple_in_s * (d if m <= 0 else d + 1)
-        if end_time > work_end_in_s:
-            end_time = work_start_in_s
-            end_day = workday(end_day + 1)
+    end_day: int = workdays[start_day - wd_ofs]
+    end_time = 0 if end_day > start_day else (start_stamp.second + 60 * (
+        start_stamp.minute + (60 * start_stamp.hour)))
 
-    return __offset(start_stamp, end_day - start_day, end_time)
+    while True:
+        for wt_start, wt_end in worktime:
+            if wt_start > end_time:
+                end_time = wt_start
+            elif end_time > wt_end:
+                continue
+
+            d, m = divmod(end_time, multiple_in_s)
+            end_time = multiple_in_s * ((d + 1) if m > 0 else d)
+            if end_time < wt_end:
+                return __offset(start_stamp, end_day - start_day, end_time)
+        end_time = 0
+        end_day = workdays[end_day - wd_ofs + 1]

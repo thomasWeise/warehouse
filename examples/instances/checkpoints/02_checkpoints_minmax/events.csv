@@ -13,18 +13,18 @@ time;type;part;packages;bin_type;checkpoint;product;rule;units
 2026-10-15 10:20;checkpoint;;;;M1;jacket;;1
 2026-10-15 10:50;checkpoint;;;;M1;jacket;;2
 
-2026-10-15 11:00;checkpoint;;;;S1;jacket;;2
-
-2026-10-15 11:20;checkpoint;;;;M1;jacket;;1
-
-2026-10-15 11:30;checkpoint;;;;S1;jacket;;4
-
-2026-10-15 11:50;checkpoint;;;;M1;jacket;;2
-
-2026-10-15 12:00;checkpoint;;;;S1;jacket;;5
+2026-10-15 12:00;checkpoint;;;;S1;jacket;;2
 
 2026-10-15 12:20;checkpoint;;;;M1;jacket;;1
 
-2026-10-15 12:30;checkpoint;;;;S1;jacket;;2
+2026-10-15 12:30;checkpoint;;;;S1;jacket;;4
 
-2026-10-15 13:00;checkpoint;;;;S1;jacket;;3
+2026-10-15 12:50;checkpoint;;;;M1;jacket;;2
+
+2026-10-15 13:00;checkpoint;;;;S1;jacket;;5
+
+2026-10-15 13:20;checkpoint;;;;M1;jacket;;1
+
+2026-10-15 13:30;checkpoint;;;;S1;jacket;;2
+
+2026-10-15 14:00;checkpoint;;;;S1;jacket;;3

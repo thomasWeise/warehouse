@@ -65,14 +65,15 @@ BinType(key=4, name='shed', packages=76, is_random=False))
 EndEvent(time=1007000000, priority=0))
 
 >>> instance.next_multiple_of(1007000000, 32)
-1007000016
+1007000000
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Final, Iterable, TypeVar
+from itertools import batched
+from typing import Any, Callable, Final, Iterable, Sequence, TypeVar
 
 from pycommons.io.console import logger
-from pycommons.io.csv import COMMENT_START
+from pycommons.io.csv import COMMENT_START, CSV_SEPARATOR
 from pycommons.io.path import Path, directory_path, write_lines
 from pycommons.types import check_int_range, type_error
 
@@ -93,6 +94,7 @@ from warehouse.instance.time import (
     EARLIEST_START,
     LATEST_END,
     end_of_job,
+    load_day_map,
     next_multiple_of,
     str_to_timedelta,
     timedelta_to_str,
@@ -118,6 +120,25 @@ FILE_CHECKPOINTS: Final[str] = "checkpoints.csv"
 FILE_DEMANDS: Final[str] = "demands.csv"
 #: the properties file
 FILE_PROPERTIES: Final[str] = "properties.txt"
+
+#: the default days
+_DAYS: Final[Callable[[int], str]] = (
+    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").__getitem__
+_DAY_MAP: Final[Callable[[str | int], int]] = {
+    0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6,
+    "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6,
+    "mo": 0, "tu": 1, "we": 2, "th": 3, "fr": 4, "sa": 5, "su": 6,
+    "mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6,
+    "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4,
+    "saturday": 5, "sunday": 6,
+    "montag": 0, "dienstag": 1, "mittwoch": 2, "donnerstag": 3, "freitag": 4,
+    "samstag": 5, "sonnabend": 5, "sonntag": 6,
+    "di": 1, "mi": 2, "do": 3, "so": 6,
+    "一": 0, "二": 1, "三": 2, "四": 3, "五": 4, "六": 5, "日": 6, "天": 6,
+    "星期一": 0, "星期二": 1, "星期三": 2, "星期四": 3,
+    "星期五": 4, "星期六": 5,
+    "星期日": 6, "星期天": 6,
+}.__getitem__
 
 
 @dataclass(frozen=True, init=False, order=True, eq=True)
@@ -148,6 +169,12 @@ class Instance:
     minmaxrule_interval: int = field(hash=True, compare=True)
     #: the interval in which JIT rules are triggered: default=5min
     jitrule_interval: int = field(hash=True, compare=True)
+    #: the work days
+    workdays: tuple[int, ...] = field(hash=True, compare=True)
+    #: the work time windows
+    worktimes: tuple[tuple[int, int], ...] = field(hash=True, compare=True)
+    #: the internal work date map, see :func:`load_day_map`
+    _workdays: Sequence[int] = field(hash=False, compare=False)
 
     def __init__(self,
                  bin_types: Iterable[BinType] | None = None,
@@ -162,6 +189,9 @@ class Instance:
                  checkpoints_trigger_demands: bool | str = False,
                  minmaxrule_interval: int | str = 120,
                  jitrule_interval: int | str = 300,
+                 workdays: Iterable[int] | str = (0, 1, 2, 3, 4, 5),
+                 worktimes: Iterable[int] | str = (8 * 3600, 11 * 3600,
+                                                   12 * 3600, 19 * 3600),
                  **_) -> None:
         """
         Create an instance of the warehousing instance.
@@ -179,6 +209,7 @@ class Instance:
             delivers
         :param minmaxrule_interval: the interval for min/max rules.
         :param jitrule_interval: the interval for JIT rules.
+        :param worktimes: the work time slots
         """
         names: Final[dict[str, Element]] = {}
         object.__setattr__(self, "bin_types", _load_type(
@@ -196,10 +227,6 @@ class Instance:
         object.__setattr__(self, "jit_rules", _load_jit_rules(
             jit_rules, names, self.parts))
         object.__setattr__(self, "events", _load_events(events))
-
-        # shortcuts directly to time routines
-        object.__setattr__(self, "end_of_job", end_of_job)
-        object.__setattr__(self, "next_multiple_of", next_multiple_of)
 
         if isinstance(checkpoints_trigger_demands, str):
             checkpoints_trigger_demands = str.startswith(str.lower(
@@ -222,6 +249,34 @@ class Instance:
             jitrule_interval, int) else str_to_timedelta(
             jitrule_interval))
 
+        if isinstance(workdays, str):
+            workdays = map(_DAY_MAP, map(str.lower, str.split(
+                workdays, CSV_SEPARATOR)))
+        workdays = tuple(sorted(set(workdays)))
+        for workday in workdays:
+            if not (0 <= workday <= 6):
+                raise ValueError(f"Inconsistent workdays {workday!r}.")
+        object.__setattr__(self, "workdays", workdays)
+
+        object.__setattr__(self, "_workdays", load_day_map(
+            workdays.__contains__))
+
+        if isinstance(worktimes, str):
+            worktimes = tuple(map(str_to_timedelta, str.split(
+                worktimes, CSV_SEPARATOR)))
+        else:
+            worktimes = tuple(worktimes)
+        if (tuple.__len__(worktimes) & 1) != 0:
+            raise ValueError(
+                f"Invalid work times {worktimes!r}, must be value pairs.")
+        old: int = 0
+        for v in worktimes:
+            if not (old < v < 86400):
+                raise ValueError(f"Invalid work times record {worktimes!r}.")
+            old = v
+        object.__setattr__(self, "worktimes", tuple(batched(
+            worktimes, 2, strict=True)))
+
     def end_of_job(self, start: int, worktime: int,
                    can_wrap: bool = False) -> int:
         """
@@ -233,7 +288,8 @@ class Instance:
             or whether it needs to be done as one
         :return: the adjusted time stamp
         """
-        return end_of_job(start, worktime, can_wrap)
+        return end_of_job(
+            start, worktime, can_wrap, self.worktimes, self._workdays)
 
     def next_multiple_of(self, start: int, multiple_in_s: int) -> int:
         """
@@ -243,7 +299,8 @@ class Instance:
         :param multiple_in_s: the multiple in seconds
         :return: the adjusted time stamp
         """
-        return next_multiple_of(start, multiple_in_s)
+        return next_multiple_of(
+            start, multiple_in_s, self.worktimes, self._workdays)
 
     @classmethod
     def from_directory(cls, directory: str) -> "Instance":
@@ -313,6 +370,9 @@ class Instance:
         _write_csv(dest.resolve_inside(FILE_DEMANDS), Demand,
                    self.demands)
         _write_properties(dest.resolve_inside(FILE_PROPERTIES), {
+            "workdays": CSV_SEPARATOR.join(map(_DAYS, self.workdays)),
+            "worktimes": CSV_SEPARATOR.join(map(
+                timedelta_to_str, (j for k in self.worktimes for j in k))),
             "warehouse_delivers_delay": timedelta_to_str(
                 self.warehouse_delivers_delay),
             "checkpoints_trigger_demands": self.checkpoints_trigger_demands,

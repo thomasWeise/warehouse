@@ -1,0 +1,6 @@
+workdays = Mon;Tue;Wed;Thu;Fri;Sat
+worktimes = 8:00;11:00;12:00;19:00
+warehouse_delivers_delay = 0:04
+checkpoints_trigger_demands = False
+minmaxrule_interval = 0:02
+jitrule_interval = 0:05

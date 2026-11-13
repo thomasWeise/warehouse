@@ -76,9 +76,9 @@ time;type;part;packages;bin_type;checkpoint;product;units;rule
 2026-10-15 17:10;bin_in;B;5;rack_1;;;10
 2026-10-15 17:10;rule_triggered;C;30;;;;30;min_C
 2026-10-15 17:14;warehouse_delivered;C;30;;;;30
-2026-10-16 07:50;warehouse_in;C;30;;;;30
-2026-10-16 07:50;bin_in;C;25;rack_1;;;25
-2026-10-16 07:50;overstock_in;C;5;;;;5
+2026-10-15 18:50;warehouse_in;C;30;;;;30
+2026-10-15 18:50;bin_in;C;25;rack_1;;;25
+2026-10-15 18:50;overstock_in;C;5;;;;5
 2026-10-16 08:10;warehouse_in;A;40;;;;120
 2026-10-16 08:10;overstock_in;A;40;;;;120
 2026-10-16 08:10;end

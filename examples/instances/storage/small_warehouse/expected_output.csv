@@ -29,8 +29,8 @@ time;type;part;packages;bin_type;checkpoint;product;units;rule
 2026-01-09 10:45;overstock_out;hat;10;;;;40
 2026-01-09 10:45;bin_in;hat;10;random_small;;;40
 2026-01-09 10:49;warehouse_delivered;trousers;1150;;;;8050
-2026-01-09 11:25;warehouse_demand;hat;33;;;;132
-2026-01-09 11:25;understock;hat;23;;;;92
-2026-01-09 11:25;bin_out;hat;10;random_small;;;40
-2026-01-09 11:29;warehouse_delivered;hat;10;;;;40
-2026-01-09 11:29;end
+2026-01-09 12:25;warehouse_demand;hat;33;;;;132
+2026-01-09 12:25;understock;hat;23;;;;92
+2026-01-09 12:25;bin_out;hat;10;random_small;;;40
+2026-01-09 12:29;warehouse_delivered;hat;10;;;;40
+2026-01-09 12:29;end

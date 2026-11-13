@@ -9,4 +9,4 @@ time;type;part;packages;bin_type;rule
 2026-01-09 10:15;warehouse_demand;tie;50
 2026-01-09 10:25;warehouse_in;hat;10
 2026-01-09 10:45;warehouse_demand;trousers;1150
-2026-01-09 11:25;warehouse_demand;hat;33
+2026-01-09 12:25;warehouse_demand;hat;33
